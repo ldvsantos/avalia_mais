@@ -259,6 +259,13 @@ app.get('/admin/export.csv', basicAuth, (req, res) => {
 
   const submissions = filterSubmissions(storage.listSubmissions(), { q, status, from, to });
 
+  const evals = storage.listEvaluations();
+  const evalMap = new Map(evals.map(e => [e.protocol, e]));
+
+  // Pesos e máximos para normalização
+  const WEIGHTS = { project: 4, interview: 5, language: 1 };
+  const MAX = { project: 10, interview: 10, language: 10 };
+
   const header = [
     'protocolo',
     'data_hora',
@@ -267,11 +274,65 @@ app.get('/admin/export.csv', basicAuth, (req, res) => {
     'nome',
     'email',
     'titulo',
-    'area',
+    'linha',
+    'nota_projeto',
+    'nota_entrevista',
+    'nota_lingua',
+    'nota_final',
+    'avaliadores_projeto',
+    'avaliadores_entrevista',
+    'avaliadores_lingua',
     'hash_curto',
   ].join(';');
 
   const lines = submissions.map(s => {
+    const e = evalMap.get(s.protocol);
+
+    // Contar avaliadores que efetivamente deram nota por fase
+    const projPrefixes = ['proj_avaliador1', 'proj_avaliador2', 'proj_avaliador3'];
+    const intPrefixes = ['int_avaliador1', 'int_avaliador2', 'int_avaliador3'];
+    const langPrefixes = ['lang_avaliador1', 'lang_avaliador2', 'lang_avaliador3'];
+
+    let projCount = 0; let intCount = 0; let langCount = 0;
+    let projTotal = '';
+    let intTotal = '';
+    let langTotal = '';
+    let finalScore = '';
+
+    if (e) {
+      projCount = projPrefixes.reduce((acc, p) => {
+        const sum = Object.keys(e).filter(k => k.startsWith(p + '_')).reduce((s, k) => s + (Number(e[k] || 0)), 0);
+        return acc + (sum > 0 ? 1 : 0);
+      }, 0);
+
+      intCount = intPrefixes.reduce((acc, p) => {
+        const sum = ['_apresentacao','_historico','_defesa','_justificativa'].reduce((s, suf) => s + (Number(e[p + suf] || 0)), 0);
+        return acc + (sum > 0 ? 1 : 0);
+      }, 0);
+
+      langCount = langPrefixes.reduce((acc, p) => {
+        const c = Number(e[p + '_clareza'] || 0);
+        const d = Number(e[p + '_domino'] || 0);
+        const a = Number(e[p + '_analise'] || 0);
+        const sum = (c * 0.3) + (d * 0.4) + (a * 0.3);
+        return acc + (sum > 0 ? 1 : 0);
+      }, 0);
+
+      projTotal = e.proj_total != null ? Number(e.proj_total) : '';
+      intTotal = e.int_total != null ? Number(e.int_total) : '';
+      langTotal = e.lang_total != null ? Number(e.lang_total) : '';
+
+      // Calcular nota final ponderada
+      const projNorm = projTotal !== '' ? Math.max(0, Math.min(1, Number(projTotal) / MAX.project)) : 0;
+      const intNorm = intTotal !== '' ? Math.max(0, Math.min(1, Number(intTotal) / MAX.interview)) : 0;
+      const langNorm = langTotal !== '' ? Math.max(0, Math.min(1, Number(langTotal) / MAX.language)) : 0;
+      finalScore = (projNorm * WEIGHTS.project) + (intNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+      finalScore = finalScore ? finalScore.toFixed(2) : '';
+      projTotal = projTotal !== '' ? Number(projTotal).toFixed(2) : '';
+      intTotal = intTotal !== '' ? Number(intTotal).toFixed(2) : '';
+      langTotal = langTotal !== '' ? Number(langTotal).toFixed(2) : '';
+    }
+
     const row = [
       s.protocol,
       formatPtBrDateTime(s.createdAt),
@@ -281,6 +342,13 @@ app.get('/admin/export.csv', basicAuth, (req, res) => {
       s.identified?.email || '',
       s.project?.titulo_pt || '',
       s.project?.area || '',
+      projTotal,
+      intTotal,
+      langTotal,
+      finalScore,
+      String(projCount),
+      String(intCount),
+      String(langCount),
       (s.hash || '').slice(0, 16) + '…',
     ].map(csvEscape);
     return row.join(';');
@@ -735,6 +803,23 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
     { key: 'proj_refs', label: '8 – Referências (ABNT)', max: 0.5 },
   ];
 
+  // Pesos e máximos para cálculo da nota final (usar mesma lógica do resto do app)
+  const WEIGHTS = { project: 4, interview: 5, language: 1 };
+  const MAX = { project: 10, interview: 10, language: 10 };
+
+  // Calcular nota final atual (se houver avaliações)
+  let finalScoreDisplay = '';
+  if (e) {
+    const projTotal = e.proj_total != null ? Number(e.proj_total) : 0;
+    const intTotal = e.int_total != null ? Number(e.int_total) : 0;
+    const langTotal = e.lang_total != null ? Number(e.lang_total) : 0;
+    const projNorm = Math.max(0, Math.min(1, projTotal / MAX.project));
+    const intNorm = Math.max(0, Math.min(1, intTotal / MAX.interview));
+    const langNorm = Math.max(0, Math.min(1, langTotal / MAX.language));
+    const finalScore = (projNorm * WEIGHTS.project) + (intNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+    finalScoreDisplay = Number.isFinite(finalScore) ? finalScore.toFixed(2) : '';
+  }
+
   res.type('html').send(`
     <!doctype html>
     <html lang="pt-BR">
@@ -754,7 +839,8 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
         <section class="panel">
           <div class="panel-header"><h2>Ficha</h2></div>
           <div class="panel-body" style="background-color:#fff;">
-            <div><strong>Título:</strong> ${escapeHtml(s.project?.titulo_pt || '')}</div>
+            <div><strong>Inscrição:</strong> ${escapeHtml(protocol)}</div>
+            <div style="margin-top:6px;"><strong>Título:</strong> ${escapeHtml(s.project?.titulo_pt || '')}</div>
             <div><strong>Linha:</strong> ${escapeHtml(s.project?.area || '')}</div>
           </div>
         </section>
@@ -764,11 +850,11 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
             <form method="POST" action="/committee/evaluate/${encodeURIComponent(protocol)}">
               <h3 style="color:#003366;">Projeto (3 Avaliadores)</h3>
               <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                ${['Avaliador1','Avaliador2','Avaliador3'].map(who => {
-                  const prefix = `proj_${who.toLowerCase()}`;
+                ${[{key:'avaliador1',label:'Avaliador 1'},{key:'avaliador2',label:'Avaliador 2'},{key:'avaliador3',label:'Comissão'}].map(ev => {
+                  const prefix = `proj_${ev.key}`;
                   return `
                     <div class="box">
-                      <div style="font-weight:bold; color:#003366; margin-bottom:6px;">${who}</div>
+                      <div style="font-weight:bold; color:#003366; margin-bottom:6px;">${ev.label}</div>
                       ${projectRubric.map(item => {
                         const key = `${prefix}_${item.key}`;
                         const val = e[key] ?? '';
@@ -805,15 +891,15 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
 
               <h3 style="color:#003366; margin-top:12px;">Entrevista (3 Avaliadores)</h3>
               <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                ${['Avaliador1','Avaliador2','Avaliador3'].map((who, idx) => {
-                  const prefix = `int_${who.toLowerCase()}`;
+                ${[{key:'avaliador1',label:'Avaliador 1'},{key:'avaliador2',label:'Avaliador 2'},{key:'avaliador3',label:'Comissão'}].map((ev) => {
+                  const prefix = `int_${ev.key}`;
                   const ap = e[`${prefix}_apresentacao`] ?? '';
                   const hp = e[`${prefix}_historico`] ?? '';
                   const df = e[`${prefix}_defesa`] ?? '';
                   const ji = e[`${prefix}_justificativa`] ?? '';
                   return `
                     <div class="box">
-                      <div style="font-weight:bold; color:#003366;">${who}</div>
+                      <div style="font-weight:bold; color:#003366;">${ev.label}</div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_apresentacao">Apresentação (máx. 3)</label>
                         <input type="number" id="${prefix}_apresentacao" name="${prefix}_apresentacao" min="0" max="3" step="0.1" value="${escapeHtml(String(ap))}" class="int-input" />
@@ -837,14 +923,14 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
 
               <h3 style="color:#003366; margin-top:12px;">Prova de Língua (3 Avaliadores)</h3>
               <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-                ${['Avaliador1','Avaliador2','Avaliador3'].map(who => {
-                  const prefix = `lang_${who.toLowerCase()}`;
+                ${[{key:'avaliador1',label:'Avaliador 1'},{key:'avaliador2',label:'Avaliador 2'},{key:'avaliador3',label:'Comissão'}].map(ev => {
+                  const prefix = `lang_${ev.key}`;
                   const c = e[`${prefix}_clareza`] ?? '';
                   const d = e[`${prefix}_domino`] ?? '';
                   const a = e[`${prefix}_analise`] ?? '';
                   return `
                     <div class="box">
-                      <div style="font-weight:bold; color:#003366;">${who}</div>
+                      <div style="font-weight:bold; color:#003366;">${ev.label}</div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_clareza">Clareza e Coesão (0-10)</label>
                         <input type="number" id="${prefix}_clareza" name="${prefix}_clareza" min="0" max="10" step="0.1" value="${escapeHtml(String(c))}" class="lang-input" />
@@ -862,20 +948,24 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
                 }).join('')}
               </div>
               <div class="hint" style="margin-top:6px;">Total da prova (por avaliador) = (Clareza*0,3) + (Domínio*0,4) + (Análise*0,3)</div>
-              <div class="form-group" style="margin-top:8px;">
-                <label for="lang_total_calc">Nota da Prova de Língua (0-10) - Média dos 3</label>
-                <input type="text" id="lang_total_calc" readonly style="background-color:#eee; font-weight:bold;" value="${escapeHtml(String(e.lang_total ? e.lang_total.toFixed(2) : ''))}" />
-              </div>
               <div class="form-group">
-                <label for="nota_projeto">Nota do Projeto (0-10) - Média dos 3</label>
+                <label for="nota_projeto">Nota do Projeto (0-10) - Média</label>
                 <input type="number" id="nota_projeto" name="nota_projeto" min="0" max="10" step="0.1" readonly style="background-color:#eee;" value="${escapeHtml(String(e.nota_projeto || ''))}" />
               </div>
               <div class="form-group">
-                <label for="nota_entrevista">Nota da Entrevista (0-10) - Média dos 3</label>
+                <label for="nota_entrevista">Nota da Entrevista (0-10) - Média</label>
                 <input type="number" id="nota_entrevista" name="nota_entrevista" min="0" max="10" step="0.1" readonly style="background-color:#eee;" value="${escapeHtml(String(e.nota_entrevista || ''))}" />
               </div>
+              <div class="form-group" style="margin-top:8px;">
+                <label for="lang_total_calc">Nota da Prova de Língua (0-10) - Média</label>
+                <input type="text" id="lang_total_calc" readonly style="background-color:#eee;" value="${escapeHtml(String(e.lang_total ? e.lang_total.toFixed(2) : ''))}" />
+              </div>
+              <div class="form-group" style="margin-top:8px;">
+                <label for="nota_final">Nota Final (P=4, E=5, L=1)</label>
+                <input type="text" id="nota_final" readonly style="background-color:#eee; font-weight:bold;" value="${escapeHtml(String(finalScoreDisplay))}" />
+              </div>
               <div class="form-group">
-                <label for="eliminado">Eliminação</label>
+                <label for="eliminado">Eliminação ( Casos omissos)</label>
                 <select id="eliminado" name="eliminado">
                   ${['Não','Sim'].map(opt => {
                     const sel = String(e.eliminado ? 'Sim' : 'Não') === opt ? 'selected' : '';
@@ -896,63 +986,73 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
       </div>
       <script>
         (function() {
-          // Project fields
-          const projKeys = ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs'];
-          const projInputs = projKeys.map(k => document.getElementById(k));
-          const notaProjeto = document.getElementById('nota_projeto');
-
-          // Interview fields
+          // Project and interview: compute per-evaluator sums and average only evaluators that have values
+          const projPrefixes = ['proj_avaliador1','proj_avaliador2','proj_avaliador3'];
           const intPrefixes = ['int_avaliador1','int_avaliador2','int_avaliador3'];
-          const intSuffixes = ['_apresentacao','_historico','_defesa','_justificativa'];
-          const intInputs = [];
-          intPrefixes.forEach(p => {
-            intSuffixes.forEach(s => {
-              const el = document.getElementById(p + s);
-              if (el) intInputs.push(el);
-            });
-          });
+          const notaProjeto = document.getElementById('nota_projeto');
           const notaEntrevista = document.getElementById('nota_entrevista');
-
-          // Language fields
-          const langClareza = document.getElementById('lang_clareza');
-          const langDomino = document.getElementById('lang_domino');
-          const langAnalise = document.getElementById('lang_analise');
+          const langPrefixes = ['lang_avaliador1','lang_avaliador2','lang_avaliador3'];
           const langTotalCalc = document.getElementById('lang_total_calc');
 
           function calcProject() {
-            let sum = 0;
-            projInputs.forEach(el => {
-              if (el) sum += parseFloat(el.value) || 0;
+            let total = 0;
+            let count = 0;
+            projPrefixes.forEach(p => {
+              const elems = Array.from(document.querySelectorAll('[id^="' + p + '_"]'));
+              const sum = elems.reduce((s, el) => s + (parseFloat(el.value) || 0), 0);
+              if (sum > 0) { total += sum; count += 1; }
             });
-            // Project rubric sums to 10.
-            if (notaProjeto) notaProjeto.value = sum.toFixed(2);
+            const avg = count ? (total / count) : 0;
+            if (notaProjeto) notaProjeto.value = avg.toFixed(2);
           }
 
           function calcInterview() {
-            let sum = 0;
-            intInputs.forEach(el => {
-              if (el) sum += parseFloat(el.value) || 0;
+            let total = 0;
+            let count = 0;
+            intPrefixes.forEach(p => {
+              const elems = Array.from(document.querySelectorAll('[id^="' + p + '_"]'));
+              const sum = elems.reduce((s, el) => s + (parseFloat(el.value) || 0), 0);
+              if (sum > 0) { total += sum; count += 1; }
             });
-            // Interview rubric: 3 evaluators * 10 points = 30 max.
-            // Convert to 0-10: (sum / 30) * 10
-            if (notaEntrevista) notaEntrevista.value = ((sum / 30) * 10).toFixed(2);
+            const avg = count ? (total / count) : 0;
+            if (notaEntrevista) notaEntrevista.value = avg.toFixed(2);
           }
 
           function calcLanguage() {
-            const c = parseFloat(langClareza.value) || 0;
-            const d = parseFloat(langDomino.value) || 0;
-            const a = parseFloat(langAnalise.value) || 0;
-            const total = (c * 0.3) + (d * 0.4) + (a * 0.3);
-            if (langTotalCalc) langTotalCalc.value = total.toFixed(2);
+            let total = 0;
+            let count = 0;
+            langPrefixes.forEach(p => {
+              const cEl = document.getElementById(p + '_clareza');
+              const dEl = document.getElementById(p + '_domino');
+              const aEl = document.getElementById(p + '_analise');
+              const c = cEl ? (parseFloat(cEl.value) || 0) : 0;
+              const d = dEl ? (parseFloat(dEl.value) || 0) : 0;
+              const a = aEl ? (parseFloat(aEl.value) || 0) : 0;
+              const sum = (c * 0.3) + (d * 0.4) + (a * 0.3);
+              if (sum > 0) { total += sum; count += 1; }
+            });
+            const avg = count ? (total / count) : 0;
+            if (langTotalCalc) langTotalCalc.value = avg.toFixed(2);
           }
 
-          // Attach listeners
-          projInputs.forEach(el => { if(el) el.addEventListener('input', calcProject); });
-          intInputs.forEach(el => { if(el) el.addEventListener('input', calcInterview); });
-          
-          if (langClareza) langClareza.addEventListener('input', calcLanguage);
-          if (langDomino) langDomino.addEventListener('input', calcLanguage);
-          if (langAnalise) langAnalise.addEventListener('input', calcLanguage);
+          // Attach listeners for dynamic calculation
+          projPrefixes.forEach(p => {
+            Array.from(document.querySelectorAll('[id^="' + p + '_"]')).forEach(el => el.addEventListener('input', calcProject));
+          });
+          intPrefixes.forEach(p => {
+            Array.from(document.querySelectorAll('[id^="' + p + '_"]')).forEach(el => el.addEventListener('input', calcInterview));
+          });
+          langPrefixes.forEach(p => {
+            ['_clareza','_domino','_analise'].forEach(suffix => {
+              const el = document.getElementById(p + suffix);
+              if (el) el.addEventListener('input', calcLanguage);
+            });
+          });
+
+          // Initial calc on load
+          calcProject();
+          calcInterview();
+          calcLanguage();
         })();
       </script>
     </body>
@@ -970,22 +1070,25 @@ app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
   // Projeto: 3 avaliadores, cada um com 8 itens
   const projectKeys = ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs'];
   const projectScores = {};
-  let projSum = 0;
+  const projEvaluatorSums = [];
   
   evaluators.forEach(who => {
+    let sumEv = 0;
     projectKeys.forEach(k => {
       const key = `proj_${who}_${k}`;
       const v = Number(req.body?.[key] ?? '0');
       projectScores[key] = v;
-      projSum += v;
+      sumEv += v;
     });
+    projEvaluatorSums.push(sumEv);
   });
-  // Average (0-10) = Sum / 3
-  const projTotal = (projSum / 3);
+  // Average across evaluators that provided a score
+  const projCount = projEvaluatorSums.filter(x => x > 0).length;
+  const projTotal = projCount ? (projEvaluatorSums.reduce((a,b) => a + b, 0) / projCount) : 0;
 
   // Entrevista: 3 avaliadores, cada com 4 itens
   const interviewScores = {};
-  let intSum = 0;
+  const intEvaluatorSums = [];
   evaluators.forEach(who => {
     const prefix = `int_${who}`;
     const ap = Number(req.body?.[`${prefix}_apresentacao`] ?? '0');
@@ -996,10 +1099,11 @@ app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
     interviewScores[`${prefix}_historico`] = hp;
     interviewScores[`${prefix}_defesa`] = df;
     interviewScores[`${prefix}_justificativa`] = ji;
-    intSum += ap + hp + df + ji;
+    intEvaluatorSums.push(ap + hp + df + ji);
   });
-  // Average (0-10) = Sum / 3
-  const intTotal = (intSum / 3);
+  // Average across evaluators that provided a score
+  const intCount = intEvaluatorSums.filter(x => x > 0).length;
+  const intTotal = intCount ? (intEvaluatorSums.reduce((a,b) => a + b, 0) / intCount) : 0;
 
   const proj_possible_supervisor = String(req.body?.proj_possible_supervisor || '');
   const proj_potential_interview = String(req.body?.proj_potential_interview || '');
@@ -1011,7 +1115,7 @@ app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
 
   // Prova de língua: 3 avaliadores
   const langScores = {};
-  let langSum = 0;
+  const langEvaluatorSums = [];
   evaluators.forEach(who => {
     const prefix = `lang_${who}`;
     const c = Number(req.body?.[`${prefix}_clareza`] ?? '0');
@@ -1021,10 +1125,10 @@ app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
     langScores[`${prefix}_domino`] = d;
     langScores[`${prefix}_analise`] = a;
     // Weighted sum per evaluator
-    langSum += (c * 0.3) + (d * 0.4) + (a * 0.3);
+    langEvaluatorSums.push((c * 0.3) + (d * 0.4) + (a * 0.3));
   });
-  // Average (0-10) = Sum / 3
-  const lang_total = (langSum / 3);
+  const langCount = langEvaluatorSums.filter(x => x > 0).length;
+  const lang_total = langCount ? (langEvaluatorSums.reduce((a,b) => a + b, 0) / langCount) : 0;
 
   storage.upsertEvaluation({
     protocol,
