@@ -92,6 +92,31 @@ function updateTermoFeedback() {
 
 const FORM_VERSION = '2025-12-15';
 
+// Máscaras e validações auxiliares
+function formatCEP(value) {
+    const digits = String(value || '').replace(/\D/g, '').slice(0, 8);
+    const p1 = digits.slice(0, 5);
+    const p2 = digits.slice(5, 8);
+    return p2 ? `${p1}-${p2}` : p1;
+}
+
+function formatPhoneBR(value) {
+    const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+    const ddd = digits.slice(0, 2);
+    const p1 = digits.length > 10 ? digits.slice(2, 7) : digits.slice(2, 6);
+    const p2 = digits.length > 10 ? digits.slice(7, 11) : digits.slice(6, 10);
+    if (p1 && p2) return `(${ddd}) ${p1}-${p2}`;
+    if (ddd && p1) return `(${ddd}) ${p1}`;
+    return ddd;
+}
+
+function updateAreaFeedback() {
+    const area = document.getElementById('area');
+    if (!area) return;
+    const val = String(area.value || '').trim();
+    setFeedback('area-feedback', val ? '' : 'Selecione uma linha de pesquisa.');
+}
+
 function detectPersonalInfoInProject(text) {
     const t = String(text || '');
     if (!t.trim()) return false;
@@ -134,13 +159,26 @@ async function generatePDF() {
     const cpf = cpfInput.value.replace(/\D/g, '');
 
     if (!isValidCPF(cpfInput.value)) {
-        alert('Por favor, insira um CPF válido.');
+        setFeedback('cpf-feedback', 'CPF inválido.');
+        cpfInput.focus();
+        cpfInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
     const termo = document.getElementById('termo_compromisso');
     if (!termo?.checked) {
-        alert('Você precisa marcar a declaração de concordância para gerar o PDF.');
+        setFeedback('termo-feedback', 'Obrigatório marcar a declaração para gerar o PDF.');
+        termo.focus();
+        document.getElementById('termo_compromisso').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    // Validar área
+    const areaSel = document.getElementById('area');
+    if (!areaSel || !String(areaSel.value || '').trim()) {
+        updateAreaFeedback();
+        areaSel.focus();
+        areaSel.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
 
@@ -184,7 +222,7 @@ async function generatePDF() {
     // Feedback visual imediato
     const btn = document.querySelector('button[onclick="generatePDF()"]');
     const originalText = btn ? btn.innerText : 'Gerar PDF';
-    if (btn) btn.innerText = 'Registrando...';
+    if (btn) { btn.disabled = true; btn.innerText = 'Registrando...'; }
 
     let serverReceipt;
     try {
@@ -236,7 +274,7 @@ async function generatePDF() {
             referencias: document.getElementById('referencias')?.value || ''
         });
     } catch (e) {
-        if (btn) btn.innerText = originalText;
+        if (btn) { btn.disabled = false; btn.innerText = originalText; }
         alert(`Não foi possível registrar a inscrição no servidor.\n\nDetalhe: ${e.message}`);
         return;
     }
@@ -765,11 +803,11 @@ async function generatePDF() {
             // submittedCPFs.push(cpf);
             // localStorage.setItem('planterr_submitted_cpfs', JSON.stringify(submittedCPFs));
             
-            if(btn) btn.innerText = originalText;
+            if(btn) { btn.disabled = false; btn.innerText = originalText; }
             alert(`Processo finalizado!\nSeu número de inscrição é: ${registrationNumber}`);
         } catch (e) {
             console.error("Erro ao imprimir:", e);
-            if(btn) btn.innerText = originalText;
+            if(btn) { btn.disabled = false; btn.innerText = originalText; }
             alert("Erro ao tentar abrir a impressão. Verifique se não há bloqueadores.");
         }
     };
@@ -819,6 +857,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         updateTermoFeedback();
     }
+
+    // CEP
+    const cep = document.getElementById('cep');
+    if (cep) {
+        cep.addEventListener('input', () => { cep.value = formatCEP(cep.value); });
+        cep.addEventListener('blur', () => { cep.value = formatCEP(cep.value); });
+    }
+
+    // Telefones
+    const cel = document.getElementById('celular');
+    const res = document.getElementById('telefone_residencial');
+    if (cel) cel.addEventListener('input', () => { cel.value = formatPhoneBR(cel.value); });
+    if (res) res.addEventListener('input', () => { res.value = formatPhoneBR(res.value); });
+
+    // Área (feedback)
+    const area = document.getElementById('area');
+    if (area) { area.addEventListener('change', updateAreaFeedback); updateAreaFeedback(); }
 });
 
 function fillExample() {

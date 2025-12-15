@@ -1,0 +1,376 @@
+{
+  "projectCriteria": {
+    "criteria": [],
+    "rangeHints": []
+  },
+  "otherPhases": {
+    "interview": [
+      {
+        "sheet": "PROJETOS",
+        "row": 4,
+        "text": "Nº DO CANDIDATO | TÍTULO DO ANTEPROJETO | AVALIADOR 1 | POSSÍVEL ORIENTADOR? | ENTREVISTA? | AVALIADOR 2 | POSSÍVEL ORIENTADOR? | ENTREVISTA? | ASPECTO 1 | ASPECTO 2 | ASPECTO 3 | ASPECTO 4 | ASPECTO 5 | ASPECTO 6 | ASPECTO 7 | ASPECTO 8 | TOTAL | ASPECTO 1 | ASPECTO 2 | ASPECTO 3 | ASPECTO 4 | ASPECTO 5 | ASPECTO 6 | ASPECTO 7 | ASPECTO 8 | TOTAL | ASPECTO 1 | ASPECTO 2 | ASPECTO 3 | ASPECTO 4 | ASPECTO 5 | ASPECTO 6 | ASPECTO 7 | ASPECTO 8 | TOTAL | TOTAL"
+      },
+      {
+        "sheet": "ENTREVISTAS",
+        "row": 1,
+        "text": "SELEÇÃO PARA ALUNO(A) REGULAR 2025 - RESULTADO DAS ENTREVISTAS - LINHA 2"
+      },
+      {
+        "sheet": "CLASSIFICAÇÃO FINAL",
+        "row": 1,
+        "text": "NOME DO/A CANDIDATO/A | PROJETO |  | ENTREVISTA |  | PROVA DE LÍNGUA |  | TOTAL | VAGAS RESERVADAS"
+      }
+    ],
+    "curriculum": []
+  },
+  "edital": {
+    "weightsAndRules": [
+      {
+        "line": 26,
+        "text": "de docência, o mestrado profissional tem como foco principal a transferência de conhecimento",
+        "type": "quota"
+      },
+      {
+        "line": 83,
+        "text": "historicamente excluídos em todos os Cursos de Pós-Graduaçãostricto sensuelato sensuda",
+        "type": "eliminatory"
+      },
+      {
+        "line": 95,
+        "text": "destinadas  a  candidatos/as  negros/as,  indígenas,  quilombolas,  ciganos/as,  pessoas  trans",
+        "type": "quota"
+      },
+      {
+        "line": 96,
+        "text": "(transgêneros, transexuais e travestis) e pessoas com deficiência.",
+        "type": "quota"
+      },
+      {
+        "line": 98,
+        "text": "denominadas de vagas reservadas, as vagas institucionais não serão incluídas. A distribuição",
+        "type": "quota"
+      },
+      {
+        "line": 99,
+        "text": "das vagas seguirá o seguinte critério: 70% para candidatos/as autodeclarados/as negros/as e",
+        "type": "quota"
+      },
+      {
+        "line": 100,
+        "text": "30% para candidatos/as indígenas, quilombolas, ciganos/as, pessoas trans e pessoas com",
+        "type": "quota"
+      },
+      {
+        "line": 105,
+        "text": "classificação, respeitando a proporcionalidade das vagas reservadas.",
+        "type": "quota"
+      },
+      {
+        "line": 106,
+        "text": "3.8  Os/as  candidatos/as  negros/as,  indígenas,  quilombolas,  ciganos/as,  pessoas  trans  e",
+        "type": "quota"
+      },
+      {
+        "line": 139,
+        "text": "I.Candidatos(as)  negros(as):  documento  de  autodeclaração  para  hetereoidentificação",
+        "type": "quota"
+      },
+      {
+        "line": 141,
+        "text": "II.Candidatos(as)  indígenas:  documento  de  autodeclaração  de  pertencimento  social",
+        "type": "quota"
+      },
+      {
+        "line": 142,
+        "text": "assinado (Anexo VI) e declaração comprobatória de pertencimento a aldeia indígena",
+        "type": "quota"
+      },
+      {
+        "line": 145,
+        "text": "III.Candidatos(as)  quilombolas:  documento  de  autodeclaração  de  pertencimento  social",
+        "type": "quota"
+      },
+      {
+        "line": 147,
+        "text": "quilombola  emitida  e  assinada  por  liderança  local  do  grupo  quilombola,  indicando",
+        "type": "quota"
+      },
+      {
+        "line": 154,
+        "text": "V.Candidatos(as)  trans:  documento  de  autodeclaração  de  identidade  TRANS:Travesti,",
+        "type": "quota"
+      },
+      {
+        "line": 155,
+        "text": "Transexual ou Transgênero assinado (Anexo X) e declaração de anuência expedida por",
+        "type": "quota"
+      },
+      {
+        "line": 168,
+        "text": "transtorno  global  do  desenvolvimento  (transtorno  do  espectro  autista,  síndrome  de",
+        "type": "quota"
+      },
+      {
+        "line": 169,
+        "text": "Asperger,  síndrome  de  Rett,  transtorno  desintegrativo  de  infância  (psicoses)  e",
+        "type": "quota"
+      },
+      {
+        "line": 170,
+        "text": "transtornosinvasivossemoutrasespecificações);pessoascomaltas",
+        "type": "quota"
+      },
+      {
+        "line": 193,
+        "text": "5.1 Os (as) candidatos (as), que optarem pelas vagas reservadas (Resoluções CONSEPE",
+        "type": "quota"
+      },
+      {
+        "line": 195,
+        "text": "Autodeclarações  /  Hetereoidentificação  para  negros  (as)  ou  Comissão  de  Validação",
+        "type": "quota"
+      },
+      {
+        "line": 196,
+        "text": "Documental  para  indígenas,  quilombolas,  ciganos  (as),  pessoas  trans  e  pessoas  com",
+        "type": "quota"
+      },
+      {
+        "line": 198,
+        "text": "5.2 Os (as) candidatos (as) negros (as) optantes pelas vagas reservadas deverão passar pela",
+        "type": "quota"
+      },
+      {
+        "line": 229,
+        "text": "5.7 Os (as) candidatos (as) autodeclarados (as) indígenas, quilombolas, ciganos, pessoas",
+        "type": "quota"
+      },
+      {
+        "line": 230,
+        "text": "trans  e  pessoas  com  deficiências  optantes  pelas  vagas  reservadas  no  processo  seletivo",
+        "type": "quota"
+      },
+      {
+        "line": 234,
+        "text": "6.1 O processo seletivo será realizado em três etapas, sendo as duas primeiras eliminatórias e",
+        "type": "eliminatory"
+      },
+      {
+        "line": 237,
+        "text": "6.2 O não comparecimento, por qualquer motivo, em qualquer uma das etapas, excluirá o/a",
+        "type": "eliminatory"
+      },
+      {
+        "line": 239,
+        "text": "6.3 Primeira Etapa (Eliminatória e Classificatória):  Enquadramento  e  avaliação  do",
+        "type": "eliminatory"
+      },
+      {
+        "line": 252,
+        "text": "6.4 Segunda Etapa (Eliminatória e Classificatória):Entrevista.",
+        "type": "eliminatory"
+      },
+      {
+        "line": 313,
+        "text": "8.CRITÉRIOS DE DESEMPATE",
+        "type": "tie"
+      },
+      {
+        "line": 314,
+        "text": "8.1 Em caso de empate entre candidatos/as, será considerado como critério de desempate a",
+        "type": "tie"
+      },
+      {
+        "line": 323,
+        "text": "PRIMEIRA   ETAPA   DA   SELEÇÃO   (Eliminatória   e",
+        "type": "eliminatory"
+      },
+      {
+        "line": 330,
+        "text": "SEGUNDAETAPA(Eliminatóriaeclassificatória)",
+        "type": "eliminatory"
+      },
+      {
+        "line": 490,
+        "text": "Candidato à Vaga Reservada: ( ) SIM   ( )NÃO( ) Negro",
+        "type": "quota"
+      },
+      {
+        "line": 491,
+        "text": "( ) Indígena",
+        "type": "quota"
+      },
+      {
+        "line": 492,
+        "text": "( ) Quilombola",
+        "type": "quota"
+      },
+      {
+        "line": 494,
+        "text": "( )PessoaTrans",
+        "type": "quota"
+      },
+      {
+        "line": 511,
+        "text": "( ) Indígena",
+        "type": "quota"
+      },
+      {
+        "line": 605,
+        "text": "(UEFS)   pelo   Sistema de Reserva de Vagas para Negros(as),nascido(a)em//,   no   município",
+        "type": "quota"
+      },
+      {
+        "line": 609,
+        "text": "Profissional em Planejamento Territorial), para fins de matrícula, que sounegro/a:(  ) preto/a; (   ) pardo/a.",
+        "type": "quota"
+      },
+      {
+        "line": 612,
+        "text": "por mim, com vistas ao ingresso pelo Sistema de Cotas na modalidade de reserva de vagas ou sobrevagas, são",
+        "type": "quota"
+      },
+      {
+        "line": 646,
+        "text": "quilombola( )indígena( )cigano(a). Declaro, ainda, ter ciência de que as informações",
+        "type": "quota"
+      },
+      {
+        "line": 648,
+        "text": "Sistema  de  Cotas  na  modalidade  de  reserva  de  vagas  ou  sobrevagas,  são  de  minha  inteira",
+        "type": "quota"
+      },
+      {
+        "line": 673,
+        "text": "ANEXO VII – DOCUMENTO COMPROBATÓRIO DE PERTENCIMENTO A INDÍGENA",
+        "type": "quota"
+      },
+      {
+        "line": 677,
+        "text": "Nós,  Indígenas    abaixo-assinados,    declaramosparaosdevidosfinsque",
+        "type": "quota"
+      },
+      {
+        "line": 680,
+        "text": "Planejamento Territorial na condição de Indígena, pertence à aldeiado",
+        "type": "quota"
+      },
+      {
+        "line": 726,
+        "text": "ANEXO VIII – DOCUMENTO COMPROBATÓRIO DE PERTENCIMENTO À COMUNIDADE QUILOMBOLA",
+        "type": "quota"
+      },
+      {
+        "line": 729,
+        "text": "da comunidade quilombola.",
+        "type": "quota"
+      },
+      {
+        "line": 730,
+        "text": "Nós,quilombolasabaixo-assinados,declaramospara   os",
+        "type": "quota"
+      },
+      {
+        "line": 734,
+        "text": "em Planejamento Territorial na condiçãodeQuilombola,pertenceàComunidade",
+        "type": "quota"
+      },
+      {
+        "line": 735,
+        "text": "Quilombola _________________________ do município de _______, Estado ____.",
+        "type": "quota"
+      },
+      {
+        "line": 738,
+        "text": "REPRESENTANTES DA COMUNIDADE QUILOMBOLA",
+        "type": "quota"
+      },
+      {
+        "line": 832,
+        "text": "ANEXO X – AUTODECLARAÇÃO DE IDENTIDADE TRANS: TRAVESTI, TRANSEXUAL OU TRANGÊNERO",
+        "type": "quota"
+      },
+      {
+        "line": 845,
+        "text": "declarada por mim, com vistas ao ingresso pelo Sistema de Cotas na modalidade de sobrevagas, são",
+        "type": "quota"
+      },
+      {
+        "line": 876,
+        "text": "autodeclarados(as) transexuais, travesti e transgênero.",
+        "type": "quota"
+      },
+      {
+        "line": 886,
+        "text": "no Sistema de Cotas da UEFS, sendo de responsabilidade da Universidade a adoção de medidas e",
+        "type": "quota"
+      },
+      {
+        "line": 955,
+        "text": "Esquizofrenia,Transtornos  psicóticos  e  outras",
+        "type": "quota"
+      },
+      {
+        "line": 981,
+        "text": "[ ]IV b – Transtorno do espectro Autista -Lei",
+        "type": "quota"
+      }
+    ],
+    "languageExam": [
+      {
+        "line": 271,
+        "text": "6.5 Terceira Etapa (classificatória):Prova de língua estrangeira – Inglês ou Espanhol",
+        "perc": null,
+        "pts": null
+      },
+      {
+        "line": 273,
+        "text": "língua estrangeira e ocorrerá exclusivamente por meio de prova escrita.",
+        "perc": null,
+        "pts": null
+      },
+      {
+        "line": 275,
+        "text": "de Avaliação da Prova de Conhecimento em Língua Estrangeira, Anexo XV, sendo:",
+        "perc": null,
+        "pts": null
+      },
+      {
+        "line": 278,
+        "text": "6.5.3 A Prova de língua estrangeira será realizada em modo presencial, no campus da UEFS,",
+        "perc": null,
+        "pts": null
+      },
+      {
+        "line": 302,
+        "text": "Entrevista (E) tem peso 5 (cinco) e a Prova de Língua Estrangeira (PLE) tem peso 1 (um),",
+        "perc": null,
+        "pts": null
+      },
+      {
+        "line": 347,
+        "text": "conhecimentos em Língua Estrangeira",
+        "perc": null,
+        "pts": null
+      },
+      {
+        "line": 349,
+        "text": "Resultado da Prova de Língua Estrangeira17/12/2025",
+        "perc": null,
+        "pts": null
+      },
+      {
+        "line": 513,
+        "text": "Língua Estrangeira para realização da prova escrita:( ) Espanhol",
+        "perc": null,
+        "pts": null
+      },
+      {
+        "line": 1120,
+        "text": "ANEXO XV – BAREMA DE AVALIAÇÃO DA PROVA DE CONHECIMENTO EM LÍNGUA ESTRANGEIRA",
+        "perc": null,
+        "pts": null
+      }
+    ]
+  }
+}

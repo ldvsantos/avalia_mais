@@ -86,7 +86,7 @@ label {
     color: #003366;
 }
 
-input[type="text"], input[type="email"], input[type="date"], textarea, select {
+input[type="text"], input[type="email"], input[type="date"], input[type="number"], textarea, select {
     width: 100%;
     padding: 3px;
     border: 1px solid #7F9DB9;
@@ -126,6 +126,11 @@ textarea {
 
 .btn-primary:hover {
     background-color: #004488;
+}
+
+.btn-primary[disabled], .btn-secondary[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .btn-secondary {
@@ -187,6 +192,25 @@ textarea {
 }
 
 .admin-box {
+    border: 1px solid #86A3C2;
+    background-color: #fff;
+    padding: 8px;
+}
+
+/* Layout helpers */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+@media (min-width: 600px) {
+    .grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.box {
     border: 1px solid #86A3C2;
     background-color: #fff;
     padding: 8px;

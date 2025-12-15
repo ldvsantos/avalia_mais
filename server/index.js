@@ -336,11 +336,33 @@ app.get('/admin', basicAuth, (req, res) => {
   const { from, to } = parseDateRange(fromStr, toStr);
 
   const submissions = filterSubmissions(storage.listSubmissions(), { q, status, from, to });
+  const evals = storage.listEvaluations();
+  const evalMap = new Map(evals.map(e => [e.protocol, e]));
+
+  // Pesos: Projeto=4, Entrevista=5, Língua=1
+  // Agora todas as notas (proj, int, lang) são salvas na escala 0-10.
+  const WEIGHTS = { project: 4, interview: 5, language: 1 };
+  const MAX = { project: 10, interview: 10, language: 10 };
+
+  function getScore(protocol) {
+    const e = evalMap.get(protocol);
+    if (!e) return null;
+    const proj = Number(e.proj_total || 0);
+    const intr = Number(e.int_total || 0);
+    const lang = Number(e.lang_total || 0);
+    const projNorm = Math.max(0, Math.min(1, proj / MAX.project));
+    const intrNorm = Math.max(0, Math.min(1, intr / MAX.interview));
+    const langNorm = Math.max(0, Math.min(1, lang / MAX.language));
+    const weighted = (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+    return weighted.toFixed(2);
+  }
+
   const qs = new URLSearchParams({ q, status, from: fromStr, to: toStr }).toString();
   const exportUrl = '/admin/export.csv' + (qs ? `?${qs}` : '');
 
   const rows = submissions.map(s => {
     const sStatus = normalizeStatus(s.status);
+    const score = getScore(s.protocol);
     return `
       <tr>
         <td>${escapeHtml(new Date(s.createdAt).toLocaleString('pt-BR'))}</td>
@@ -349,6 +371,7 @@ app.get('/admin', basicAuth, (req, res) => {
         <td>${escapeHtml(s.cpfLast4)}</td>
         <td>${escapeHtml((s.identified?.nome || '').slice(0, 60))}</td>
         <td>${escapeHtml((s.identified?.email || '').slice(0, 60))}</td>
+        <td>${score ? escapeHtml(score) : '<span style="color:#ccc;">—</span>'}</td>
         <td style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;">${escapeHtml((s.hash || '').slice(0, 16))}…</td>
       </tr>
     `;
@@ -384,6 +407,8 @@ app.get('/admin', basicAuth, (req, res) => {
           <div class="panel-body">
             <div class="hint">Dica: clique no protocolo para ver detalhes, status e verificação.</div>
             <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
+              <a class="btn-secondary" href="/committee">Área da Comissão</a>
+              <a class="btn-secondary" href="/committee/results">Ranking / Resultados</a>
               <form method="POST" action="/admin/reset" onsubmit="return confirm('Isso vai apagar TODAS as inscrições registradas.\n\nUse apenas para TESTE.\n\nDeseja continuar?');" style="margin:0;">
                 <input type="hidden" name="confirm" value="sim" />
                 <button class="btn-secondary" type="submit">Limpar inscrições (teste)</button>
@@ -434,11 +459,12 @@ app.get('/admin', basicAuth, (req, res) => {
                   <th>CPF (últ. 4)</th>
                   <th>Nome</th>
                   <th>Email</th>
+                  <th>Nota Final</th>
                   <th>Hash</th>
                 </tr>
               </thead>
               <tbody>
-                ${rows || '<tr><td colspan="7">Nenhuma inscrição encontrada.</td></tr>'}
+                ${rows || '<tr><td colspan="8">Nenhuma inscrição encontrada.</td></tr>'}
               </tbody>
             </table>
           </div>
@@ -447,6 +473,578 @@ app.get('/admin', basicAuth, (req, res) => {
     </body>
     </html>
   `);
+});
+
+// Committee evaluation pages and API
+app.get('/committee', basicAuth, (req, res) => {
+  const subs = storage.listSubmissions();
+  const evals = storage.listEvaluations();
+  const evalMap = new Map(evals.map(e => [e.protocol, e]));
+
+  // Pesos provisórios do edital: Projeto=4, Entrevista=5, Língua=1
+  const WEIGHTS = { project: 4, interview: 5, language: 1 };
+  const MAX = { project: 10, interview: 10, language: 10 }; // normalização por máximos
+
+  function score(protocol) {
+    const e = evalMap.get(protocol);
+    if (!e) return { total: '', status: '—', components: {} };
+    // Usar totais detalhados, se existirem
+    const proj = Number(e.proj_total || 0);
+    const intr = Number(e.int_total || 0);
+    const lang = Number(e.lang_total || 0);
+    const projNorm = Math.max(0, Math.min(1, proj / MAX.project));
+    const intrNorm = Math.max(0, Math.min(1, intr / MAX.interview));
+    const langNorm = Math.max(0, Math.min(1, lang / MAX.language));
+    const weighted = (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+    const status = e.eliminado ? 'Eliminado' : 'Classificável';
+    return { total: weighted.toFixed(2), status, components: { proj, intr, lang } };
+  }
+
+  const subsLine1 = subs.filter(s => (s.project?.area || '').includes('Linha de Pesquisa 1'));
+  const subsLine2 = subs.filter(s => (s.project?.area || '').includes('Linha de Pesquisa 2'));
+  const subsOther = subs.filter(s => !(s.project?.area || '').includes('Linha de Pesquisa 1') && !(s.project?.area || '').includes('Linha de Pesquisa 2'));
+
+  function renderRows(list) {
+    if (!list.length) return '<tr><td colspan="8">Nenhum projeto nesta linha.</td></tr>';
+    return list.map(s => {
+      const e = evalMap.get(s.protocol);
+      const sc = score(s.protocol);
+      return `
+        <tr>
+          <td>${escapeHtml(s.protocol)}</td>
+          <td>${escapeHtml((s.project?.titulo_pt || '').slice(0, 80))}</td>
+          <td>${e ? escapeHtml(String(e.proj_total ?? '')) : ''}</td>
+          <td>${e ? escapeHtml(String(e.int_total ?? '')) : ''}</td>
+          <td>${e ? escapeHtml(String(e.lang_total ?? '')) : ''}</td>
+          <td>${escapeHtml(sc.total)}</td>
+          <td>${escapeHtml(sc.status)}</td>
+          <td><a class="btn-secondary" href="/committee/evaluate/${encodeURIComponent(s.protocol)}">Avaliar</a></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Comissão - Avaliações</title>
+      <link rel="stylesheet" href="/theme.css" />
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header"><h1>Comissão - Avaliações</h1></header>
+        <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
+          <a class="btn-secondary" href="/admin">Admin</a>
+        </div>
+        
+        <section class="panel">
+          <div class="panel-header"><h2>Linha 1 – Planejamento Urbano-regional, Ambiental e de Comunidades Tradicionais</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th><th>Título</th><th>Projeto (0–10)</th><th>Entrevista (0–10)</th><th>Língua (0–10)</th><th>Total (P=4/E=5/L=1)</th><th>Status</th><th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${renderRows(subsLine1)}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Linha 2 – Políticas públicas, Planejamento Territorial e Participação Social</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th><th>Título</th><th>Projeto (0–10)</th><th>Entrevista (0–10)</th><th>Língua (0–10)</th><th>Total (P=4/E=5/L=1)</th><th>Status</th><th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${renderRows(subsLine2)}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        ${subsOther.length ? `
+        <section class="panel">
+          <div class="panel-header"><h2>Outros / Não classificados</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th><th>Título</th><th>Projeto (0–10)</th><th>Entrevista (0–10)</th><th>Língua (0–10)</th><th>Total (P=4/E=5/L=1)</th><th>Status</th><th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${renderRows(subsOther)}
+              </tbody>
+            </table>
+          </div>
+        </section>` : ''}
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// Página de resultados com ranking
+app.get('/committee/results', basicAuth, (req, res) => {
+  const subs = storage.listSubmissions();
+  const evals = storage.listEvaluations();
+  const evalMap = new Map(evals.map(e => [e.protocol, e]));
+  const WEIGHTS = { project: 4, interview: 5, language: 1 };
+  const MAX = { project: 10, interview: 10, language: 10 };
+
+  function totalScore(e) {
+    if (!e) return 0;
+    const projNorm = Math.max(0, Math.min(1, Number(e.proj_total || 0) / MAX.project));
+    const intrNorm = Math.max(0, Math.min(1, Number(e.int_total || 0) / MAX.interview));
+    const langNorm = Math.max(0, Math.min(1, Number(e.lang_total || 0) / MAX.language));
+    return (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+  }
+
+  const rowsData = subs.map(s => {
+    const e = evalMap.get(s.protocol);
+    return {
+      protocol: s.protocol,
+      nome: s.identified?.nome || '',
+      titulo: s.project?.titulo_pt || '',
+      area: s.project?.area || '',
+      proj: e?.proj_total ?? '',
+      intr: e?.int_total ?? '',
+      lang: e?.lang_total ?? '',
+      total: totalScore(e),
+      eliminado: e?.eliminado ? 'Sim' : 'Não',
+      reserva: s.identified?.cotas || '',
+    };
+  }).sort((a, b) => b.total - a.total);
+
+  const rowsLine1 = rowsData.filter(r => r.area.includes('Linha de Pesquisa 1'));
+  const rowsLine2 = rowsData.filter(r => r.area.includes('Linha de Pesquisa 2'));
+  const rowsOther = rowsData.filter(r => !r.area.includes('Linha de Pesquisa 1') && !r.area.includes('Linha de Pesquisa 2'));
+
+  function renderRankingRows(list) {
+    if (!list.length) return '<tr><td colspan="8">Nenhum resultado.</td></tr>';
+    return list.map(r => `
+      <tr>
+        <td>${escapeHtml(r.protocol)}</td>
+        <td>${escapeHtml(r.titulo.slice(0, 80))}</td>
+        <td>${escapeHtml(String(r.proj))}</td>
+        <td>${escapeHtml(String(r.intr))}</td>
+        <td>${escapeHtml(String(r.lang))}</td>
+        <td>${escapeHtml(r.total.toFixed(2))}</td>
+        <td>${escapeHtml(r.eliminado)}</td>
+        <td>${escapeHtml(r.reserva)}</td>
+      </tr>
+    `).join('');
+  }
+
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Comissão - Resultados</title>
+      <link rel="stylesheet" href="/theme.css" />
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header"><h1>Resultados (Ranking)</h1></header>
+        <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
+          <a class="btn-secondary" href="/admin">← Voltar</a>
+          <span class="admin-badge">Pesos: Projeto=4, Entrevista=5, Língua=1 (normalizados)</span>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Linha 1 – Planejamento Urbano-regional, Ambiental e de Comunidades Tradicionais</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th><th>Título</th><th>Proj (0–10)</th><th>Ent (0–10)</th><th>Língua (0–10)</th><th>Total</th><th>Eliminado</th><th>Vagas Reservadas</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${renderRankingRows(rowsLine1)}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Linha 2 – Políticas públicas, Planejamento Territorial e Participação Social</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th><th>Título</th><th>Proj (0–10)</th><th>Ent (0–10)</th><th>Língua (0–10)</th><th>Total</th><th>Eliminado</th><th>Vagas Reservadas</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${renderRankingRows(rowsLine2)}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        ${rowsOther.length ? `
+        <section class="panel">
+          <div class="panel-header"><h2>Outros</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th><th>Título</th><th>Proj (0–10)</th><th>Ent (0–10)</th><th>Língua (0–10)</th><th>Total</th><th>Eliminado</th><th>Vagas Reservadas</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${renderRankingRows(rowsOther)}
+              </tbody>
+            </table>
+          </div>
+        </section>` : ''}
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
+  const protocol = req.params.protocol;
+  const s = storage.getByProtocol(protocol);
+  if (!s) return res.status(404).send('Não encontrado');
+  const e = storage.getEvaluation(protocol) || {};
+
+  // Projeto rubric max values
+  const projectRubric = [
+    { key: 'proj_intro', label: '1 – Introdução / Contextualização', max: 1 },
+    { key: 'proj_problem', label: '2 – Problema ou questão de pesquisa', max: 1.5 },
+    { key: 'proj_just', label: '3 – Justificativa (relevância e viabilidade)', max: 1 },
+    { key: 'proj_objectives', label: '4 – Objetivos (geral e específicos)', max: 2 },
+    { key: 'proj_review', label: '5 – Revisão da literatura', max: 1 },
+    { key: 'proj_methods', label: '6 – Procedimentos metodológicos', max: 2.5 },
+    { key: 'proj_schedule', label: '7 – Cronograma (2 anos)', max: 0.5 },
+    { key: 'proj_refs', label: '8 – Referências (ABNT)', max: 0.5 },
+  ];
+
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Avaliação - ${escapeHtml(protocol)}</title>
+      <link rel="stylesheet" href="/theme.css" />
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header"><h1>Avaliação de Projeto</h1></header>
+        <div class="admin-actions" style="justify-content:center; gap:8px;">
+          <a class="btn-secondary" href="/committee">← Voltar</a>
+          <span class="admin-badge">Protocolo: ${escapeHtml(protocol)}</span>
+        </div>
+        <section class="panel">
+          <div class="panel-header"><h2>Ficha</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <div><strong>Título:</strong> ${escapeHtml(s.project?.titulo_pt || '')}</div>
+            <div><strong>Linha:</strong> ${escapeHtml(s.project?.area || '')}</div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-header"><h2>Avaliação</h2></div>
+          <div class="panel-body">
+            <form method="POST" action="/committee/evaluate/${encodeURIComponent(protocol)}">
+              <h3 style="color:#003366;">Projeto (3 Avaliadores)</h3>
+              <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                ${['Avaliador1','Avaliador2','Avaliador3'].map(who => {
+                  const prefix = `proj_${who.toLowerCase()}`;
+                  return `
+                    <div class="box">
+                      <div style="font-weight:bold; color:#003366; margin-bottom:6px;">${who}</div>
+                      ${projectRubric.map(item => {
+                        const key = `${prefix}_${item.key}`;
+                        const val = e[key] ?? '';
+                        return `
+                          <div class="form-group" style="margin-bottom:4px;">
+                            <label for="${key}">${escapeHtml(item.label)} (máx. ${item.max})</label>
+                            <input type="number" id="${key}" name="${key}" min="0" max="${item.max}" step="0.1" value="${escapeHtml(String(val))}" class="proj-input" />
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+
+              <div class="form-group" style="margin-top:8px;">
+                <label for="proj_potential_interview">O(a) candidato(a) tem potencial e deve passar para a fase da entrevista?</label>
+                <select id="proj_potential_interview" name="proj_potential_interview">
+                  ${['','Sim','Não'].map(opt => {
+                    const sel = String(e.proj_potential_interview || '') === opt ? 'selected' : '';
+                    return `<option value="${escapeHtml(opt)}" ${sel}>${escapeHtml(opt||'Selecione…')}</option>`;
+                  }).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="proj_justification">Justifique (pontos fortes e fracos do projeto)</label>
+                <textarea id="proj_justification" name="proj_justification" rows="4">${escapeHtml(String(e.proj_justification || ''))}</textarea>
+              </div>
+              <div class="form-group">
+                <label for="proj_interview_points">Aspectos a questionar na entrevista</label>
+                <textarea id="proj_interview_points" name="proj_interview_points" rows="3">${escapeHtml(String(e.proj_interview_points || ''))}</textarea>
+              </div>
+
+              <h3 style="color:#003366; margin-top:12px;">Entrevista (3 Avaliadores)</h3>
+              <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                ${['Avaliador1','Avaliador2','Avaliador3'].map((who, idx) => {
+                  const prefix = `int_${who.toLowerCase()}`;
+                  const ap = e[`${prefix}_apresentacao`] ?? '';
+                  const hp = e[`${prefix}_historico`] ?? '';
+                  const df = e[`${prefix}_defesa`] ?? '';
+                  const ji = e[`${prefix}_justificativa`] ?? '';
+                  return `
+                    <div class="box">
+                      <div style="font-weight:bold; color:#003366;">${who}</div>
+                      <div class="form-group" style="margin-bottom:4px;">
+                        <label for="${prefix}_apresentacao">Apresentação (máx. 3)</label>
+                        <input type="number" id="${prefix}_apresentacao" name="${prefix}_apresentacao" min="0" max="3" step="0.1" value="${escapeHtml(String(ap))}" class="int-input" />
+                      </div>
+                      <div class="form-group" style="margin-bottom:4px;">
+                        <label for="${prefix}_historico">Histórico Profissional (máx. 2)</label>
+                        <input type="number" id="${prefix}_historico" name="${prefix}_historico" min="0" max="2" step="0.1" value="${escapeHtml(String(hp))}" class="int-input" />
+                      </div>
+                      <div class="form-group" style="margin-bottom:4px;">
+                        <label for="${prefix}_defesa">Defesa da proposta (máx. 3)</label>
+                        <input type="number" id="${prefix}_defesa" name="${prefix}_defesa" min="0" max="3" step="0.1" value="${escapeHtml(String(df))}" class="int-input" />
+                      </div>
+                      <div class="form-group" style="margin-bottom:4px;">
+                        <label for="${prefix}_justificativa">Justificativa/interesse + disponibilidade (máx. 2)</label>
+                        <input type="number" id="${prefix}_justificativa" name="${prefix}_justificativa" min="0" max="2" step="0.1" value="${escapeHtml(String(ji))}" class="int-input" />
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <h3 style="color:#003366; margin-top:12px;">Prova de Língua (3 Avaliadores)</h3>
+              <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                ${['Avaliador1','Avaliador2','Avaliador3'].map(who => {
+                  const prefix = `lang_${who.toLowerCase()}`;
+                  const c = e[`${prefix}_clareza`] ?? '';
+                  const d = e[`${prefix}_domino`] ?? '';
+                  const a = e[`${prefix}_analise`] ?? '';
+                  return `
+                    <div class="box">
+                      <div style="font-weight:bold; color:#003366;">${who}</div>
+                      <div class="form-group" style="margin-bottom:4px;">
+                        <label for="${prefix}_clareza">Clareza e Coesão (0-10)</label>
+                        <input type="number" id="${prefix}_clareza" name="${prefix}_clareza" min="0" max="10" step="0.1" value="${escapeHtml(String(c))}" class="lang-input" />
+                      </div>
+                      <div class="form-group" style="margin-bottom:4px;">
+                        <label for="${prefix}_domino">Domínio do Conteúdo (0-10)</label>
+                        <input type="number" id="${prefix}_domino" name="${prefix}_domino" min="0" max="10" step="0.1" value="${escapeHtml(String(d))}" class="lang-input" />
+                      </div>
+                      <div class="form-group" style="margin-bottom:4px;">
+                        <label for="${prefix}_analise">Análise Crítica (0-10)</label>
+                        <input type="number" id="${prefix}_analise" name="${prefix}_analise" min="0" max="10" step="0.1" value="${escapeHtml(String(a))}" class="lang-input" />
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+              <div class="hint" style="margin-top:6px;">Total da prova (por avaliador) = (Clareza*0,3) + (Domínio*0,4) + (Análise*0,3)</div>
+              <div class="form-group" style="margin-top:8px;">
+                <label for="lang_total_calc">Nota da Prova de Língua (0-10) - Média dos 3</label>
+                <input type="text" id="lang_total_calc" readonly style="background-color:#eee; font-weight:bold;" value="${escapeHtml(String(e.lang_total ? e.lang_total.toFixed(2) : ''))}" />
+              </div>
+              <div class="form-group">
+                <label for="nota_projeto">Nota do Projeto (0-10) - Média dos 3</label>
+                <input type="number" id="nota_projeto" name="nota_projeto" min="0" max="10" step="0.1" readonly style="background-color:#eee;" value="${escapeHtml(String(e.nota_projeto || ''))}" />
+              </div>
+              <div class="form-group">
+                <label for="nota_entrevista">Nota da Entrevista (0-10) - Média dos 3</label>
+                <input type="number" id="nota_entrevista" name="nota_entrevista" min="0" max="10" step="0.1" readonly style="background-color:#eee;" value="${escapeHtml(String(e.nota_entrevista || ''))}" />
+              </div>
+              <div class="form-group">
+                <label for="eliminado">Eliminação</label>
+                <select id="eliminado" name="eliminado">
+                  ${['Não','Sim'].map(opt => {
+                    const sel = String(e.eliminado ? 'Sim' : 'Não') === opt ? 'selected' : '';
+                    return `<option value="${escapeHtml(opt)}" ${sel}>${escapeHtml(opt)}</option>`;
+                  }).join('')}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="observacoes">Observações</label>
+                <textarea id="observacoes" name="observacoes" rows="4">${escapeHtml(String(e.observacoes || ''))}</textarea>
+              </div>
+              <div class="admin-actions" style="justify-content:center;">
+                <button class="btn-primary" type="submit">Salvar avaliação</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+      <script>
+        (function() {
+          // Project fields
+          const projKeys = ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs'];
+          const projInputs = projKeys.map(k => document.getElementById(k));
+          const notaProjeto = document.getElementById('nota_projeto');
+
+          // Interview fields
+          const intPrefixes = ['int_avaliador1','int_avaliador2','int_avaliador3'];
+          const intSuffixes = ['_apresentacao','_historico','_defesa','_justificativa'];
+          const intInputs = [];
+          intPrefixes.forEach(p => {
+            intSuffixes.forEach(s => {
+              const el = document.getElementById(p + s);
+              if (el) intInputs.push(el);
+            });
+          });
+          const notaEntrevista = document.getElementById('nota_entrevista');
+
+          // Language fields
+          const langClareza = document.getElementById('lang_clareza');
+          const langDomino = document.getElementById('lang_domino');
+          const langAnalise = document.getElementById('lang_analise');
+          const langTotalCalc = document.getElementById('lang_total_calc');
+
+          function calcProject() {
+            let sum = 0;
+            projInputs.forEach(el => {
+              if (el) sum += parseFloat(el.value) || 0;
+            });
+            // Project rubric sums to 10.
+            if (notaProjeto) notaProjeto.value = sum.toFixed(2);
+          }
+
+          function calcInterview() {
+            let sum = 0;
+            intInputs.forEach(el => {
+              if (el) sum += parseFloat(el.value) || 0;
+            });
+            // Interview rubric: 3 evaluators * 10 points = 30 max.
+            // Convert to 0-10: (sum / 30) * 10
+            if (notaEntrevista) notaEntrevista.value = ((sum / 30) * 10).toFixed(2);
+          }
+
+          function calcLanguage() {
+            const c = parseFloat(langClareza.value) || 0;
+            const d = parseFloat(langDomino.value) || 0;
+            const a = parseFloat(langAnalise.value) || 0;
+            const total = (c * 0.3) + (d * 0.4) + (a * 0.3);
+            if (langTotalCalc) langTotalCalc.value = total.toFixed(2);
+          }
+
+          // Attach listeners
+          projInputs.forEach(el => { if(el) el.addEventListener('input', calcProject); });
+          intInputs.forEach(el => { if(el) el.addEventListener('input', calcInterview); });
+          
+          if (langClareza) langClareza.addEventListener('input', calcLanguage);
+          if (langDomino) langDomino.addEventListener('input', calcLanguage);
+          if (langAnalise) langAnalise.addEventListener('input', calcLanguage);
+        })();
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
+  const protocol = req.params.protocol;
+  const s = storage.getByProtocol(protocol);
+  if (!s) return res.status(404).send('Não encontrado');
+
+  const evaluators = ['avaliador1','avaliador2','avaliador3'];
+
+  // Projeto: 3 avaliadores, cada um com 8 itens
+  const projectKeys = ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs'];
+  const projectScores = {};
+  let projSum = 0;
+  
+  evaluators.forEach(who => {
+    projectKeys.forEach(k => {
+      const key = `proj_${who}_${k}`;
+      const v = Number(req.body?.[key] ?? '0');
+      projectScores[key] = v;
+      projSum += v;
+    });
+  });
+  // Average (0-10) = Sum / 3
+  const projTotal = (projSum / 3);
+
+  // Entrevista: 3 avaliadores, cada com 4 itens
+  const interviewScores = {};
+  let intSum = 0;
+  evaluators.forEach(who => {
+    const prefix = `int_${who}`;
+    const ap = Number(req.body?.[`${prefix}_apresentacao`] ?? '0');
+    const hp = Number(req.body?.[`${prefix}_historico`] ?? '0');
+    const df = Number(req.body?.[`${prefix}_defesa`] ?? '0');
+    const ji = Number(req.body?.[`${prefix}_justificativa`] ?? '0');
+    interviewScores[`${prefix}_apresentacao`] = ap;
+    interviewScores[`${prefix}_historico`] = hp;
+    interviewScores[`${prefix}_defesa`] = df;
+    interviewScores[`${prefix}_justificativa`] = ji;
+    intSum += ap + hp + df + ji;
+  });
+  // Average (0-10) = Sum / 3
+  const intTotal = (intSum / 3);
+
+  const proj_possible_supervisor = String(req.body?.proj_possible_supervisor || '');
+  const proj_potential_interview = String(req.body?.proj_potential_interview || '');
+  const proj_justification = String(req.body?.proj_justification || '').slice(0, 4000);
+  const proj_interview_points = String(req.body?.proj_interview_points || '').slice(0, 4000);
+
+  const eliminado = String(req.body?.eliminado || 'Não') === 'Sim';
+  const observacoes = String(req.body?.observacoes || '').slice(0, 2000);
+
+  // Prova de língua: 3 avaliadores
+  const langScores = {};
+  let langSum = 0;
+  evaluators.forEach(who => {
+    const prefix = `lang_${who}`;
+    const c = Number(req.body?.[`${prefix}_clareza`] ?? '0');
+    const d = Number(req.body?.[`${prefix}_domino`] ?? '0');
+    const a = Number(req.body?.[`${prefix}_analise`] ?? '0');
+    langScores[`${prefix}_clareza`] = c;
+    langScores[`${prefix}_domino`] = d;
+    langScores[`${prefix}_analise`] = a;
+    // Weighted sum per evaluator
+    langSum += (c * 0.3) + (d * 0.4) + (a * 0.3);
+  });
+  // Average (0-10) = Sum / 3
+  const lang_total = (langSum / 3);
+
+  storage.upsertEvaluation({
+    protocol,
+    // Projeto detalhado
+    ...projectScores,
+    proj_total: projTotal,
+    proj_possible_supervisor,
+    proj_potential_interview,
+    proj_justification,
+    proj_interview_points,
+    // Entrevista detalhada
+    ...interviewScores,
+    int_total: intTotal,
+    // Língua
+    ...langScores,
+    lang_total,
+    eliminado,
+    observacoes,
+  });
+  return res.redirect(`/committee/evaluate/${encodeURIComponent(protocol)}`);
 });
 
 app.post('/admin/submission/:protocol', basicAuth, (req, res) => {

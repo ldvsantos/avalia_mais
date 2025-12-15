@@ -3,11 +3,15 @@ const path = require('path');
 
 const DATA_DIR = path.join(__dirname, 'data');
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
+const EVALUATIONS_FILE = path.join(DATA_DIR, 'evaluations.json');
 
 function ensureFile() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(SUBMISSIONS_FILE)) {
     fs.writeFileSync(SUBMISSIONS_FILE, JSON.stringify({ submissions: [] }, null, 2), 'utf8');
+  }
+  if (!fs.existsSync(EVALUATIONS_FILE)) {
+    fs.writeFileSync(EVALUATIONS_FILE, JSON.stringify({ evaluations: [] }, null, 2), 'utf8');
   }
 }
 
@@ -26,6 +30,23 @@ function readAll() {
 function writeAll(data) {
   ensureFile();
   fs.writeFileSync(SUBMISSIONS_FILE, JSON.stringify(data, null, 2), 'utf8');
+}
+
+function readAllEvaluations() {
+  ensureFile();
+  const raw = fs.readFileSync(EVALUATIONS_FILE, 'utf8');
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.evaluations)) return { evaluations: [] };
+    return parsed;
+  } catch {
+    return { evaluations: [] };
+  }
+}
+
+function writeAllEvaluations(data) {
+  ensureFile();
+  fs.writeFileSync(EVALUATIONS_FILE, JSON.stringify(data, null, 2), 'utf8');
 }
 
 function listSubmissions() {
@@ -71,6 +92,30 @@ function clearAllSubmissions() {
   writeAll({ submissions: [] });
 }
 
+function upsertEvaluation(evaluation) {
+  // evaluation: { protocol, nota_projeto, nota_entrevista, eliminado, observacoes }
+  const data = readAllEvaluations();
+  const idx = data.evaluations.findIndex(e => e.protocol === evaluation.protocol);
+  const next = {
+    ...data.evaluations[idx] || {},
+    ...evaluation,
+    updatedAt: new Date().toISOString(),
+  };
+  if (idx === -1) data.evaluations.push(next); else data.evaluations[idx] = next;
+  writeAllEvaluations(data);
+  return next;
+}
+
+function listEvaluations() {
+  const { evaluations } = readAllEvaluations();
+  return evaluations.slice();
+}
+
+function getEvaluation(protocol) {
+  const { evaluations } = readAllEvaluations();
+  return evaluations.find(e => e.protocol === protocol) || null;
+}
+
 module.exports = {
   listSubmissions,
   getByProtocol,
@@ -78,4 +123,7 @@ module.exports = {
   addSubmission,
   updateByProtocol,
   clearAllSubmissions,
+  upsertEvaluation,
+  listEvaluations,
+  getEvaluation,
 };
