@@ -1,0 +1,161 @@
+body {
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 20px;
+    color: #000;
+    font-size: 11px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 10px;
+    border: 1px solid #003366;
+}
+
+.main-header {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #003366;
+    border-bottom: 2px solid #003366;
+    padding-bottom: 10px;
+}
+
+.main-header h1 {
+    font-size: 16px;
+    margin: 0;
+    font-weight: bold;
+}
+
+.panel {
+    border: 1px solid #86A3C2;
+    margin-bottom: 10px;
+    background-color: #fff;
+}
+
+.panel-header {
+    background: #D0E5F5 url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0iZyIgeDE9IjAlIiB4Mj0iMCUiIHkxPSIwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNlMGVmZjkiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNkMGU1ZjUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2cpIi8+PC9zdmc+'); /* Fallback SVG gradient */
+    background: -webkit-linear-gradient(top, #e0eff9 0%, #d0e5f5 100%);
+    background: linear-gradient(to bottom, #e0eff9 0%, #d0e5f5 100%);
+    padding: 4px 10px;
+    border-bottom: 1px solid #86A3C2;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 11px;
+    color: #003366;
+    font-weight: bold;
+    text-transform: none;
+}
+
+.panel-body {
+    padding: 10px;
+    background-color: #F4F9FD;
+}
+
+.instructions {
+    font-size: 11px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 5px;
+    margin: 5px;
+}
+
+.form-group {
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    font-weight: bold;
+    margin-bottom: 2px;
+    font-size: 11px;
+    color: #003366;
+}
+
+input[type="text"], textarea, select {
+    width: 100%;
+    padding: 3px;
+    border: 1px solid #7F9DB9;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    background-color: #fff;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.counter {
+    text-align: right;
+    font-size: 10px;
+    color: #003366;
+    margin-top: 1px;
+}
+
+.actions-bar {
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.btn-primary {
+    background-color: #003366;
+    color: white;
+    border: 1px solid #002244;
+    padding: 5px 15px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: Verdana, Arial, sans-serif;
+}
+
+.btn-primary:hover {
+    background-color: #004488;
+}
+
+.field-feedback {
+    margin-top: 4px;
+    font-size: 12px;
+    font-family: Verdana, Arial, sans-serif;
+}
+
+.field-feedback.error {
+    color: red;
+}
+
+/* PDF Specific Styles - Applied to the clone */
+.pdf-text-element {
+    border: 1px solid #ccc;
+    padding: 5px;
+    background-color: #fff;
+    min-height: 20px;
+.btn-secondary {
+     background-color: #e9ecef;
+     color: #212529;
+     border: 1px solid #ced4da;
+    padding: 5px 15px;
+    font-size: 12px;
+     cursor: pointer;
+    font-weight: bold;
+    font-family: Verdana, Arial, sans-serif;
+}
+    white-space: pre-wrap;
+    font-size: 11px;
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    color: #000;
+    margin-top: 2px;
+}
+
+.pdf-header-info {
+    font-weight: bold;
+    color: #003366;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+}

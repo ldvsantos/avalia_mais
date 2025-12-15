@@ -1,0 +1,879 @@
+function updateCounter(element, maxLimit) {
+    const currentLength = element.value.length;
+    const remaining = maxLimit - currentLength;
+    const counterId = element.id + '-counter';
+    const counterElement = document.getElementById(counterId);
+    
+    if (counterElement) {
+        counterElement.textContent = remaining;
+        if (remaining < 0) {
+            counterElement.style.color = 'red';
+        } else {
+            counterElement.style.color = '#003366';
+        }
+    }
+}
+
+function generateRegistrationNumber() {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `2025-PLANTERR-${timestamp}-${random}`;
+}
+
+function formatCPF(value) {
+    const digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+    const p1 = digits.slice(0, 3);
+    const p2 = digits.slice(3, 6);
+    const p3 = digits.slice(6, 9);
+    const p4 = digits.slice(9, 11);
+    let out = p1;
+    if (p2) out += `.${p2}`;
+    if (p3) out += `.${p3}`;
+    if (p4) out += `-${p4}`;
+    return out;
+}
+
+function isValidCPF(raw) {
+    const cpf = String(raw || '').replace(/\D/g, '');
+    if (cpf.length !== 11) return false;
+    if (/^(\d)\1{10}$/.test(cpf)) return false; // 000... 111... etc.
+    if (cpf === '01234567890' || cpf === '12345678909') return false;
+
+    const digits = cpf.split('').map(Number);
+    const calcDV = (baseLen) => {
+        let sum = 0;
+        for (let i = 0; i < baseLen; i++) {
+            sum += digits[i] * ((baseLen + 1) - i);
+        }
+        const mod = sum % 11;
+        return mod < 2 ? 0 : 11 - mod;
+    };
+
+    const dv1 = calcDV(9);
+    const dv2 = calcDV(10);
+    return dv1 === digits[9] && dv2 === digits[10];
+}
+
+function setFeedback(elementId, message) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.textContent = message || '';
+    el.classList.toggle('error', Boolean(message));
+}
+
+function updateCpfFeedback() {
+    const cpfInput = document.getElementById('cpf');
+    if (!cpfInput) return;
+    const digits = cpfInput.value.replace(/\D/g, '');
+
+    if (!digits) {
+        setFeedback('cpf-feedback', '');
+        return;
+    }
+
+    if (digits.length < 11) {
+        setFeedback('cpf-feedback', 'CPF incompleto (digite 11 dígitos).');
+        return;
+    }
+
+    if (!isValidCPF(cpfInput.value)) {
+        setFeedback('cpf-feedback', 'CPF inválido.');
+        return;
+    }
+
+    setFeedback('cpf-feedback', '');
+}
+
+function updateTermoFeedback() {
+    const termo = document.getElementById('termo_compromisso');
+    if (!termo) return;
+    setFeedback('termo-feedback', termo.checked ? '' : 'Obrigatório marcar a declaração para gerar o PDF.');
+}
+
+const FORM_VERSION = '2025-12-15';
+
+function detectPersonalInfoInProject(text) {
+    const t = String(text || '');
+    if (!t.trim()) return false;
+    const cpfLike = /\b\d{3}\.?\d{3}\.?\d{3}-?\d{2}\b/;
+    const emailLike = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+    const phoneLike = /\b\(?\d{2}\)?\s?9?\d{4}-?\d{4}\b/;
+    return cpfLike.test(t) || emailLike.test(t) || phoneLike.test(t);
+}
+
+async function registerSubmissionOnServer(payload) {
+    const res = await fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            ...payload,
+            form_version: FORM_VERSION,
+            website: document.getElementById('website')?.value || ''
+        })
+    });
+
+    let body;
+    try { body = await res.json(); } catch { body = null; }
+
+    if (!res.ok) {
+        const msg = body?.error ? String(body.error) : 'Falha ao registrar inscrição no servidor.';
+        throw new Error(msg);
+    }
+
+    return body;
+}
+
+async function generatePDF() {
+    console.log("Iniciando geração do PDF...");
+
+    const MAX_RESUMO = 1800;
+    const MAX_OBJETIVO_GERAL = 200;
+    const limitText = (value, maxLen) => String(value || '').slice(0, maxLen);
+    
+    const cpfInput = document.getElementById('cpf');
+    const cpf = cpfInput.value.replace(/\D/g, '');
+
+    if (!isValidCPF(cpfInput.value)) {
+        alert('Por favor, insira um CPF válido.');
+        return;
+    }
+
+    const termo = document.getElementById('termo_compromisso');
+    if (!termo?.checked) {
+        alert('Você precisa marcar a declaração de concordância para gerar o PDF.');
+        return;
+    }
+
+    // Blind review: bloquear dados pessoais dentro do projeto
+    const projectText = [
+        document.getElementById('titulo_pt')?.value,
+        document.getElementById('titulo_en')?.value,
+        document.getElementById('palavras_pt')?.value,
+        document.getElementById('palavras_en')?.value,
+        limitText(document.getElementById('resumo')?.value, MAX_RESUMO),
+        document.getElementById('justificativa_enquadramento')?.value,
+        document.getElementById('introducao')?.value,
+        document.getElementById('problema_pesquisa')?.value,
+        document.getElementById('justificativa_relevancia')?.value,
+        limitText(document.getElementById('objetivo_geral')?.value, MAX_OBJETIVO_GERAL),
+        document.getElementById('objetivos_especificos')?.value,
+        document.getElementById('revisao_literatura')?.value,
+        document.getElementById('procedimentos_metodologicos')?.value,
+        document.getElementById('cronograma')?.value,
+        document.getElementById('referencias')?.value,
+    ].join('\n');
+
+    if (detectPersonalInfoInProject(projectText)) {
+        alert('Atenção: foi detectado possível dado pessoal (CPF/e-mail/telefone) nos campos do projeto. Remova para manter a avaliação às cegas.');
+        return;
+    }
+
+    /*
+    const submittedCPFs = JSON.parse(localStorage.getItem('planterr_submitted_cpfs') || '[]');
+    if (submittedCPFs.includes(cpf)) {
+        alert('Este CPF já possui uma inscrição gerada. Não é permitido gerar mais de uma inscrição.');
+        return;
+    }
+    */
+    const submittedCPFs = []; // Mock para evitar erro de referência abaixo
+
+    // Helper functions for form data
+    const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+    const getCheckboxes = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value).join(', ');
+
+    // Feedback visual imediato
+    const btn = document.querySelector('button[onclick="generatePDF()"]');
+    const originalText = btn ? btn.innerText : 'Gerar PDF';
+    if (btn) btn.innerText = 'Registrando...';
+
+    let serverReceipt;
+    try {
+        serverReceipt = await registerSubmissionOnServer({
+            // Ficha
+            nome: document.getElementById('nome').value,
+            nome_social: document.getElementById('nome_social').value,
+            data_nascimento: document.getElementById('data_nascimento').value,
+            cpf: document.getElementById('cpf').value,
+            rg: document.getElementById('rg').value,
+            orgao_expedidor: document.getElementById('orgao_expedidor').value,
+            data_expedicao: document.getElementById('data_expedicao').value,
+            endereco: document.getElementById('endereco').value,
+            cidade_estado: document.getElementById('cidade_estado').value,
+            cep: document.getElementById('cep').value,
+            celular: document.getElementById('celular').value,
+            telefone_residencial: document.getElementById('telefone_residencial').value,
+            email: document.getElementById('email').value,
+            curso_graduacao: document.getElementById('curso_graduacao').value,
+            instituicao: document.getElementById('instituicao').value,
+            ano_conclusao: document.getElementById('ano_conclusao').value,
+            vaga_institucional: getRadio('vaga_institucional'),
+            vaga_cooperacao: getRadio('vaga_cooperacao'),
+            vaga_reservada: getRadio('vaga_reservada'),
+            cotas: getCheckboxes('cotas'),
+            raca_cor: document.getElementById('raca_cor').value,
+            lingua_estrangeira: getRadio('lingua_estrangeira'),
+            vinculo_empregaticio: getRadio('vinculo_empregaticio'),
+            carga_horaria: document.getElementById('carga_horaria').value,
+            empresa_vinculo: document.getElementById('empresa_vinculo').value,
+            termo_compromisso: document.getElementById('termo_compromisso')?.checked ? 'Concordo' : 'Não concordo',
+
+            // Projeto
+            titulo_pt: document.getElementById('titulo_pt').value,
+            titulo_en: document.getElementById('titulo_en').value,
+            area: document.getElementById('area').value,
+            palavras_pt: document.getElementById('palavras_pt').value,
+            palavras_en: document.getElementById('palavras_en').value,
+            resumo: limitText(document.getElementById('resumo').value, MAX_RESUMO),
+            justificativa_enquadramento: document.getElementById('justificativa_enquadramento')?.value || '',
+            introducao: document.getElementById('introducao')?.value || '',
+            problema_pesquisa: document.getElementById('problema_pesquisa')?.value || '',
+            justificativa_relevancia: document.getElementById('justificativa_relevancia')?.value || '',
+            objetivo_geral: limitText(document.getElementById('objetivo_geral')?.value || '', MAX_OBJETIVO_GERAL),
+            objetivos_especificos: document.getElementById('objetivos_especificos')?.value || '',
+            revisao_literatura: document.getElementById('revisao_literatura')?.value || '',
+            procedimentos_metodologicos: document.getElementById('procedimentos_metodologicos')?.value || '',
+            cronograma: document.getElementById('cronograma')?.value || '',
+            referencias: document.getElementById('referencias')?.value || ''
+        });
+    } catch (e) {
+        if (btn) btn.innerText = originalText;
+        alert(`Não foi possível registrar a inscrição no servidor.\n\nDetalhe: ${e.message}`);
+        return;
+    }
+
+    const registrationNumber = serverReceipt.protocol;
+
+    if (btn) btn.innerText = 'Gerando...';
+
+    // Coletar todos os dados do formulário
+    const formData = {
+        inscricao: registrationNumber,
+        hash_verificacao: serverReceipt.hash,
+        data_registro: serverReceipt.createdAt,
+        // Ficha de Inscrição
+        nome: document.getElementById('nome').value,
+        nome_social: document.getElementById('nome_social').value,
+        data_nascimento: document.getElementById('data_nascimento').value,
+        cpf: document.getElementById('cpf').value,
+        rg: document.getElementById('rg').value,
+        orgao_expedidor: document.getElementById('orgao_expedidor').value,
+        data_expedicao: document.getElementById('data_expedicao').value,
+        endereco: document.getElementById('endereco').value,
+        cidade_estado: document.getElementById('cidade_estado').value,
+        cep: document.getElementById('cep').value,
+        celular: document.getElementById('celular').value,
+        telefone_residencial: document.getElementById('telefone_residencial').value,
+        email: document.getElementById('email').value,
+        curso_graduacao: document.getElementById('curso_graduacao').value,
+        instituicao: document.getElementById('instituicao').value,
+        ano_conclusao: document.getElementById('ano_conclusao').value,
+        vaga_institucional: getRadio('vaga_institucional'),
+        vaga_cooperacao: getRadio('vaga_cooperacao'),
+        vaga_reservada: getRadio('vaga_reservada'),
+        cotas: getCheckboxes('cotas'),
+        raca_cor: document.getElementById('raca_cor').value,
+        lingua_estrangeira: getRadio('lingua_estrangeira'),
+        vinculo_empregaticio: getRadio('vinculo_empregaticio'),
+        carga_horaria: document.getElementById('carga_horaria').value,
+        empresa_vinculo: document.getElementById('empresa_vinculo').value,
+
+        // Projeto
+        titulo_pt: document.getElementById('titulo_pt').value,
+        titulo_en: document.getElementById('titulo_en').value,
+        area: document.getElementById('area').value,
+        palavras_pt: document.getElementById('palavras_pt').value,
+        palavras_en: document.getElementById('palavras_en').value,
+        resumo: limitText(document.getElementById('resumo').value, MAX_RESUMO),
+        justificativa_enquadramento: document.getElementById('justificativa_enquadramento')?.value || '',
+        introducao: document.getElementById('introducao')?.value || '',
+        problema_pesquisa: document.getElementById('problema_pesquisa')?.value || '',
+        justificativa_relevancia: document.getElementById('justificativa_relevancia')?.value || '',
+        objetivo_geral: limitText(document.getElementById('objetivo_geral')?.value || '', MAX_OBJETIVO_GERAL),
+        objetivos_especificos: document.getElementById('objetivos_especificos')?.value || '',
+        revisao_literatura: document.getElementById('revisao_literatura')?.value || '',
+        procedimentos_metodologicos: document.getElementById('procedimentos_metodologicos')?.value || '',
+        cronograma: document.getElementById('cronograma')?.value || '',
+        referencias: document.getElementById('referencias')?.value || ''
+    };
+    // Termo de Compromisso
+    formData.termo_compromisso = document.getElementById('termo_compromisso')?.checked ? 'Concordo' : 'Não concordo';
+
+    // Criar HTML para o PDF
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Projeto Planterr - ${registrationNumber}</title>
+            <link rel="stylesheet" href="/theme.css">
+            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
+            <style>
+                @page { size: A4; margin: 14mm; }
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                html, body { width: 100%; margin: 0; padding: 0; }
+                body {
+                    font-family: Verdana, Arial, Helvetica, sans-serif;
+                    font-size: 11px;
+                    color: #000;
+                    padding: 0;
+                    line-height: 1.3;
+                    background: #fff;
+                    overflow-x: hidden;
+                }
+                /* Margem interna de segurança (ajuda quando o driver ignora parte do @page) */
+                .content { padding: 0 2mm; max-width: 100%; }
+                
+                /* Header Styles (evita "estourar" a área imprimível) */
+                .header-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    justify-content: space-between;
+                    width: 100%;
+                    max-width: 100%;
+                    border-bottom: 2px solid #003366;
+                    padding-bottom: 10px;
+                    margin-bottom: 15px;
+                    overflow: hidden;
+                }
+                .header-left {
+                    flex: 0 0 18%;
+                    max-width: 18%;
+                }
+                .header-left img {
+                    display: block;
+                    max-width: 100%;
+                    height: auto;
+                    max-height: 45px;
+                }
+                .header-center {
+                    flex: 1 1 auto;
+                    min-width: 0;
+                    text-align: center;
+                    font-size: 14px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    color: #003366;
+                }
+                .header-right {
+                    flex: 0 0 32%;
+                    max-width: 32%;
+                    min-width: 0;
+                    text-align: right;
+                    font-size: 10px;
+                }
+                .barcode-container {
+                    margin-top: 5px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: flex-end;
+                    overflow: hidden;
+                    max-width: 100%;
+                }
+                svg { max-width: 100% !important; }
+                #barcode, #barcode2 { height: 30px; width: 100% !important; max-width: 100% !important; }
+
+                /* Table Styles for Ficha (Page 1) */
+                table.ficha-table {
+                    width: 100%;
+                    max-width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 20px;
+                    table-layout: fixed;
+                    page-break-inside: auto;
+                }
+                table.ficha-table, table.ficha-table tr, table.ficha-table td {
+                    box-sizing: border-box;
+                }
+                table.ficha-table tr {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+                table.ficha-table td {
+                    border: 1px solid #003366;
+                    padding: 4px;
+                    vertical-align: top;
+                    word-wrap: break-word;
+                    overflow-wrap: anywhere;
+                    background: #fff;
+                }
+                table.ficha-table tr.declaration-row {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+                .declaration-block {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+                .label { display: block; font-weight: bold; margin-bottom: 3px; font-size: 10px; color: #003366; }
+                .value { display: block; min-height: 15px; }
+
+                /* Section Styles for Projeto (Page 2 - Old Style) */
+                .section { margin-bottom: 10px; border: 1px solid #86A3C2; padding: 10px; background-color: #F4F9FD; }
+                .section-title {
+                    font-weight: bold;
+                    color: #003366;
+                    margin: -10px -10px 10px -10px;
+                    font-size: 11px;
+                    padding: 4px 10px;
+                    border-bottom: 1px solid #86A3C2;
+                    background: -webkit-linear-gradient(top, #e0eff9 0%, #d0e5f5 100%);
+                    background: linear-gradient(to bottom, #e0eff9 0%, #d0e5f5 100%);
+                }
+                .field { margin-bottom: 8px; }
+                .field {
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+                .field-label { font-weight: bold; color: #003366; font-size: 11px; margin-bottom: 2px; }
+                .field-value { padding: 4px; background-color: #fff; border: 1px solid #7F9DB9; min-height: 18px; white-space: pre-wrap; word-wrap: break-word; font-size: 11px; }
+
+                .cut-line {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-top: 10px;
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+                .cut-line::before,
+                .cut-line::after {
+                    content: "";
+                    flex: 1;
+                    border-top: 1px dashed #003366;
+                }
+                .cut-line span {
+                    font-size: 10px;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                    white-space: nowrap;
+                }
+                
+                .page-break { 
+                    display: block;
+                    height: 0; 
+                    page-break-before: always; 
+                    break-before: page;
+                    margin: 0;
+                }
+                
+                @media print { 
+                    body { padding: 0; } 
+                    .page-break { page-break-before: always; break-before: page; }
+                    .section { break-inside: auto; }
+                    .section-title { page-break-after: avoid; break-after: avoid; }
+                    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="content">
+            <!-- PÁGINA 1: FICHA DE INSCRIÇÃO (TABELA) -->
+            <div class="page-1">
+                <div class="header-container">
+                    <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
+                    <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO</div>
+                    <div class="header-right">
+                        <div><strong>Processo:</strong> ${registrationNumber}</div>
+                        <div><strong>Registro:</strong> ${new Date(formData.data_registro).toLocaleString('pt-BR')}</div>
+                        <div style="font-size:8px; word-break:break-all;"><strong>Hash:</strong> ${formData.hash_verificacao}</div>
+                        <div class="barcode-container"><svg id="barcode"></svg></div>
+                    </div>
+                </div>
+
+                <table class="ficha-table">
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Nome do/a candidato/a (civilmente registrado):</span>
+                            <span class="value">${escapeHtml(formData.nome)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Nome Social:</span>
+                            <span class="value">${escapeHtml(formData.nome_social)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="width: 50%">
+                            <span class="label">Data de Nascimento:</span>
+                            <span class="value">${escapeHtml(formData.data_nascimento)}</span>
+                        </td>
+                        <td colspan="2" style="width: 50%">
+                            <span class="label">CPF:</span>
+                            <span class="value">${escapeHtml(formData.cpf)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="width: 25%">
+                            <span class="label">Nº RG:</span>
+                            <span class="value">${escapeHtml(formData.rg)}</span>
+                        </td>
+                        <td style="width: 25%">
+                            <span class="label">Órgão Expedidor:</span>
+                            <span class="value">${escapeHtml(formData.orgao_expedidor)}</span>
+                        </td>
+                        <td colspan="2" style="width: 50%">
+                            <span class="label">Data Expedição:</span>
+                            <span class="value">${escapeHtml(formData.data_expedicao)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Endereço completo:</span>
+                            <span class="value">${escapeHtml(formData.endereco)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="width: 75%">
+                            <span class="label">Cidade/Estado:</span>
+                            <span class="value">${escapeHtml(formData.cidade_estado)}</span>
+                        </td>
+                        <td style="width: 25%">
+                            <span class="label">CEP:</span>
+                            <span class="value">${escapeHtml(formData.cep)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="width: 50%">
+                            <span class="label">Celular:</span>
+                            <span class="value">${escapeHtml(formData.celular)}</span>
+                        </td>
+                        <td colspan="2" style="width: 50%">
+                            <span class="label">Telefone residencial:</span>
+                            <span class="value">${escapeHtml(formData.telefone_residencial)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">E-mail:</span>
+                            <span class="value">${escapeHtml(formData.email)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Curso de Graduação:</span>
+                            <span class="value">${escapeHtml(formData.curso_graduacao)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" style="width: 75%">
+                            <span class="label">Instituição:</span>
+                            <span class="value">${escapeHtml(formData.instituicao)}</span>
+                        </td>
+                        <td style="width: 25%">
+                            <span class="label">Ano de Conclusão:</span>
+                            <span class="value">${escapeHtml(formData.ano_conclusao)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <span class="label">Candidato a Vaga Institucional (servidor docente ou técnico efetivo da UEFS):</span>
+                        </td>
+                        <td>
+                            <span class="value">${escapeHtml(formData.vaga_institucional)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <span class="label">Candidato a Vaga pelo Termo de Cooperação N° 004/2024 (funcionário da SDR):</span>
+                        </td>
+                        <td>
+                            <span class="value">${escapeHtml(formData.vaga_cooperacao)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="width: 50%">
+                            <span class="label">Candidato à Vaga Reservada:</span>
+                            <span class="value">${escapeHtml(formData.vaga_reservada)}</span>
+                        </td>
+                        <td colspan="2" style="width: 50%">
+                            <span class="label">Cotas:</span>
+                            <span class="value">${escapeHtml(formData.cotas)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Raça/Cor:</span>
+                            <span class="value">${escapeHtml(formData.raca_cor)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Língua Estrangeira para realização da prova escrita:</span>
+                            <span class="value">${escapeHtml(formData.lingua_estrangeira)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Possui vínculo empregatício:</span>
+                            <span class="value">${escapeHtml(formData.vinculo_empregaticio)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Carga Horária:</span>
+                            <span class="value">${escapeHtml(formData.carga_horaria)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Empresa/entidade ao qual está vinculado (se possuir vínculo empregatício):</span>
+                            <span class="value">${escapeHtml(formData.empresa_vinculo)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Título do Anteprojeto:</span>
+                            <span class="value">${escapeHtml(formData.titulo_pt)}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <span class="label">Linha de Pesquisa:</span>
+                            <span class="value">${escapeHtml(formData.area)}</span>
+                        </td>
+                    </tr>
+                    <tr class="declaration-row">
+                        <td colspan="4">
+                            <div class="declaration-block" style="font-size:10px; line-height:1.4; text-align:justify;">
+                                Declaro que, em sendo aprovado/a no processo seletivo, tenho disponibilidade para realizar, de forma presencial nas dependências da UEFS, todas as atividades do Programa de Pós-Graduação em Planejamento Territorial (PLANTERR) – Mestrado Profissional.
+                                <br><br>
+                                <div style="display:flex; align-items:flex-start; gap:8px;">
+                                    <span style="font-size:14px; line-height:1; margin-top:1px; color:${formData.termo_compromisso==='Concordo' ? '#003366' : '#000'};">${formData.termo_compromisso==='Concordo' ? '☑' : '☐'}</span>
+                                    <span class="value">Declaro que concordo com o Termo de Compromisso acima.</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="page-break"></div>
+
+            <div class="cut-line"><span>PARA A COMISSÃO: ✂ ---- CORTE AQUI ---- ✂</span></div>
+
+            <!-- PÁGINA 2: ANTEPROJETO (BLIND REVIEW - ESTILO ANTIGO) -->
+            <div class="page-2">
+                <div class="header-container">
+                    <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
+                    <div class="header-center">ANTEPROJETO DE TCC</div>
+                    <div class="header-right">
+                        <div><strong>Processo:</strong> ${registrationNumber}</div>
+                        <div><strong>Registro:</strong> ${new Date(formData.data_registro).toLocaleString('pt-BR')}</div>
+                        <div style="font-size:8px; word-break:break-all;"><strong>Hash:</strong> ${formData.hash_verificacao}</div>
+                        <div class="barcode-container"><svg id="barcode2"></svg></div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">ANEXO IV - Anteprojeto (sem identificação)</div>
+                    <div class="field"><div class="field-label">Título do anteprojeto:</div><div class="field-value">${escapeHtml(formData.titulo_pt)}</div></div>
+                    <div class="field"><div class="field-label">Linha de pesquisa:</div><div class="field-value">${escapeHtml(formData.area)}</div></div>
+                    <div class="field"><div class="field-label">Justificativa para enquadramento na linha de pesquisa:</div><div class="field-value">${escapeHtml(formData.justificativa_enquadramento)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">Resumo</div>
+                    <div class="field"><div class="field-label">Resumo:</div><div class="field-value">${escapeHtml(formData.resumo)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">1 – Introdução / Contextualização</div>
+                    <div class="field"><div class="field-value">${escapeHtml(formData.introducao)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">2 – Problema ou questão de pesquisa</div>
+                    <div class="field"><div class="field-value">${escapeHtml(formData.problema_pesquisa)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">3 – Justificativa (relevância do tema proposto)</div>
+                    <div class="field"><div class="field-value">${escapeHtml(formData.justificativa_relevancia)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">4 – Objetivos</div>
+                    <div class="field"><div class="field-label">Objetivo geral:</div><div class="field-value">${escapeHtml(formData.objetivo_geral)}</div></div>
+                    <div class="field"><div class="field-label">Objetivos específicos:</div><div class="field-value">${escapeHtml(formData.objetivos_especificos)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">5 – Revisão da literatura</div>
+                    <div class="field"><div class="field-value">${escapeHtml(formData.revisao_literatura)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">6 – Procedimentos metodológicos</div>
+                    <div class="field"><div class="field-value">${escapeHtml(formData.procedimentos_metodologicos)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">7 – Cronograma</div>
+                    <div class="field"><div class="field-value">${escapeHtml(formData.cronograma)}</div></div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">8 – Referências (ABNT)</div>
+                    <div class="field"><div class="field-value">${escapeHtml(formData.referencias)}</div></div>
+                </div>
+            </div>
+
+            <script>
+                try {
+                    const config = { format: "CODE128", displayValue: true, fontSize: 10, height: 30, margin: 0, textMargin: 2 };
+                    JsBarcode("#barcode", "${registrationNumber}", config);
+                    JsBarcode("#barcode2", "${registrationNumber}", config);
+                } catch (e) { console.error("Erro ao gerar barcode:", e); }
+            <\/script>
+        </body>
+        </html>
+    `;
+
+    // Usar iframe para imprimir (evita bloqueio de popups)
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'print-frame';
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
+    }
+
+    const frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write(htmlContent);
+    frameDoc.close();
+
+    let isPrinted = false;
+
+    const finalizePrint = () => {
+        if (isPrinted) return;
+        isPrinted = true;
+        
+        try {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+            
+            // Salvar CPF após sucesso (ou tentativa)
+            // submittedCPFs.push(cpf);
+            // localStorage.setItem('planterr_submitted_cpfs', JSON.stringify(submittedCPFs));
+            
+            if(btn) btn.innerText = originalText;
+            alert(`Processo finalizado!\nSeu número de inscrição é: ${registrationNumber}`);
+        } catch (e) {
+            console.error("Erro ao imprimir:", e);
+            if(btn) btn.innerText = originalText;
+            alert("Erro ao tentar abrir a impressão. Verifique se não há bloqueadores.");
+        }
+    };
+
+    // Aumentar um pouco o tempo para garantir que o JsBarcode carregue e renderize
+    setTimeout(finalizePrint, 1500);
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+// Initialize counters on load (in case of browser auto-fill)
+document.addEventListener('DOMContentLoaded', () => {
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        const max = textarea.getAttribute('maxlength');
+        if (max) {
+            updateCounter(textarea, parseInt(max));
+        }
+    });
+
+    const cpfInput = document.getElementById('cpf');
+    if (cpfInput) {
+        cpfInput.addEventListener('input', () => {
+            cpfInput.value = formatCPF(cpfInput.value);
+            updateCpfFeedback();
+        });
+        cpfInput.addEventListener('blur', () => {
+            cpfInput.value = formatCPF(cpfInput.value);
+            updateCpfFeedback();
+        });
+    }
+
+    const termo = document.getElementById('termo_compromisso');
+    if (termo) {
+        termo.addEventListener('change', () => {
+            updateTermoFeedback();
+        });
+        updateTermoFeedback();
+    }
+});
+
+function fillExample() {
+    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
+    const checkRadio = (name, val) => { const el = document.querySelector(`input[name="${name}"][value="${val}"]`); if (el) el.checked = true; };
+    const checkBoxes = (name, values) => { values.forEach(v => { const el = document.querySelector(`input[name="${name}"][value="${v}"]`); if (el) el.checked = true; }); };
+
+    // Ficha
+    setVal('nome', 'Maria da Silva');
+    setVal('nome_social', 'Maria Silva');
+    setVal('data_nascimento', '1990-05-10');
+    setVal('cpf', '390.533.447-05');
+    setVal('rg', '1234567');
+    setVal('orgao_expedidor', 'SSP-BA');
+    setVal('data_expedicao', '2010-08-15');
+    setVal('endereco', 'Rua das Flores, 123, Bairro Centro');
+    setVal('cidade_estado', 'Feira de Santana - BA');
+    setVal('cep', '44000-000');
+    setVal('celular', '(75) 99999-0000');
+    setVal('telefone_residencial', '(75) 3333-4444');
+    setVal('email', 'maria.silva@example.com');
+    setVal('curso_graduacao', 'Engenharia Agronômica');
+    setVal('instituicao', 'UEFS');
+    setVal('ano_conclusao', '2015');
+    checkRadio('vaga_institucional', 'Sim');
+    checkRadio('vaga_cooperacao', 'Não');
+    checkRadio('vaga_reservada', 'Não');
+    checkBoxes('cotas', ['Negro']);
+    setVal('raca_cor', 'Parda');
+    checkRadio('lingua_estrangeira', 'Inglês');
+    checkRadio('vinculo_empregaticio', 'Não');
+    setVal('carga_horaria', '40h');
+    setVal('empresa_vinculo', '');
+    const termo = document.getElementById('termo_compromisso');
+    if (termo) termo.checked = true;
+
+    // Atualizar avisos na tela após autopreenchimento
+    updateCpfFeedback();
+    updateTermoFeedback();
+
+    // Projeto
+    setVal('titulo_pt', 'Desenvolvimento de Sistema PlanTerr para Gestão de Projetos');
+    setVal('titulo_en', 'PlanTerr System Development for Project Management');
+    setVal('area', 'Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social');
+    setVal('palavras_pt', 'gestão; projeto; inovação');
+    setVal('palavras_en', 'management; project; innovation');
+    setVal('resumo', 'Este anteprojeto propõe o desenvolvimento de um sistema para apoiar a gestão de projetos acadêmicos, com foco em processos seletivos e avaliação cega.');
+    setVal('justificativa_enquadramento', 'O tema se enquadra na linha escolhida por tratar de processos e práticas de planejamento territorial apoiados por tecnologia e participação social.');
+    setVal('introducao', 'Contextualização do problema e do cenário institucional em que se insere o anteprojeto.');
+    setVal('problema_pesquisa', 'Como padronizar e dar rastreabilidade ao processo de submissão e avaliação às cegas de anteprojetos?');
+    setVal('justificativa_relevancia', 'A relevância está na melhoria da transparência, eficiência e integridade do processo seletivo, reduzindo falhas operacionais.');
+    setVal('objetivo_geral', 'Propor um fluxo digital de submissão e verificação do anteprojeto, com geração de protocolo e hash.');
+    setVal('objetivos_especificos', '(i) validar dados; (ii) gerar protocolo e hash; (iii) exportar relatórios; (iv) imprimir em PDF.');
+    setVal('revisao_literatura', 'Síntese de conceitos sobre avaliação às cegas, gestão de processos e documentação digital.');
+    setVal('procedimentos_metodologicos', 'Desenvolvimento incremental do protótipo (HTML/CSS/JS + Node/Express), testes com usuários e ajustes de layout/validações.');
+    setVal('cronograma', 'Mês 1-2: levantamento e desenho do fluxo\nMês 3-4: implementação e testes\nMês 5-6: validação e refinamentos\nMês 7-24: evolução e documentação');
+    setVal('referencias', 'SOBRENOME, Nome. Título. Local: Editora, ano.\nASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. NBR 6023.');
+}

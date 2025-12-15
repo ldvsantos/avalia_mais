@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Inscrição - Planterr</title>
+    <link rel="stylesheet" href="theme.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div class="container" id="form-content">
+        <input type="text" id="website" name="website" autocomplete="off" tabindex="-1" style="position:absolute; left:-9999px; height:0; width:0; opacity:0;" aria-hidden="true">
+        <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <img src="img/logo_planter.png" alt="Logo Planterr" style="max-height:80px; width:auto;">
+                <h1>Formulário de Anteprojeto de TCC - PLANTERR</h1>
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Instruções</h2></div>
+            <div class="panel-body instructions">
+                <ol style="margin:0; padding-left:20px;">
+                    <li>Preencha todos os campos obrigatórios.</li>
+                    <li>Respeite o limite de caracteres de cada campo.</li>
+                    <li>Ao finalizar, clique no botão "Gerar PDF" para baixar sua proposta.</li>
+                    <li>Envie o PDF gerado para a equipe do Planterr.</li>
+                </ol>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Ficha de Inscrição</h2></div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="nome">Nome do/a candidato/a (civilmente registrado):</label>
+                    <input type="text" id="nome" name="nome" required maxlength="120">
+                </div>
+                <div class="form-group">
+                    <label for="nome_social">Nome Social:</label>
+                    <input type="text" id="nome_social" name="nome_social" maxlength="120">
+                </div>
+                <div class="form-group">
+                    <label for="data_nascimento">Data de Nascimento:</label>
+                    <input type="date" id="data_nascimento" name="data_nascimento">
+                </div>
+                <div class="form-group">
+                    <label for="cpf">CPF:</label>
+                    <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" required maxlength="14">
+                    <div id="cpf-feedback" class="field-feedback" aria-live="polite"></div>
+                </div>
+                <div class="form-group">
+                    <label for="rg">Nº RG:</label>
+                    <input type="text" id="rg" name="rg" maxlength="12">
+                </div>
+                <div class="form-group">
+                    <label for="orgao_expedidor">Órgão Expedidor:</label>
+                    <input type="text" id="orgao_expedidor" name="orgao_expedidor" maxlength="20">
+                </div>
+                <div class="form-group">
+                    <label for="data_expedicao">Data Expedição:</label>
+                    <input type="date" id="data_expedicao" name="data_expedicao">
+                </div>
+                <div class="form-group">
+                    <label for="endereco">Endereço completo:</label>
+                    <input type="text" id="endereco" name="endereco" maxlength="120">
+                </div>
+                <div class="form-group">
+                    <label for="cidade_estado">Cidade/Estado:</label>
+                    <input type="text" id="cidade_estado" name="cidade_estado" maxlength="60">
+                </div>
+                <div class="form-group">
+                    <label for="cep">CEP:</label>
+                    <input type="text" id="cep" name="cep" maxlength="9">
+                </div>
+                <div class="form-group">
+                    <label for="celular">Celular:</label>
+                    <input type="text" id="celular" name="celular" maxlength="16">
+                </div>
+                <div class="form-group">
+                    <label for="telefone_residencial">Telefone residencial:</label>
+                    <input type="text" id="telefone_residencial" name="telefone_residencial" maxlength="16">
+                </div>
+                <div class="form-group">
+                    <label for="email">E-mail:</label>
+                    <input type="email" id="email" name="email" maxlength="120">
+                </div>
+                <div class="form-group">
+                    <label for="curso_graduacao">Curso de Graduação:</label>
+                    <input type="text" id="curso_graduacao" name="curso_graduacao" maxlength="80">
+                </div>
+                <div class="form-group">
+                    <label for="instituicao">Instituição:</label>
+                    <input type="text" id="instituicao" name="instituicao" maxlength="80">
+                </div>
+                <div class="form-group">
+                    <label for="ano_conclusao">Ano de Conclusão:</label>
+                    <input type="text" id="ano_conclusao" name="ano_conclusao" maxlength="4">
+                </div>
+
+                <div class="form-group">
+                    <label>Candidato a Vaga Institucional (servidor docente ou técnico efetivo da UEFS):</label>
+                    <div>
+                        <input type="radio" id="vaga_institucional_sim" name="vaga_institucional" value="Sim"> <label for="vaga_institucional_sim" style="display:inline; font-weight:normal;">SIM</label>
+                        <input type="radio" id="vaga_institucional_nao" name="vaga_institucional" value="Não"> <label for="vaga_institucional_nao" style="display:inline; font-weight:normal;">NÃO</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Candidato a Vaga pelo Termo de Cooperação N° 004/2024 (funcionário da SDR):</label>
+                    <div>
+                        <input type="radio" id="vaga_cooperacao_sim" name="vaga_cooperacao" value="Sim"> <label for="vaga_cooperacao_sim" style="display:inline; font-weight:normal;">SIM</label>
+                        <input type="radio" id="vaga_cooperacao_nao" name="vaga_cooperacao" value="Não"> <label for="vaga_cooperacao_nao" style="display:inline; font-weight:normal;">NÃO</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Candidato à Vaga Reservada:</label>
+                    <div>
+                        <input type="radio" id="vaga_reservada_sim" name="vaga_reservada" value="Sim"> <label for="vaga_reservada_sim" style="display:inline; font-weight:normal;">SIM</label>
+                        <input type="radio" id="vaga_reservada_nao" name="vaga_reservada" value="Não"> <label for="vaga_reservada_nao" style="display:inline; font-weight:normal;">NÃO</label>
+                    </div>
+                    <div style="margin-left:20px; margin-top:5px;">
+                        <input type="checkbox" id="cotas_negro" name="cotas" value="Negro"> <label for="cotas_negro" style="display:inline; font-weight:normal;">Negro</label><br>
+                        <input type="checkbox" id="cotas_indigena" name="cotas" value="Indígena"> <label for="cotas_indigena" style="display:inline; font-weight:normal;">Indígena</label><br>
+                        <input type="checkbox" id="cotas_quilombola" name="cotas" value="Quilombola"> <label for="cotas_quilombola" style="display:inline; font-weight:normal;">Quilombola</label><br>
+                        <input type="checkbox" id="cotas_cigano" name="cotas" value="Cigano"> <label for="cotas_cigano" style="display:inline; font-weight:normal;">Cigano</label><br>
+                        <input type="checkbox" id="cotas_trans" name="cotas" value="PessoaTrans"> <label for="cotas_trans" style="display:inline; font-weight:normal;">PessoaTrans</label><br>
+                        <input type="checkbox" id="cotas_pcd" name="cotas" value="Pessoa com Deficiência"> <label for="cotas_pcd" style="display:inline; font-weight:normal;">Pessoa com Deficiência</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="raca_cor">Raça/Cor:</label>
+                    <select id="raca_cor" name="raca_cor">
+                        <option value="">Selecione...</option>
+                        <option value="Branca">Branca</option>
+                        <option value="Preta">Preta</option>
+                        <option value="Parda">Parda</option>
+                        <option value="Amarela">Amarela</option>
+                        <option value="Indígena">Indígena</option>
+                        <option value="Não declarado">Não declarado</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Língua Estrangeira para realização da prova escrita:</label>
+                    <div>
+                        <input type="radio" id="lingua_espanhol" name="lingua_estrangeira" value="Espanhol"> <label for="lingua_espanhol" style="display:inline; font-weight:normal;">Espanhol</label>
+                        <input type="radio" id="lingua_ingles" name="lingua_estrangeira" value="Inglês"> <label for="lingua_ingles" style="display:inline; font-weight:normal;">Inglês</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Possui vínculo empregatício:</label>
+                    <div>
+                        <input type="radio" id="vinculo_sim" name="vinculo_empregaticio" value="Sim"> <label for="vinculo_sim" style="display:inline; font-weight:normal;">SIM</label>
+                        <input type="radio" id="vinculo_nao" name="vinculo_empregaticio" value="Não"> <label for="vinculo_nao" style="display:inline; font-weight:normal;">NÃO</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="carga_horaria">Carga Horária:</label>
+                    <input type="text" id="carga_horaria" name="carga_horaria" maxlength="10">
+                </div>
+                <div class="form-group">
+                    <label for="empresa_vinculo">Empresa/entidade ao qual está vinculado (se possuir vínculo empregatício):</label>
+                    <input type="text" id="empresa_vinculo" name="empresa_vinculo" maxlength="80">
+                </div>
+
+                <div class="form-group" style="border:1px solid #ccc; background:#fff; padding:8px;">
+                    <p style="margin:0 0 8px 0; line-height:1.4;">
+                        Declaro que, em sendo aprovado/a no processo seletivo, tenho disponibilidade para realizar, de forma presencial nas dependências da UEFS, todas as atividades do Programa de Pós-Graduação em Planejamento Territorial (PLANTERR) – Mestrado Profissional.
+                    </p>
+                    <div>
+                        <input type="checkbox" id="termo_compromisso" name="termo_compromisso" value="Concordo" required>
+                        <label for="termo_compromisso" style="display:inline; font-weight:normal;">Declaro que concordo com o Termo de Compromisso acima.</label>
+                    </div>
+                    <div id="termo-feedback" class="field-feedback" aria-live="polite"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Projeto de Pesquisa</h2></div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="titulo_pt">Título do Projeto (Em Português):</label>
+                    <input type="text" id="titulo_pt" name="titulo_pt" required maxlength="150">
+                </div>
+                <div class="form-group">
+                    <label for="titulo_en">Título do Projeto (Em Inglês):</label>
+                    <input type="text" id="titulo_en" name="titulo_en" maxlength="150">
+                </div>
+                <div class="form-group">
+                    <label for="area">Área:</label>
+                    <select id="area" name="area">
+                        <option value="">Selecione uma linha de pesquisa...</option>
+                        <option value="Linha de Pesquisa 1 – Planejamento Urbano-regional, Ambiental e de Comunidades Tradicionais">Linha de Pesquisa 1 – Planejamento Urbano-regional, Ambiental e de Comunidades Tradicionais</option>
+                        <option value="Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social">Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="palavras_pt">Palavras-chave (em português):</label>
+                    <input type="text" id="palavras_pt" name="palavras_pt" maxlength="120" placeholder="Informe entre uma e seis palavras-chave, separadas por vírgula">
+                </div>
+                <div class="form-group">
+                    <label for="palavras_en">Palavras-chave (em inglês):</label>
+                    <input type="text" id="palavras_en" name="palavras_en" maxlength="120" placeholder="Informe entre uma e seis palavras-chave, separadas por vírgula">
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Anteprojeto (sem identificação)</h2></div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="resumo">Resumo:</label>
+                    <textarea id="resumo" name="resumo" maxlength="1800" rows="10" oninput="updateCounter(this, 1800)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="resumo-counter">1800</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="justificativa_enquadramento">Justificativa para enquadramento na linha de pesquisa:</label>
+                    <textarea id="justificativa_enquadramento" name="justificativa_enquadramento" maxlength="2000" rows="6" oninput="updateCounter(this, 2000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="justificativa_enquadramento-counter">2000</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="introducao">1 – Introdução / Contextualização:</label>
+                    <textarea id="introducao" name="introducao" maxlength="4000" rows="10" oninput="updateCounter(this, 4000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="introducao-counter">4000</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="problema_pesquisa">2 – Problema ou questão de pesquisa:</label>
+                    <textarea id="problema_pesquisa" name="problema_pesquisa" maxlength="4000" rows="10" oninput="updateCounter(this, 4000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="problema_pesquisa-counter">4000</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="justificativa_relevancia">3 – Justificativa (relevância do tema proposto):</label>
+                    <textarea id="justificativa_relevancia" name="justificativa_relevancia" maxlength="4000" rows="10" oninput="updateCounter(this, 4000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="justificativa_relevancia-counter">4000</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="objetivo_geral">4 – Objetivo geral:</label>
+                    <textarea id="objetivo_geral" name="objetivo_geral" maxlength="200" rows="6" oninput="updateCounter(this, 200)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="objetivo_geral-counter">200</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="objetivos_especificos">4 – Objetivos específicos:</label>
+                    <textarea id="objetivos_especificos" name="objetivos_especificos" maxlength="4000" rows="10" oninput="updateCounter(this, 4000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="objetivos_especificos-counter">4000</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="revisao_literatura">5 – Revisão da literatura:</label>
+                    <textarea id="revisao_literatura" name="revisao_literatura" maxlength="4000" rows="10" oninput="updateCounter(this, 4000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="revisao_literatura-counter">4000</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="procedimentos_metodologicos">6 – Procedimentos metodológicos:</label>
+                    <textarea id="procedimentos_metodologicos" name="procedimentos_metodologicos" maxlength="4000" rows="10" oninput="updateCounter(this, 4000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="procedimentos_metodologicos-counter">4000</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="cronograma">7 – Cronograma (Elaborado para dois anos, contados a partir do início do calendário):</label>
+                    <textarea id="cronograma" name="cronograma" maxlength="4000" rows="10" oninput="updateCounter(this, 4000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="cronograma-counter">4000</span></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="referencias">8 – Referências (apenas as citadas no anteprojeto, segundo as normas da ABNT):</label>
+                    <textarea id="referencias" name="referencias" maxlength="4000" rows="10" oninput="updateCounter(this, 4000)"></textarea>
+                    <div class="counter">Caracteres restantes: <span id="referencias-counter">4000</span></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="actions-bar" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:16px;">
+        <button onclick="fillExample()" class="btn-secondary">Preencher Exemplo</button>
+        <button onclick="generatePDF()" class="btn-primary">Gerar PDF do Projeto</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
