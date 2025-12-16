@@ -1061,7 +1061,7 @@ async function generatePDF() {
 
             <div class="page-break"></div>
 
-            <div class="cut-line"><span>PARA A COMISSÃO: ✂ ---- CORTE AQUI ---- ✂</span></div>
+            <div class="cut-line"><span>PARA A COMISSÃO: ✂ ---- SEPARE AQUI ---- ✂</span></div>
 
             <!-- PÁGINA 2: ANTEPROJETO (BLIND REVIEW - ESTILO ANTIGO) -->
             <div class="page-2">
