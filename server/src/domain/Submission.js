@@ -11,6 +11,9 @@ class Submission {
     this.project = data.project || data.blind || {}; // Project data
     this.blind = data.blind || data.project || {}; // Project data (blind)
     this.adminUpdatedAt = data.adminUpdatedAt;
+
+    // Governança/auditoria (metadados + histórico de alterações)
+    this.audit = data.audit || null;
   }
 
   isValid() {

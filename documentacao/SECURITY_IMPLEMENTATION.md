@@ -169,6 +169,13 @@ server/logs/
 - ✅ Ações administrativas
 - ✅ Exportação de dados
 
+**Governança (controle de modificações):**
+- ✅ Criação/alteração de inscrições (`SUBMISSION_CREATED`, `SUBMISSION_MODIFIED`)
+- ✅ Criação/alteração de avaliações (`EVALUATION_CREATED`, `EVALUATION_MODIFIED`)
+- ✅ Alterações de configuração (`CONFIG_MODIFIED`)
+
+**Correlação:** cada resposta inclui `X-Request-Id`, que também aparece nos eventos do `security.log`.
+
 ---
 
 ### 9. **Validação e Sanitização** ✨

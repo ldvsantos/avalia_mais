@@ -1,6 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
+const { getRequestContext } = require('./request-context');
+const {
+  logSubmissionCreated,
+  logSubmissionModified,
+  logEvaluationCreated,
+  logEvaluationModified,
+  logConfigModified,
+  logUserModified,
+} = require('./security-logger');
+
 const DATA_DIR = path.join(__dirname, 'data');
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const EVALUATIONS_FILE = path.join(DATA_DIR, 'evaluations.json');
@@ -89,13 +99,47 @@ function hasCpfHash(cpfHash) {
 }
 
 function addSubmission(record) {
+  const ctx = getRequestContext();
+  const actor = ctx?.actor || { type: 'public' };
+
   const data = readAll();
-  data.submissions.push(record);
+  const next = { ...record };
+
+  next.audit = next.audit && typeof next.audit === 'object' ? next.audit : { history: [] };
+  if (!Array.isArray(next.audit.history)) next.audit.history = [];
+
+  const now = new Date().toISOString();
+  next.audit.createdAt = next.audit.createdAt || next.createdAt || now;
+  next.audit.createdBy = next.audit.createdBy || actor;
+  next.audit.createdIp = next.audit.createdIp || ctx?.ip;
+  next.audit.createdUserAgent = next.audit.createdUserAgent || ctx?.userAgent;
+  next.audit.updatedAt = now;
+  next.audit.updatedBy = actor;
+  next.audit.updatedIp = ctx?.ip;
+  next.audit.updatedUserAgent = ctx?.userAgent;
+  next.audit.updatedRequestId = ctx?.requestId;
+  next.audit.history.push({ at: now, action: 'create', actor, ip: ctx?.ip, requestId: ctx?.requestId });
+  if (next.audit.history.length > 50) next.audit.history = next.audit.history.slice(-50);
+
+  data.submissions.push(next);
   writeAll(data);
-  return record;
+
+  logSubmissionCreated({
+    requestId: ctx?.requestId,
+    protocol: next.protocol,
+    cpfLast4: next.cpfLast4,
+    actor,
+    ip: ctx?.ip,
+    userAgent: ctx?.userAgent,
+  });
+
+  return next;
 }
 
 function updateByProtocol(protocol, patch) {
+  const ctx = getRequestContext();
+  const actor = ctx?.actor || { type: 'unknown' };
+
   const data = readAll();
   const idx = data.submissions.findIndex(s => s.protocol === protocol);
   if (idx === -1) return null;
@@ -107,8 +151,36 @@ function updateByProtocol(protocol, patch) {
     adminUpdatedAt: new Date().toISOString(),
   };
 
+  next.audit = next.audit && typeof next.audit === 'object' ? next.audit : { history: [] };
+  if (!Array.isArray(next.audit.history)) next.audit.history = [];
+  const now = new Date().toISOString();
+  next.audit.updatedAt = now;
+  next.audit.updatedBy = actor;
+  next.audit.updatedIp = ctx?.ip;
+  next.audit.updatedUserAgent = ctx?.userAgent;
+  next.audit.updatedRequestId = ctx?.requestId;
+  next.audit.history.push({
+    at: now,
+    action: 'update',
+    actor,
+    ip: ctx?.ip,
+    requestId: ctx?.requestId,
+    patchKeys: Object.keys(patch || {}),
+  });
+  if (next.audit.history.length > 50) next.audit.history = next.audit.history.slice(-50);
+
   data.submissions[idx] = next;
   writeAll(data);
+
+  logSubmissionModified({
+    requestId: ctx?.requestId,
+    protocol,
+    actor,
+    ip: ctx?.ip,
+    userAgent: ctx?.userAgent,
+    patchKeys: Object.keys(patch || {}),
+  });
+
   return next;
 }
 
@@ -117,6 +189,9 @@ function clearAllSubmissions() {
 }
 
 function upsertEvaluation(evaluation) {
+  const ctx = getRequestContext();
+  const actor = ctx?.actor || { type: 'unknown' };
+
   // evaluation: { protocol, nota_projeto, nota_entrevista, eliminado, observacoes }
   const data = readAllEvaluations();
   const idx = data.evaluations.findIndex(e => e.protocol === evaluation.protocol);
@@ -125,8 +200,43 @@ function upsertEvaluation(evaluation) {
     ...evaluation,
     updatedAt: new Date().toISOString(),
   };
+
+  next.audit = next.audit && typeof next.audit === 'object' ? next.audit : { history: [] };
+  if (!Array.isArray(next.audit.history)) next.audit.history = [];
+  const now = new Date().toISOString();
+  if (idx === -1) {
+    next.audit.createdAt = next.audit.createdAt || now;
+    next.audit.createdBy = next.audit.createdBy || actor;
+    next.audit.createdIp = next.audit.createdIp || ctx?.ip;
+    next.audit.createdUserAgent = next.audit.createdUserAgent || ctx?.userAgent;
+  }
+  next.audit.updatedAt = now;
+  next.audit.updatedBy = actor;
+  next.audit.updatedIp = ctx?.ip;
+  next.audit.updatedUserAgent = ctx?.userAgent;
+  next.audit.updatedRequestId = ctx?.requestId;
+  next.audit.history.push({
+    at: now,
+    action: idx === -1 ? 'create' : 'update',
+    actor,
+    ip: ctx?.ip,
+    requestId: ctx?.requestId,
+    patchKeys: Object.keys(evaluation || {}),
+  });
+  if (next.audit.history.length > 50) next.audit.history = next.audit.history.slice(-50);
   if (idx === -1) data.evaluations.push(next); else data.evaluations[idx] = next;
   writeAllEvaluations(data);
+
+  const logFn = idx === -1 ? logEvaluationCreated : logEvaluationModified;
+  logFn({
+    requestId: ctx?.requestId,
+    protocol: next.protocol,
+    actor,
+    ip: ctx?.ip,
+    userAgent: ctx?.userAgent,
+    eliminated: next.eliminado,
+  });
+
   return next;
 }
 
@@ -151,8 +261,18 @@ function getEvaluators() {
 }
 
 function saveEvaluators(evaluators) {
+  const ctx = getRequestContext();
   ensureFile();
   fs.writeFileSync(EVALUATORS_FILE, JSON.stringify(evaluators, null, 2), 'utf8');
+
+  logUserModified({
+    requestId: ctx?.requestId,
+    actor: ctx?.actor,
+    ip: ctx?.ip,
+    userAgent: ctx?.userAgent,
+    action: 'saveEvaluators',
+    evaluatorCount: evaluators && typeof evaluators === 'object' ? Object.keys(evaluators).length : null,
+  });
 }
 
 function readConfig() {
@@ -169,6 +289,7 @@ function readConfig() {
 }
 
 function writeConfig(config) {
+  const ctx = getRequestContext();
   ensureFile();
   const next = {
     ...(readConfig()),
@@ -176,6 +297,15 @@ function writeConfig(config) {
     updatedAt: new Date().toISOString(),
   };
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(next, null, 2), 'utf8');
+
+  logConfigModified({
+    requestId: ctx?.requestId,
+    actor: ctx?.actor,
+    ip: ctx?.ip,
+    userAgent: ctx?.userAgent,
+    changedKeys: Object.keys(config || {}),
+  });
+
   return next;
 }
 

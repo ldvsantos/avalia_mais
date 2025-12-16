@@ -25,6 +25,9 @@ class Evaluation {
     this.eliminado = data.eliminado || false;
     this.observacoes = data.observacoes || '';
     this.updatedAt = data.updatedAt || new Date().toISOString();
+
+    // Governança/auditoria (metadados + histórico de alterações)
+    this.audit = data.audit || null;
   }
 
   calculateFinalScores() {

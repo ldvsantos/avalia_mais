@@ -1,5 +1,7 @@
 const { parseDateRange, csvEscape, formatPtBrDateTime } = require('../../../util');
 const storage = require('../../../storage');
+const { getRequestContext } = require('../../../request-context');
+const { logDataExport } = require('../../../security-logger');
 
 class AdminController {
   constructor(listSubmissionsUseCase, listEvaluationsUseCase, adminDashboardPresenter) {
@@ -129,6 +131,10 @@ class AdminController {
 
     const csv = '\uFEFF' + [header, ...lines].join('\r\n') + '\r\n';
     const filename = `inscricoes_${new Date().toISOString().slice(0, 10)}.csv`;
+
+    const ctx = getRequestContext();
+    const actorUser = ctx?.actor && typeof ctx.actor === 'object' ? (ctx.actor.user || 'unknown') : 'unknown';
+    logDataExport(actorUser, 'csv', submissions.length, ctx?.ip);
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);

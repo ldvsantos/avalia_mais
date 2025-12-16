@@ -46,6 +46,8 @@ const {
   getClientIP 
 } = require('./security-middleware');
 
+const { requestContextMiddleware, refreshActorFromReq } = require('./request-context');
+
 const storage = require('./storage');
 const {
   stableStringify,
@@ -57,6 +59,9 @@ const {
 } = require('./util');
 
 const app = express();
+
+// Governança: requestId + contexto de auditoria por requisição
+app.use(requestContextMiddleware);
 
 // Configuração de Segurança
 const ADMIN_SECRET = generateOrReadAdminSecret();
@@ -221,6 +226,8 @@ function adminAuth(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+    // Atualiza o contexto (ator) após autenticação
+    refreshActorFromReq(req);
     next();
   } catch (err) {
     logLoginFailed('unknown', req.ip, 'INVALID_TOKEN');
@@ -958,6 +965,24 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Avaliação - ${escapeHtml(protocol)}</title>
       <link rel="stylesheet" href="/theme.css" />
+      <style>
+        .eval-input {
+          width: 100%;
+          padding: 6px;
+          border: 1px solid #86A3C2;
+          border-radius: 4px;
+          box-sizing: border-box;
+          font-size: 12px;
+          background: #fff;
+        }
+
+        .panel-body input[type="number"],
+        .panel-body input[type="text"],
+        .panel-body textarea,
+        .panel-body select {
+          border-radius: 4px;
+        }
+      </style>
     </head>
     <body>
       <div class="container">
@@ -997,7 +1022,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
                         return `
                           <div class="form-group" style="margin-bottom:4px;">
                             <label for="${key}">${escapeHtml(item.label)} (máx. ${item.max})</label>
-                            <input type="number" id="${key}" name="${key}" min="0" max="${item.max}" step="0.1" value="${escapeHtml(String(val))}" class="proj-input" />
+                            <input type="number" id="${key}" name="${key}" min="0" max="${item.max}" step="0.1" value="${escapeHtml(String(val))}" class="eval-input proj-input" />
                           </div>
                         `;
                       }).join('')}
@@ -1009,7 +1034,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
 
               <div class="form-group" style="margin-top:8px;">
                 <label for="proj_potential_interview">O(a) candidato(a) tem potencial e deve passar para a fase da entrevista?</label>
-                <select id="proj_potential_interview" name="proj_potential_interview">
+                <select class="eval-input" id="proj_potential_interview" name="proj_potential_interview">
                   ${['','Sim','Não'].map(opt => {
                     const sel = String(e.proj_potential_interview || '') === opt ? 'selected' : '';
                     return `<option value="${escapeHtml(opt)}" ${sel}>${escapeHtml(opt||'Selecione…')}</option>`;
@@ -1018,11 +1043,11 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
               </div>
               <div class="form-group">
                 <label for="proj_justification">Justifique (pontos fortes e fracos do projeto)</label>
-                <textarea id="proj_justification" name="proj_justification" rows="4">${escapeHtml(String(e.proj_justification || ''))}</textarea>
+                <textarea class="eval-input" id="proj_justification" name="proj_justification" rows="4">${escapeHtml(String(e.proj_justification || ''))}</textarea>
               </div>
               <div class="form-group">
                 <label for="proj_interview_points">Aspectos a questionar na entrevista</label>
-                <textarea id="proj_interview_points" name="proj_interview_points" rows="3">${escapeHtml(String(e.proj_interview_points || ''))}</textarea>
+                <textarea class="eval-input" id="proj_interview_points" name="proj_interview_points" rows="3">${escapeHtml(String(e.proj_interview_points || ''))}</textarea>
               </div>
 
               <h3 style="color:#003366; margin-top:12px;">Entrevista (3 Avaliadores)</h3>
@@ -1038,19 +1063,19 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
                       <div style="font-weight:bold; color:#003366;">${ev.label}</div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_apresentacao">Apresentação (máx. 3)</label>
-                        <input type="number" id="${prefix}_apresentacao" name="${prefix}_apresentacao" min="0" max="3" step="0.1" value="${escapeHtml(String(ap))}" class="int-input" />
+                        <input type="number" id="${prefix}_apresentacao" name="${prefix}_apresentacao" min="0" max="3" step="0.1" value="${escapeHtml(String(ap))}" class="eval-input int-input" />
                       </div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_historico">Histórico Profissional (máx. 2)</label>
-                        <input type="number" id="${prefix}_historico" name="${prefix}_historico" min="0" max="2" step="0.1" value="${escapeHtml(String(hp))}" class="int-input" />
+                        <input type="number" id="${prefix}_historico" name="${prefix}_historico" min="0" max="2" step="0.1" value="${escapeHtml(String(hp))}" class="eval-input int-input" />
                       </div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_defesa">Defesa da proposta (máx. 3)</label>
-                        <input type="number" id="${prefix}_defesa" name="${prefix}_defesa" min="0" max="3" step="0.1" value="${escapeHtml(String(df))}" class="int-input" />
+                        <input type="number" id="${prefix}_defesa" name="${prefix}_defesa" min="0" max="3" step="0.1" value="${escapeHtml(String(df))}" class="eval-input int-input" />
                       </div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_justificativa">Justificativa/interesse + disponibilidade (máx. 2)</label>
-                        <input type="number" id="${prefix}_justificativa" name="${prefix}_justificativa" min="0" max="2" step="0.1" value="${escapeHtml(String(ji))}" class="int-input" />
+                        <input type="number" id="${prefix}_justificativa" name="${prefix}_justificativa" min="0" max="2" step="0.1" value="${escapeHtml(String(ji))}" class="eval-input int-input" />
                       </div>
                     </div>
                   `;
@@ -1069,15 +1094,15 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
                       <div style="font-weight:bold; color:#003366;">${ev.label}</div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_clareza">Clareza e Coesão (0-10)</label>
-                        <input type="number" id="${prefix}_clareza" name="${prefix}_clareza" min="0" max="10" step="0.1" value="${escapeHtml(String(c))}" class="lang-input" />
+                        <input type="number" id="${prefix}_clareza" name="${prefix}_clareza" min="0" max="10" step="0.1" value="${escapeHtml(String(c))}" class="eval-input lang-input" />
                       </div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_domino">Domínio do Conteúdo (0-10)</label>
-                        <input type="number" id="${prefix}_domino" name="${prefix}_domino" min="0" max="10" step="0.1" value="${escapeHtml(String(d))}" class="lang-input" />
+                        <input type="number" id="${prefix}_domino" name="${prefix}_domino" min="0" max="10" step="0.1" value="${escapeHtml(String(d))}" class="eval-input lang-input" />
                       </div>
                       <div class="form-group" style="margin-bottom:4px;">
                         <label for="${prefix}_analise">Análise Crítica (0-10)</label>
-                        <input type="number" id="${prefix}_analise" name="${prefix}_analise" min="0" max="10" step="0.1" value="${escapeHtml(String(a))}" class="lang-input" />
+                        <input type="number" id="${prefix}_analise" name="${prefix}_analise" min="0" max="10" step="0.1" value="${escapeHtml(String(a))}" class="eval-input lang-input" />
                       </div>
                     </div>
                   `;
@@ -1086,23 +1111,23 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
               <div class="hint" style="margin-top:6px;">Total da prova (por avaliador) = (Clareza*0,3) + (Domínio*0,4) + (Análise*0,3)</div>
               <div class="form-group">
                 <label for="nota_projeto">Nota do Projeto (0-10) - Média</label>
-                <input type="number" id="nota_projeto" name="nota_projeto" min="0" max="10" step="0.1" readonly style="background-color:#eee;" value="${escapeHtml(String(e.nota_projeto || ''))}" />
+                <input class="eval-input" type="number" id="nota_projeto" name="nota_projeto" min="0" max="10" step="0.1" readonly style="background-color:#eee;" value="${escapeHtml(String(e.nota_projeto || ''))}" />
               </div>
               <div class="form-group">
                 <label for="nota_entrevista">Nota da Entrevista (0-10) - Média</label>
-                <input type="number" id="nota_entrevista" name="nota_entrevista" min="0" max="10" step="0.1" readonly style="background-color:#eee;" value="${escapeHtml(String(e.nota_entrevista || ''))}" />
+                <input class="eval-input" type="number" id="nota_entrevista" name="nota_entrevista" min="0" max="10" step="0.1" readonly style="background-color:#eee;" value="${escapeHtml(String(e.nota_entrevista || ''))}" />
               </div>
               <div class="form-group" style="margin-top:8px;">
                 <label for="lang_total_calc">Nota da Prova de Língua (0-10) - Média</label>
-                <input type="text" id="lang_total_calc" readonly style="background-color:#eee;" value="${escapeHtml(String(e.lang_total ? e.lang_total.toFixed(2) : ''))}" />
+                <input class="eval-input" type="text" id="lang_total_calc" readonly style="background-color:#eee;" value="${escapeHtml(String(e.lang_total ? e.lang_total.toFixed(2) : ''))}" />
               </div>
               <div class="form-group" style="margin-top:8px;">
                 <label for="nota_final">Nota Final (P=4, E=5, L=1)</label>
-                <input type="text" id="nota_final" readonly style="background-color:#eee; font-weight:bold;" value="${escapeHtml(String(finalScoreDisplay))}" />
+                <input class="eval-input" type="text" id="nota_final" readonly style="background-color:#eee; font-weight:bold;" value="${escapeHtml(String(finalScoreDisplay))}" />
               </div>
               <div class="form-group">
                 <label for="eliminado">Eliminação (Casos omissos)</label>
-                <select id="eliminado" name="eliminado">
+                <select class="eval-input" id="eliminado" name="eliminado">
                   ${['Não','Sim'].map(opt => {
                     const sel = String(e.eliminado ? 'Sim' : 'Não') === opt ? 'selected' : '';
                     return `<option value="${escapeHtml(opt)}" ${sel}>${escapeHtml(opt)}</option>`;
@@ -1111,7 +1136,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
               </div>
               <div class="form-group">
                 <label for="observacoes">Observações</label>
-                <textarea id="observacoes" name="observacoes" rows="4">${escapeHtml(String(e.observacoes || ''))}</textarea>
+                <textarea class="eval-input" id="observacoes" name="observacoes" rows="4">${escapeHtml(String(e.observacoes || ''))}</textarea>
               </div>
               <div class="admin-actions" style="justify-content:center;">
                 <button class="btn-primary" type="submit">Salvar avaliação</button>
@@ -1136,11 +1161,11 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
             projPrefixes.forEach(p => {
               const elems = Array.from(document.querySelectorAll('[id^="' + p + '_"]'));
               const sum = elems.reduce((s, el) => s + (parseFloat(el.value) || 0), 0);
-              if (sum > 0) { total += sum; count += 1; }
+              const anyFilled = elems.some(el => String(el.value || '').trim() !== '');
+              if (anyFilled) { total += sum; count += 1; }
             });
-            // Divide sempre por 3 (número fixo de avaliadores) para refletir a média real do processo
-            const avg = (total / 3);
-            if (notaProjeto) notaProjeto.value = avg.toFixed(2);
+            const avg = count > 0 ? (total / count) : 0;
+            if (notaProjeto) notaProjeto.value = count > 0 ? avg.toFixed(2) : '';
           }
 
           function calcInterview() {
@@ -1149,11 +1174,11 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
             intPrefixes.forEach(p => {
               const elems = Array.from(document.querySelectorAll('[id^="' + p + '_"]'));
               const sum = elems.reduce((s, el) => s + (parseFloat(el.value) || 0), 0);
-              if (sum > 0) { total += sum; count += 1; }
+              const anyFilled = elems.some(el => String(el.value || '').trim() !== '');
+              if (anyFilled) { total += sum; count += 1; }
             });
-            // Divide sempre por 3
-            const avg = (total / 3);
-            if (notaEntrevista) notaEntrevista.value = avg.toFixed(2);
+            const avg = count > 0 ? (total / count) : 0;
+            if (notaEntrevista) notaEntrevista.value = count > 0 ? avg.toFixed(2) : '';
           }
 
           function calcLanguage() {
@@ -1163,15 +1188,15 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
               const cEl = document.getElementById(p + '_clareza');
               const dEl = document.getElementById(p + '_domino');
               const aEl = document.getElementById(p + '_analise');
+              const anyFilled = [cEl, dEl, aEl].some(el => el && String(el.value || '').trim() !== '');
               const c = cEl ? (parseFloat(cEl.value) || 0) : 0;
               const d = dEl ? (parseFloat(dEl.value) || 0) : 0;
               const a = aEl ? (parseFloat(aEl.value) || 0) : 0;
               const sum = (c * 0.3) + (d * 0.4) + (a * 0.3);
-              if (sum > 0) { total += sum; count += 1; }
+              if (anyFilled) { total += sum; count += 1; }
             });
-            // Divide sempre por 3
-            const avg = (total / 3);
-            if (langTotalCalc) langTotalCalc.value = avg.toFixed(2);
+            const avg = count > 0 ? (total / count) : 0;
+            if (langTotalCalc) langTotalCalc.value = count > 0 ? avg.toFixed(2) : '';
           }
 
           // Attach listeners for dynamic calculation
@@ -1204,43 +1229,64 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
   const s = storage.getByProtocol(protocol);
   if (!s) return res.status(404).send('Não encontrado');
 
+  const parseOptionalNumber = (raw) => {
+    const text = String(raw ?? '').trim();
+    if (!text) return null;
+    const n = Number(text);
+    return Number.isFinite(n) ? n : null;
+  };
+
   const evaluators = ['avaliador1','avaliador2','avaliador3'];
 
   // Projeto: 3 avaliadores, cada um com 8 itens
   const projectKeys = ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs'];
   const projectScores = {};
-  const projEvaluatorSums = [];
+  let projTotalSum = 0;
+  let projCount = 0;
   
   evaluators.forEach(who => {
     let sumEv = 0;
+    let anyFilled = false;
     projectKeys.forEach(k => {
       const key = `proj_${who}_${k}`;
-      const v = Number(req.body?.[key] ?? '0');
+      const raw = req.body?.[key];
+      const v = parseOptionalNumber(raw);
+      if (v !== null) anyFilled = true;
       projectScores[key] = v;
-      sumEv += v;
+      sumEv += (v ?? 0);
     });
-    projEvaluatorSums.push(sumEv);
+    if (anyFilled) {
+      projTotalSum += sumEv;
+      projCount += 1;
+    }
   });
-  // Average across evaluators (fixed divisor 3)
-  const projTotal = (projEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
+  const projTotal = projCount > 0 ? (projTotalSum / projCount) : 0;
 
   // Entrevista: 3 avaliadores, cada com 4 itens
   const interviewScores = {};
-  const intEvaluatorSums = [];
+  let intTotalSum = 0;
+  let intCount = 0;
   evaluators.forEach(who => {
     const prefix = `int_${who}`;
-    const ap = Number(req.body?.[`${prefix}_apresentacao`] ?? '0');
-    const hp = Number(req.body?.[`${prefix}_historico`] ?? '0');
-    const df = Number(req.body?.[`${prefix}_defesa`] ?? '0');
-    const ji = Number(req.body?.[`${prefix}_justificativa`] ?? '0');
+    const apRaw = req.body?.[`${prefix}_apresentacao`];
+    const hpRaw = req.body?.[`${prefix}_historico`];
+    const dfRaw = req.body?.[`${prefix}_defesa`];
+    const jiRaw = req.body?.[`${prefix}_justificativa`];
+    const ap = parseOptionalNumber(apRaw);
+    const hp = parseOptionalNumber(hpRaw);
+    const df = parseOptionalNumber(dfRaw);
+    const ji = parseOptionalNumber(jiRaw);
+    const anyFilled = [ap, hp, df, ji].some(v => v !== null);
     interviewScores[`${prefix}_apresentacao`] = ap;
     interviewScores[`${prefix}_historico`] = hp;
     interviewScores[`${prefix}_defesa`] = df;
     interviewScores[`${prefix}_justificativa`] = ji;
-    intEvaluatorSums.push(ap + hp + df + ji);
+    if (anyFilled) {
+      intTotalSum += ((ap ?? 0) + (hp ?? 0) + (df ?? 0) + (ji ?? 0));
+      intCount += 1;
+    }
   });
-  // Average across evaluators (fixed divisor 3)
-  const intTotal = (intEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
+  const intTotal = intCount > 0 ? (intTotalSum / intCount) : 0;
 
   const proj_possible_supervisor = String(req.body?.proj_possible_supervisor || '');
   const proj_potential_interview = String(req.body?.proj_potential_interview || '');
@@ -1252,20 +1298,27 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
 
   // Prova de língua: 3 avaliadores
   const langScores = {};
-  const langEvaluatorSums = [];
+  let langTotalSum = 0;
+  let langCount = 0;
   evaluators.forEach(who => {
     const prefix = `lang_${who}`;
-    const c = Number(req.body?.[`${prefix}_clareza`] ?? '0');
-    const d = Number(req.body?.[`${prefix}_domino`] ?? '0');
-    const a = Number(req.body?.[`${prefix}_analise`] ?? '0');
+    const cRaw = req.body?.[`${prefix}_clareza`];
+    const dRaw = req.body?.[`${prefix}_domino`];
+    const aRaw = req.body?.[`${prefix}_analise`];
+    const c = parseOptionalNumber(cRaw);
+    const d = parseOptionalNumber(dRaw);
+    const a = parseOptionalNumber(aRaw);
+    const anyFilled = [c, d, a].some(v => v !== null);
     langScores[`${prefix}_clareza`] = c;
     langScores[`${prefix}_domino`] = d;
     langScores[`${prefix}_analise`] = a;
     // Weighted sum per evaluator
-    langEvaluatorSums.push((c * 0.3) + (d * 0.4) + (a * 0.3));
+    if (anyFilled) {
+      langTotalSum += (((c ?? 0) * 0.3) + ((d ?? 0) * 0.4) + ((a ?? 0) * 0.3));
+      langCount += 1;
+    }
   });
-  // Average across evaluators (fixed divisor 3)
-  const lang_total = (langEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
+  const lang_total = langCount > 0 ? (langTotalSum / langCount) : 0;
 
   storage.upsertEvaluation({
     protocol,
@@ -1710,6 +1763,8 @@ function evaluatorAuth(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+    // Atualiza o contexto (ator) após autenticação
+    refreshActorFromReq(req);
     // Se for admin, deixa passar (tem acesso a tudo)
     if (decoded.role === 'admin') return next();
     
@@ -1962,12 +2017,6 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
         .kv { width: 100%; border-collapse: collapse; background-color: #fff; }
         .kv th, .kv td { border: 1px solid #86A3C2; padding: 6px; vertical-align: top; }
         .kv th { background-color: #D0E5F5; color: #003366; text-align: left; width: 34%; }
-
-        .eval-kv { width: 100%; border-collapse: collapse; background-color: #fff; }
-        .eval-kv th, .eval-kv td { border: 1px solid #86A3C2; padding: 6px; vertical-align: middle; }
-        .eval-kv th { background-color: #D0E5F5; color: #003366; text-align: left; }
-        .eval-kv td.note { width: 120px; }
-        .eval-kv td.max { width: 90px; text-align: center; }
         .eval-input {
           width: 100%;
           padding: 6px;
