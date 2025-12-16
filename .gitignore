@@ -1,20 +1,69 @@
-# Dependências
+# ===== SEGURANÇA - CRÍTICO =====
+# NUNCA commitar arquivos de segurança
+.env
+.env.local
+.env.*.local
+.env.production
+.admin-secret
+.admin-2fa-secret
+.jwt-secret
+server/.admin-secret
+server/.admin-2fa-secret
+informacoes_adm.txt
+.ssh/
+*.pem
+*.key
+*.crt
+
+# Logs de segurança
+server/logs/
+logs/
+*.log
+
+# ===== Dependências =====
 node_modules/
 **/node_modules/
-
-# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-*.log
+pnpm-debug.log*
 
-# Sistema/Editor
+# ===== Sistema/Editor =====
 .DS_Store
 Thumbs.db
-.vscode/
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
 
-# Dados locais (não commitar inscrições reais)
+# ===== Dados locais (desenvolvimento) =====
+# NÃO commitar dados reais de inscrição
 server/data/submissions.json
+server/data/evaluations.json
+server/data/*.bak
+server/data/*.json.old
 
-# Jupyter
+# ===== Backups e temporários =====
+*.bak
+*.tmp
+*.temp
+*~
+tmp/
+temp/
+
+# ===== IDE específicas =====
+.idea/
+.vscode/
+*.iml
+*.sublime-workspace
+
+# ===== Builds =====
+dist/
+build/
+out/
+
+# ===== Jupyter =====
 .ipynb_checkpoints/
+*.ipynb_checkpoints

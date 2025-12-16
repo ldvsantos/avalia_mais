@@ -148,6 +148,250 @@ async function registerSubmissionOnServer(payload) {
     return body;
 }
 
+async function generateDraft() {
+    console.log("Gerando rascunho...");
+    const MAX_RESUMO = 1800;
+    const MAX_OBJETIVO_GERAL = 200;
+    const limitText = (value, maxLen) => String(value || '').slice(0, maxLen);
+
+    // Helper functions for form data
+    const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
+    const getCheckboxes = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value).join(', ');
+
+    const registrationNumber = "RASCUNHO - SEM VALIDADE";
+    const hashVerificacao = "RASCUNHO - NÃO ENVIADO";
+    const dataRegistro = new Date().toISOString();
+
+    // Coletar todos os dados do formulário
+    const formData = {
+        inscricao: registrationNumber,
+        hash_verificacao: hashVerificacao,
+        data_registro: dataRegistro,
+        // Ficha de Inscrição
+        nome: document.getElementById('nome').value || '[NOME]',
+        nome_social: document.getElementById('nome_social').value,
+        data_nascimento: document.getElementById('data_nascimento').value,
+        cpf: document.getElementById('cpf').value || '000.000.000-00',
+        rg: document.getElementById('rg').value,
+        orgao_expedidor: document.getElementById('orgao_expedidor').value,
+        data_expedicao: document.getElementById('data_expedicao').value,
+        endereco: document.getElementById('endereco').value,
+        cidade_estado: document.getElementById('cidade_estado').value,
+        cep: document.getElementById('cep').value,
+        celular: document.getElementById('celular').value,
+        telefone_residencial: document.getElementById('telefone_residencial').value,
+        email: document.getElementById('email').value,
+        curso_graduacao: document.getElementById('curso_graduacao').value,
+        instituicao: document.getElementById('instituicao').value,
+        ano_conclusao: document.getElementById('ano_conclusao').value,
+        vaga_institucional: getRadio('vaga_institucional'),
+        vaga_cooperacao: getRadio('vaga_cooperacao'),
+        vaga_reservada: getRadio('vaga_reservada'),
+        cotas: getCheckboxes('cotas'),
+        raca_cor: document.getElementById('raca_cor').value,
+        lingua_estrangeira: getRadio('lingua_estrangeira'),
+        vinculo_empregaticio: getRadio('vinculo_empregaticio'),
+        carga_horaria: document.getElementById('carga_horaria').value,
+        empresa_vinculo: document.getElementById('empresa_vinculo').value,
+
+        // Projeto
+        titulo_pt: document.getElementById('titulo_pt').value || '[TÍTULO]',
+        titulo_en: document.getElementById('titulo_en').value,
+        area: document.getElementById('area').value,
+        palavras_pt: document.getElementById('palavras_pt').value,
+        palavras_en: document.getElementById('palavras_en').value,
+        resumo: limitText(document.getElementById('resumo').value, MAX_RESUMO),
+        justificativa_enquadramento: document.getElementById('justificativa_enquadramento')?.value || '',
+        introducao: document.getElementById('introducao')?.value || '',
+        problema_pesquisa: document.getElementById('problema_pesquisa')?.value || '',
+        justificativa_relevancia: document.getElementById('justificativa_relevancia')?.value || '',
+        objetivo_geral: limitText(document.getElementById('objetivo_geral')?.value || '', MAX_OBJETIVO_GERAL),
+        objetivos_especificos: document.getElementById('objetivos_especificos')?.value || '',
+        revisao_literatura: document.getElementById('revisao_literatura')?.value || '',
+        procedimentos_metodologicos: document.getElementById('procedimentos_metodologicos')?.value || '',
+        cronograma: document.getElementById('cronograma')?.value || '',
+        referencias: document.getElementById('referencias')?.value || ''
+    };
+    // Termo de Compromisso
+    formData.termo_compromisso = document.getElementById('termo_compromisso')?.checked ? 'Concordo' : 'Não concordo';
+
+    // Criar HTML para o PDF (Cópia simplificada do generatePDF)
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>RASCUNHO - Planterr</title>
+            <link rel="stylesheet" href="/theme.css">
+            <style>
+                @page { size: A4; margin: 14mm; }
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                html, body { width: 100%; margin: 0; padding: 0; }
+                body {
+                    font-family: Verdana, Arial, Helvetica, sans-serif;
+                    font-size: 11px;
+                    color: #000;
+                    padding: 0;
+                    line-height: 1.3;
+                    background: #fff;
+                    overflow-x: hidden;
+                }
+                .watermark {
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%) rotate(-45deg);
+                    font-size: 100px;
+                    color: rgba(200, 0, 0, 0.2);
+                    z-index: 9999;
+                    pointer-events: none;
+                    white-space: nowrap;
+                }
+                .content { padding: 0 2mm; max-width: 100%; }
+                .header-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    justify-content: space-between;
+                    width: 100%;
+                    max-width: 100%;
+                    border-bottom: 2px solid #003366;
+                    padding-bottom: 10px;
+                    margin-bottom: 15px;
+                    overflow: hidden;
+                }
+                .header-left { flex: 0 0 18%; max-width: 18%; }
+                .header-left img { display: block; max-width: 100%; height: auto; max-height: 45px; }
+                .header-center { flex: 1 1 auto; min-width: 0; text-align: center; font-size: 14px; font-weight: bold; text-transform: uppercase; color: #003366; }
+                .header-right { flex: 0 0 32%; max-width: 32%; min-width: 0; text-align: right; font-size: 10px; }
+                
+                /* Table Styles */
+                table.ficha-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+                table.ficha-table td { border: 1px solid #003366; padding: 4px; vertical-align: top; word-wrap: break-word; background: #fff; }
+                .label { display: block; font-weight: bold; margin-bottom: 3px; font-size: 10px; color: #003366; }
+                .value { display: block; min-height: 15px; }
+
+                /* Section Styles */
+                .section { margin-bottom: 10px; border: 1px solid #86A3C2; padding: 10px; background-color: #F4F9FD; }
+                .section-title { font-weight: bold; color: #003366; margin: -10px -10px 10px -10px; font-size: 11px; padding: 4px 10px; border-bottom: 1px solid #86A3C2; background: #d0e5f5; }
+                .field { margin-bottom: 8px; }
+                .field-label { font-weight: bold; color: #003366; font-size: 11px; margin-bottom: 2px; }
+                .field-value { padding: 4px; background-color: #fff; border: 1px solid #7F9DB9; min-height: 18px; white-space: pre-wrap; word-wrap: break-word; font-size: 11px; }
+                
+                .page-break { display: block; height: 0; page-break-before: always; break-before: page; margin: 0; }
+                @media print { 
+                    .page-break { page-break-before: always; break-before: page; }
+                    .section { break-inside: auto; }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="watermark">RASCUNHO</div>
+            <div class="content">
+            <!-- PÁGINA 1: FICHA DE INSCRIÇÃO -->
+            <div class="page-1">
+                <div class="header-container">
+                    <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
+                    <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO (RASCUNHO)</div>
+                    <div class="header-right">
+                        <div><strong>Processo:</strong> ${registrationNumber}</div>
+                        <div><strong>Registro:</strong> ${new Date(formData.data_registro).toLocaleString('pt-BR')}</div>
+                        <div style="font-size:8px; word-break:break-all;"><strong>Hash:</strong> ${formData.hash_verificacao}</div>
+                    </div>
+                </div>
+
+                <table class="ficha-table">
+                    <tr><td colspan="4"><span class="label">Nome:</span><span class="value">${escapeHtml(formData.nome)}</span></td></tr>
+                    <tr><td colspan="4"><span class="label">Nome Social:</span><span class="value">${escapeHtml(formData.nome_social)}</span></td></tr>
+                    <tr>
+                        <td colspan="2"><span class="label">Data de Nascimento:</span><span class="value">${escapeHtml(formData.data_nascimento)}</span></td>
+                        <td colspan="2"><span class="label">CPF:</span><span class="value">${escapeHtml(formData.cpf)}</span></td>
+                    </tr>
+                    <tr>
+                        <td><span class="label">RG:</span><span class="value">${escapeHtml(formData.rg)}</span></td>
+                        <td><span class="label">Órgão:</span><span class="value">${escapeHtml(formData.orgao_expedidor)}</span></td>
+                        <td colspan="2"><span class="label">Data Exp.:</span><span class="value">${escapeHtml(formData.data_expedicao)}</span></td>
+                    </tr>
+                    <tr><td colspan="4"><span class="label">Endereço:</span><span class="value">${escapeHtml(formData.endereco)}</span></td></tr>
+                    <tr>
+                        <td colspan="3"><span class="label">Cidade/Estado:</span><span class="value">${escapeHtml(formData.cidade_estado)}</span></td>
+                        <td><span class="label">CEP:</span><span class="value">${escapeHtml(formData.cep)}</span></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><span class="label">Celular:</span><span class="value">${escapeHtml(formData.celular)}</span></td>
+                        <td colspan="2"><span class="label">Residencial:</span><span class="value">${escapeHtml(formData.telefone_residencial)}</span></td>
+                    </tr>
+                    <tr><td colspan="4"><span class="label">E-mail:</span><span class="value">${escapeHtml(formData.email)}</span></td></tr>
+                    <tr><td colspan="4"><span class="label">Curso:</span><span class="value">${escapeHtml(formData.curso_graduacao)}</span></td></tr>
+                    <tr>
+                        <td colspan="3"><span class="label">Instituição:</span><span class="value">${escapeHtml(formData.instituicao)}</span></td>
+                        <td><span class="label">Ano:</span><span class="value">${escapeHtml(formData.ano_conclusao)}</span></td>
+                    </tr>
+                    <tr><td colspan="4"><span class="label">Título:</span><span class="value">${escapeHtml(formData.titulo_pt)}</span></td></tr>
+                    <tr><td colspan="4"><span class="label">Linha:</span><span class="value">${escapeHtml(formData.area)}</span></td></tr>
+                </table>
+            </div>
+
+            <div class="page-break"></div>
+
+            <!-- PÁGINA 2: ANTEPROJETO -->
+            <div class="page-2">
+                <div class="header-container">
+                    <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
+                    <div class="header-center">ANTEPROJETO (RASCUNHO)</div>
+                    <div class="header-right">
+                        <div><strong>Processo:</strong> ${registrationNumber}</div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">ANEXO IV - Anteprojeto</div>
+                    <div class="field"><div class="field-label">Título:</div><div class="field-value">${escapeHtml(formData.titulo_pt)}</div></div>
+                    <div class="field"><div class="field-label">Linha:</div><div class="field-value">${escapeHtml(formData.area)}</div></div>
+                </div>
+
+                <div class="section"><div class="section-title">Resumo</div><div class="field"><div class="field-value">${escapeHtml(formData.resumo)}</div></div></div>
+                <div class="section"><div class="section-title">1 – Introdução</div><div class="field"><div class="field-value">${escapeHtml(formData.introducao)}</div></div></div>
+                <div class="section"><div class="section-title">2 – Problema</div><div class="field"><div class="field-value">${escapeHtml(formData.problema_pesquisa)}</div></div></div>
+                <div class="section"><div class="section-title">3 – Justificativa</div><div class="field"><div class="field-value">${escapeHtml(formData.justificativa_relevancia)}</div></div></div>
+                <div class="section">
+                    <div class="section-title">4 – Objetivos</div>
+                    <div class="field"><div class="field-label">Geral:</div><div class="field-value">${escapeHtml(formData.objetivo_geral)}</div></div>
+                    <div class="field"><div class="field-label">Específicos:</div><div class="field-value">${escapeHtml(formData.objetivos_especificos)}</div></div>
+                </div>
+                <div class="section"><div class="section-title">5 – Revisão</div><div class="field"><div class="field-value">${escapeHtml(formData.revisao_literatura)}</div></div></div>
+                <div class="section"><div class="section-title">6 – Metodologia</div><div class="field"><div class="field-value">${escapeHtml(formData.procedimentos_metodologicos)}</div></div></div>
+                <div class="section"><div class="section-title">7 – Cronograma</div><div class="field"><div class="field-value">${escapeHtml(formData.cronograma)}</div></div></div>
+                <div class="section"><div class="section-title">8 – Referências</div><div class="field"><div class="field-value">${escapeHtml(formData.referencias)}</div></div></div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    let printFrame = document.getElementById('print-frame');
+    if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.id = 'print-frame';
+        printFrame.style.position = 'fixed';
+        printFrame.style.right = '0';
+        printFrame.style.bottom = '0';
+        printFrame.style.width = '0';
+        printFrame.style.height = '0';
+        printFrame.style.border = '0';
+        document.body.appendChild(printFrame);
+    }
+
+    const frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write(htmlContent);
+    frameDoc.close();
+
+    setTimeout(() => {
+        printFrame.contentWindow.focus();
+        printFrame.contentWindow.print();
+    }, 1000);
+}
+
 async function generatePDF() {
     console.log("Iniciando geração do PDF...");
 
@@ -877,58 +1121,75 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function fillExample() {
-    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val; };
-    const checkRadio = (name, val) => { const el = document.querySelector(`input[name="${name}"][value="${val}"]`); if (el) el.checked = true; };
-    const checkBoxes = (name, values) => { values.forEach(v => { const el = document.querySelector(`input[name="${name}"][value="${v}"]`); if (el) el.checked = true; }); };
+    console.log('fillExample chamado!');
+    try {
+        const setVal = (id, val) => { 
+            const el = document.getElementById(id); 
+            if (el) {
+                el.value = val;
+                el.dispatchEvent(new Event('input')); // Atualiza contadores
+                el.dispatchEvent(new Event('change')); // Atualiza validações
+            }
+        };
+        const checkRadio = (name, val) => { const el = document.querySelector(`input[name="${name}"][value="${val}"]`); if (el) el.checked = true; };
+        const checkBoxes = (name, values) => { values.forEach(v => { const el = document.querySelector(`input[name="${name}"][value="${v}"]`); if (el) el.checked = true; }); };
 
-    // Ficha
-    setVal('nome', 'Maria da Silva');
-    setVal('nome_social', 'Maria Silva');
-    setVal('data_nascimento', '1990-05-10');
-    setVal('cpf', '390.533.447-05');
-    setVal('rg', '1234567');
-    setVal('orgao_expedidor', 'SSP-BA');
-    setVal('data_expedicao', '2010-08-15');
-    setVal('endereco', 'Rua das Flores, 123, Bairro Centro');
-    setVal('cidade_estado', 'Feira de Santana - BA');
-    setVal('cep', '44000-000');
-    setVal('celular', '(75) 99999-0000');
-    setVal('telefone_residencial', '(75) 3333-4444');
-    setVal('email', 'maria.silva@example.com');
-    setVal('curso_graduacao', 'Engenharia Agronômica');
-    setVal('instituicao', 'UEFS');
-    setVal('ano_conclusao', '2015');
-    checkRadio('vaga_institucional', 'Sim');
-    checkRadio('vaga_cooperacao', 'Não');
-    checkRadio('vaga_reservada', 'Não');
-    checkBoxes('cotas', ['Negro']);
-    setVal('raca_cor', 'Parda');
-    checkRadio('lingua_estrangeira', 'Inglês');
-    checkRadio('vinculo_empregaticio', 'Não');
-    setVal('carga_horaria', '40h');
-    setVal('empresa_vinculo', '');
-    const termo = document.getElementById('termo_compromisso');
-    if (termo) termo.checked = true;
+        // Ficha
+        setVal('nome', 'Maria da Silva');
+        setVal('nome_social', 'Maria Silva');
+        setVal('data_nascimento', '1990-05-10');
+        setVal('cpf', '390.533.447-05');
+        setVal('rg', '1234567');
+        setVal('orgao_expedidor', 'SSP-BA');
+        setVal('data_expedicao', '2010-08-15');
+        setVal('endereco', 'Rua das Flores, 123, Bairro Centro');
+        setVal('cidade_estado', 'Feira de Santana - BA');
+        setVal('cep', '44000-000');
+        setVal('celular', '(75) 99999-0000');
+        setVal('telefone_residencial', '(75) 3333-4444');
+        setVal('email', 'maria.silva@example.com');
+        setVal('curso_graduacao', 'Engenharia Agronômica');
+        setVal('instituicao', 'UEFS');
+        setVal('ano_conclusao', '2015');
+        checkRadio('vaga_institucional', 'Sim');
+        checkRadio('vaga_cooperacao', 'Não');
+        checkRadio('vaga_reservada', 'Não');
+        checkBoxes('cotas', ['Negro']);
+        setVal('raca_cor', 'Parda');
+        checkRadio('lingua_estrangeira', 'Inglês');
+        checkRadio('vinculo_empregaticio', 'Não');
+        setVal('carga_horaria', '40h');
+        setVal('empresa_vinculo', '');
+        const termo = document.getElementById('termo_compromisso');
+        if (termo) termo.checked = true;
 
-    // Atualizar avisos na tela após autopreenchimento
-    updateCpfFeedback();
-    updateTermoFeedback();
+        // Atualizar avisos na tela após autopreenchimento
+        if (typeof updateCpfFeedback === 'function') updateCpfFeedback();
+        if (typeof updateTermoFeedback === 'function') updateTermoFeedback();
 
-    // Projeto
-    setVal('titulo_pt', 'Desenvolvimento de Sistema PlanTerr para Gestão de Projetos');
-    setVal('titulo_en', 'PlanTerr System Development for Project Management');
-    setVal('area', 'Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social');
-    setVal('palavras_pt', 'gestão; projeto; inovação');
-    setVal('palavras_en', 'management; project; innovation');
-    setVal('resumo', 'Este anteprojeto propõe o desenvolvimento de um sistema para apoiar a gestão de projetos acadêmicos, com foco em processos seletivos e avaliação cega.');
-    setVal('justificativa_enquadramento', 'O tema se enquadra na linha escolhida por tratar de processos e práticas de planejamento territorial apoiados por tecnologia e participação social.');
-    setVal('introducao', 'Contextualização do problema e do cenário institucional em que se insere o anteprojeto.');
-    setVal('problema_pesquisa', 'Como padronizar e dar rastreabilidade ao processo de submissão e avaliação às cegas de anteprojetos?');
-    setVal('justificativa_relevancia', 'A relevância está na melhoria da transparência, eficiência e integridade do processo seletivo, reduzindo falhas operacionais.');
-    setVal('objetivo_geral', 'Propor um fluxo digital de submissão e verificação do anteprojeto, com geração de protocolo e hash.');
-    setVal('objetivos_especificos', '(i) validar dados; (ii) gerar protocolo e hash; (iii) exportar relatórios; (iv) imprimir em PDF.');
-    setVal('revisao_literatura', 'Síntese de conceitos sobre avaliação às cegas, gestão de processos e documentação digital.');
-    setVal('procedimentos_metodologicos', 'Desenvolvimento incremental do protótipo (HTML/CSS/JS + Node/Express), testes com usuários e ajustes de layout/validações.');
-    setVal('cronograma', 'Mês 1-2: levantamento e desenho do fluxo\nMês 3-4: implementação e testes\nMês 5-6: validação e refinamentos\nMês 7-24: evolução e documentação');
-    setVal('referencias', 'SOBRENOME, Nome. Título. Local: Editora, ano.\nASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. NBR 6023.');
+        // Projeto
+        setVal('titulo_pt', 'Desenvolvimento de Sistema PlanTerr para Gestão de Projetos');
+        setVal('titulo_en', 'PlanTerr System Development for Project Management');
+        setVal('area', 'Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social');
+        setVal('palavras_pt', 'gestão; projeto; inovação');
+        setVal('palavras_en', 'management; project; innovation');
+        setVal('resumo', 'Este anteprojeto propõe o desenvolvimento de um sistema para apoiar a gestão de projetos acadêmicos, com foco em processos seletivos e avaliação cega.');
+        setVal('justificativa_enquadramento', 'O tema se enquadra na linha escolhida por tratar de processos e práticas de planejamento territorial apoiados por tecnologia e participação social.');
+        setVal('introducao', 'Contextualização do problema e do cenário institucional em que se insere o anteprojeto.');
+        setVal('problema_pesquisa', 'Como padronizar e dar rastreabilidade ao processo de submissão e avaliação às cegas de anteprojetos?');
+        setVal('justificativa_relevancia', 'A relevância está na melhoria da transparência, eficiência e integridade do processo seletivo, reduzindo falhas operacionais.');
+        setVal('objetivo_geral', 'Propor um fluxo digital de submissão e verificação do anteprojeto, com geração de protocolo e hash.');
+        setVal('objetivos_especificos', '(i) validar dados; (ii) gerar protocolo e hash; (iii) exportar relatórios; (iv) imprimir em PDF.');
+        setVal('revisao_literatura', 'Síntese de conceitos sobre avaliação às cegas, gestão de processos e documentação digital.');
+        setVal('procedimentos_metodologicos', 'Desenvolvimento incremental do protótipo (HTML/CSS/JS + Node/Express), testes com usuários e ajustes de layout/validações.');
+        setVal('cronograma', 'Mês 1-2: levantamento e desenho do fluxo\nMês 3-4: implementação e testes\nMês 5-6: validação e refinamentos\nMês 7-24: evolução e documentação');
+        setVal('referencias', 'SOBRENOME, Nome. Título. Local: Editora, ano.\nASSOCIAÇÃO BRASILEIRA DE NORMAS TÉCNICAS. NBR 6023.');
+
+        if (typeof updateAreaFeedback === 'function') updateAreaFeedback();
+        
+        alert('Exemplo preenchido com sucesso!');
+    } catch (err) {
+        console.error(err);
+        alert('Erro ao preencher exemplo: ' + err.message);
+    }
 }

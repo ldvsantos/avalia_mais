@@ -1,3 +1,26 @@
 {
-  "evaluations": []
+  "evaluations": [
+    {
+      "protocol": "PLANTERR-2025-20251215-4E3C8CF1A1A1",
+      "proj_avaliador1_proj_intro": 1,
+      "proj_avaliador1_proj_problem": 1.5,
+      "proj_avaliador1_proj_just": 1,
+      "proj_avaliador1_proj_objectives": 2,
+      "proj_avaliador1_proj_review": 1,
+      "proj_avaliador1_proj_methods": 2.5,
+      "proj_avaliador1_proj_schedule": 0.5,
+      "proj_avaliador1_proj_refs": 0.5,
+      "int_avaliador1_apresentacao": 3,
+      "int_avaliador1_historico": 2,
+      "int_avaliador1_defesa": 3,
+      "int_avaliador1_justificativa": 2,
+      "lang_avaliador1_clareza": 10,
+      "lang_avaliador1_domino": 10,
+      "lang_avaliador1_analise": 10,
+      "proj_total": 10,
+      "int_total": 10,
+      "lang_total": 10,
+      "updatedAt": "2025-12-15T23:51:27.288Z"
+    }
+  ]
 }

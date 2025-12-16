@@ -2,6 +2,29 @@ const path = require('path');
 const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cors = require('cors');
+const session = require('express-session');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const { body, validationResult } = require('express-validator');
+
+// Módulos de segurança
+const { generateOrReadAdminSecret } = require('./admin-secret');
+const { 
+  logSecurityEvent, 
+  logLoginSuccess, 
+  logLoginFailed, 
+  logUnauthorizedAccess,
+  logAdminAction 
+} = require('./security-logger');
+const { 
+  detectAttackPatterns, 
+  securityHeaders, 
+  enforceHTTPS, 
+  verifyJWT, 
+  validateIPWhitelist,
+  getClientIP 
+} = require('./security-middleware');
 
 const storage = require('./storage');
 const {
@@ -15,39 +38,126 @@ const {
 
 const app = express();
 
+// Configuração de Segurança
+const ADMIN_SECRET = generateOrReadAdminSecret();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.ADMIN_PASS || 'admin';
 const HMAC_SECRET = process.env.HMAC_SECRET || 'dev-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
+const ADMIN_IPS = (process.env.ADMIN_IPS || '').split(',').filter(Boolean);
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
 
+// 1. Headers de Segurança (Helmet + Custom)
 app.use(helmet({
-  contentSecurityPolicy: false,
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"], // Necessário para alguns scripts inline
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+app.use(securityHeaders);
+
+// 2. CORS Restritivo
+app.use(cors({
+  origin: (origin, callback) => {
+    // Permitir requisições sem origin (como curl ou apps mobile) ou da whitelist
+    if (!origin || ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.length === 0) {
+      callback(null, true);
+    } else {
+      logSecurityEvent('CORS_BLOCKED', { origin });
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
 
+// 3. Detecção de Ataques
+app.use(detectAttackPatterns);
+
+// 4. Parsing e Sessão
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 
-app.use('/api/', rateLimit({
+app.use(session({
+  secret: JWT_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 2 * 60 * 60 * 1000 // 2 horas
+  }
+}));
+
+// 5. Rate Limiting
+const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 60,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-}));
+  handler: (req, res) => {
+    logSecurityEvent('RATE_LIMIT_EXCEEDED', { ip: req.ip, path: req.path });
+    res.status(429).json({ error: 'Muitas requisições, tente novamente mais tarde.' });
+  }
+});
+app.use('/api/', apiLimiter);
 
 // Serve the existing static site from /src
 app.use('/', express.static(path.join(__dirname, '..', 'src')));
 
-function basicAuth(req, res, next) {
-  const header = req.headers.authorization || '';
-  if (!header.startsWith('Basic ')) {
-    res.setHeader('WWW-Authenticate', 'Basic realm="Admin"');
-    return res.status(401).send('Auth required');
+function checkAdminIP(req, res, next) {
+  const clientIP = getClientIP(req);
+  
+  if (ADMIN_IPS.length > 0 && !ADMIN_IPS.includes(clientIP)) {
+    logUnauthorizedAccess(req.path, clientIP, req.method, { reason: 'IP_NOT_WHITELISTED' });
+    return res.status(403).send('Acesso não autorizado (IP)');
   }
-  const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
-  const [user, pass] = decoded.split(':');
-  if (user === ADMIN_USER && pass === ADMIN_PASS) return next();
-  res.setHeader('WWW-Authenticate', 'Basic realm="Admin"');
-  return res.status(401).send('Invalid credentials');
+  next();
+}
+
+function adminAuth(req, res, next) {
+  // Verificar token na sessão ou header
+  const token = req.session.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+  
+  if (!token) {
+    // Se for requisição AJAX/API, retornar JSON
+    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+      return res.status(401).json({ error: 'Autenticação necessária' });
+    }
+    // Se for navegador, redirecionar para login
+    return res.redirect(`/secret/${ADMIN_SECRET}/`);
+  }
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    logLoginFailed('unknown', req.ip, 'INVALID_TOKEN');
+    // Limpar sessão inválida
+    if (req.session) req.session.destroy();
+    
+    if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+      return res.status(401).json({ error: 'Sessão expirada ou inválida' });
+    }
+    return res.redirect(`/secret/${ADMIN_SECRET}/`);
+  }
 }
 
 function pickSubmissionPayload(body) {
@@ -250,7 +360,7 @@ app.post('/api/submissions', (req, res) => {
   });
 });
 
-app.get('/admin/export.csv', basicAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => {
   const q = String(req.query.q ?? '');
   const status = String(req.query.status ?? '');
   const fromStr = String(req.query.from ?? '');
@@ -354,7 +464,8 @@ app.get('/admin/export.csv', basicAuth, (req, res) => {
     return row.join(';');
   });
 
-  const csv = [header, ...lines].join('\r\n') + '\r\n';
+  // Adiciona BOM (\uFEFF) para forçar Excel a reconhecer UTF-8
+  const csv = '\uFEFF' + [header, ...lines].join('\r\n') + '\r\n';
   const filename = `inscricoes_${new Date().toISOString().slice(0, 10)}.csv`;
 
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -362,14 +473,14 @@ app.get('/admin/export.csv', basicAuth, (req, res) => {
   return res.send(csv);
 });
 
-app.post('/admin/reset', basicAuth, (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/admin/reset`, checkAdminIP, adminAuth, (req, res) => {
   const confirm = String(req.body?.confirm ?? '').trim().toLowerCase();
   if (confirm !== 'sim') {
     return res.status(400).send('Confirmação obrigatória');
   }
 
   storage.clearAllSubmissions();
-  return res.redirect('/admin');
+  return res.redirect(`/secret/${ADMIN_SECRET}/admin`);
 });
 
 app.get('/api/verify/:protocol', (req, res) => {
@@ -396,7 +507,191 @@ app.get('/api/verify/:protocol', (req, res) => {
   });
 });
 
-app.get('/admin', basicAuth, (req, res) => {
+// --- ROTAS DE AUTENTICAÇÃO ---
+
+// Credenciais dos Avaliadores (Hardcoded para simplificação)
+const EVALUATORS = {
+  'av1-l1': { pass: 'planter2025', line: '1', num: '1' },
+  'av2-l1': { pass: 'planter2025', line: '1', num: '2' },
+  'av3-l1': { pass: 'planter2025', line: '1', num: '3' },
+  'av1-l2': { pass: 'planter2025', line: '2', num: '1' },
+  'av2-l2': { pass: 'planter2025', line: '2', num: '2' },
+  'av3-l2': { pass: 'planter2025', line: '2', num: '3' },
+};
+
+// Endpoint de Login
+app.post(`/secret/${ADMIN_SECRET}/login`, apiLimiter, (req, res) => {
+  const { username, password } = req.body;
+  
+  // 1. Tentar login como Admin
+  if (username === ADMIN_USER && password === ADMIN_PASS) {
+    const token = jwt.sign(
+      { user: username, role: 'admin', iat: Date.now() },
+      JWT_SECRET,
+      { expiresIn: '4h' }
+    );
+    req.session.token = token;
+    logLoginSuccess(username, req.ip, req.headers['user-agent']);
+    return res.json({ success: true, token, redirect: `/secret/${ADMIN_SECRET}/admin` });
+  }
+
+  // 2. Tentar login como Avaliador
+  const evaluator = EVALUATORS[username];
+  if (evaluator && evaluator.pass === password) {
+    const token = jwt.sign(
+      { 
+        user: username, 
+        role: 'evaluator', 
+        line: evaluator.line, 
+        num: evaluator.num,
+        iat: Date.now() 
+      },
+      JWT_SECRET,
+      { expiresIn: '4h' }
+    );
+    req.session.token = token;
+    logLoginSuccess(username, req.ip, req.headers['user-agent']);
+    return res.json({ 
+      success: true, 
+      token, 
+      redirect: `/secret/${ADMIN_SECRET}/evaluator/${evaluator.line}/${evaluator.num}` 
+    });
+  }
+  
+  // Falha
+  logLoginFailed(username, req.ip, 'INVALID_CREDENTIALS');
+  return res.status(401).json({ error: 'Credenciais inválidas' });
+});
+
+// Endpoint de Logout
+app.post(`/secret/${ADMIN_SECRET}/logout`, (req, res) => {
+  req.session.destroy((err) => {
+    res.redirect(`/secret/${ADMIN_SECRET}/`);
+  });
+});
+
+// Verificar status de autenticação
+app.get(`/secret/${ADMIN_SECRET}/auth-status`, (req, res) => {
+  const token = req.session.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+  
+  if (!token) return res.json({ authenticated: false });
+  
+  try {
+    jwt.verify(token, JWT_SECRET);
+    res.json({ authenticated: true });
+  } catch (e) {
+    res.json({ authenticated: false });
+  }
+});
+
+// Redirecionamento da raiz secreta para login ou admin
+app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
+  if (req.session.token) {
+    try {
+      const decoded = jwt.verify(req.session.token, JWT_SECRET);
+      if (decoded.role === 'admin') {
+        return res.redirect(`/secret/${ADMIN_SECRET}/admin`);
+      } else if (decoded.role === 'evaluator') {
+        return res.redirect(`/secret/${ADMIN_SECRET}/evaluator/${decoded.line}/${decoded.num}`);
+      }
+    } catch (e) {
+      // Token inválido, continua para login
+    }
+  }
+  // Servir página de login simples
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Acesso Restrito</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="/theme.css">
+      <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f5f5f5; }
+        .login-box { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; }
+        input { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; }
+        button { width: 100%; padding: 0.75rem; background: #003366; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #002244; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .error { color: red; margin-bottom: 1rem; display: none; padding: 10px; background: #ffe6e6; border-radius: 4px; }
+      </style>
+    </head>
+    <body>
+      <div class="login-box">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img src="/img/logo_planter.png" alt="Logo Planterr" style="max-width: 180px; height: auto; margin-bottom: 10px;">
+          <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Administração do Processo Seletivo - PLANTERR</div>
+        </div>
+        <h2 style="text-align: center; color: #003366; margin-top: 0;">Acesso Restrito</h2>
+        <div id="error-msg" class="error"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label>Usuário</label>
+            <input type="text" name="username" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label>Senha</label>
+            <input type="password" name="password" required autocomplete="current-password">
+          </div>
+          <button type="submit" id="btn-submit">Entrar</button>
+        </form>
+      </div>
+      <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const btn = document.getElementById('btn-submit');
+          const errDiv = document.getElementById('error-msg');
+          
+          // Reset state
+          btn.disabled = true;
+          btn.textContent = 'Entrando...';
+          errDiv.style.display = 'none';
+          
+          const formData = new FormData(e.target);
+          const data = {};
+          formData.forEach((value, key) => data[key] = value);
+          
+          try {
+            const res = await fetch('/secret/${ADMIN_SECRET}/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+
+            // Verificar se a resposta é JSON
+            const contentType = res.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+              const text = await res.text();
+              console.error("Resposta não-JSON recebida:", text);
+              throw new Error("Erro de comunicação com o servidor (CORS ou erro interno).");
+            }
+            
+            const result = await res.json();
+            
+            if (result.success) {
+              btn.textContent = 'Sucesso!';
+              window.location.href = result.redirect;
+            } else {
+              throw new Error(result.error || 'Credenciais inválidas');
+            }
+          } catch (err) {
+            console.error(err);
+            errDiv.textContent = err.message || 'Erro de conexão. Tente novamente.';
+            errDiv.style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Entrar';
+          }
+        });
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, (req, res) => {
   const q = String(req.query.q ?? '');
   const status = String(req.query.status ?? '');
   const fromStr = String(req.query.from ?? '');
@@ -412,12 +707,22 @@ app.get('/admin', basicAuth, (req, res) => {
   const WEIGHTS = { project: 4, interview: 5, language: 1 };
   const MAX = { project: 10, interview: 10, language: 10 };
 
-  function getScore(protocol) {
-    const e = evalMap.get(protocol);
-    if (!e) return null;
+  function getScoreDisplay(s) {
+    const sStatus = normalizeStatus(s.status);
+    if (sStatus.toLowerCase() === 'indeferido') return '<span style="color:red; font-weight:bold;">INDEFERIDO</span>';
+
+    const e = evalMap.get(s.protocol);
+    if (!e) return '<span style="color:#ccc;">—</span>';
+
     const proj = Number(e.proj_total || 0);
     const intr = Number(e.int_total || 0);
     const lang = Number(e.lang_total || 0);
+
+    // Se alguma nota for menor que 7, considera reprovado
+    if (proj < 7 || intr < 7 || lang < 7) {
+      return '<span style="color:red; font-weight:bold;">REPROVADO (< 7)</span>';
+    }
+
     const projNorm = Math.max(0, Math.min(1, proj / MAX.project));
     const intrNorm = Math.max(0, Math.min(1, intr / MAX.interview));
     const langNorm = Math.max(0, Math.min(1, lang / MAX.language));
@@ -426,20 +731,20 @@ app.get('/admin', basicAuth, (req, res) => {
   }
 
   const qs = new URLSearchParams({ q, status, from: fromStr, to: toStr }).toString();
-  const exportUrl = '/admin/export.csv' + (qs ? `?${qs}` : '');
+  const exportUrl = `/secret/${ADMIN_SECRET}/admin/export.csv` + (qs ? `?${qs}` : '');
 
   const rows = submissions.map(s => {
     const sStatus = normalizeStatus(s.status);
-    const score = getScore(s.protocol);
+    const scoreDisplay = getScoreDisplay(s);
     return `
       <tr>
         <td>${escapeHtml(new Date(s.createdAt).toLocaleString('pt-BR'))}</td>
-        <td><a href="/admin/submission/${encodeURIComponent(s.protocol)}">${escapeHtml(s.protocol)}</a></td>
+        <td><a href="/secret/${ADMIN_SECRET}/admin/submission/${encodeURIComponent(s.protocol)}">${escapeHtml(s.protocol)}</a></td>
         <td>${escapeHtml(sStatus)}</td>
         <td>${escapeHtml(s.cpfLast4)}</td>
         <td>${escapeHtml((s.identified?.nome || '').slice(0, 60))}</td>
         <td>${escapeHtml((s.identified?.email || '').slice(0, 60))}</td>
-        <td>${score ? escapeHtml(score) : '<span style="color:#ccc;">—</span>'}</td>
+        <td>${scoreDisplay}</td>
         <td style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;">${escapeHtml((s.hash || '').slice(0, 16))}…</td>
       </tr>
     `;
@@ -475,14 +780,15 @@ app.get('/admin', basicAuth, (req, res) => {
           <div class="panel-body">
             <div class="hint">Dica: clique no protocolo para ver detalhes, status e verificação.</div>
             <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
-              <a class="btn-secondary" href="/committee">Área da Comissão</a>
-              <a class="btn-secondary" href="/committee/results">Ranking / Resultados</a>
-              <form method="POST" action="/admin/reset" onsubmit="return confirm('Isso vai apagar TODAS as inscrições registradas.\n\nUse apenas para TESTE.\n\nDeseja continuar?');" style="margin:0;">
+              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee">Área da Comissão</a>
+              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee/results">Ranking / Resultados</a>
+              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/evaluator-links">Credenciais Avaliadores</a>
+              <form method="POST" action="/secret/${ADMIN_SECRET}/admin/reset" onsubmit="return confirm('Isso vai apagar TODAS as inscrições registradas.\n\nUse apenas para TESTE.\n\nDeseja continuar?');" style="margin:0;">
                 <input type="hidden" name="confirm" value="sim" />
                 <button class="btn-secondary" type="submit">Limpar inscrições (teste)</button>
               </form>
             </div>
-            <form method="GET" action="/admin">
+            <form method="GET" action="/secret/${ADMIN_SECRET}/admin">
               <div class="filters-grid" style="margin-top: 8px;">
                 <div class="form-group" style="margin-bottom: 0;">
                   <label for="q">Busca (protocolo, nome, email, título)</label>
@@ -508,7 +814,7 @@ app.get('/admin', basicAuth, (req, res) => {
               </div>
               <div class="filters-actions">
                 <button class="btn-primary" type="submit">Filtrar</button>
-                <a class="btn-secondary" href="/admin">Limpar</a>
+                <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">Limpar</a>
                 <a class="btn-secondary" href="${exportUrl}">Baixar CSV</a>
               </div>
             </form>
@@ -544,7 +850,7 @@ app.get('/admin', basicAuth, (req, res) => {
 });
 
 // Committee evaluation pages and API
-app.get('/committee', basicAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, (req, res) => {
   const subs = storage.listSubmissions();
   const evals = storage.listEvaluations();
   const evalMap = new Map(evals.map(e => [e.protocol, e]));
@@ -586,7 +892,7 @@ app.get('/committee', basicAuth, (req, res) => {
           <td>${e ? escapeHtml(String(e.lang_total ?? '')) : ''}</td>
           <td>${escapeHtml(sc.total)}</td>
           <td>${escapeHtml(sc.status)}</td>
-          <td><a class="btn-secondary" href="/committee/evaluate/${encodeURIComponent(s.protocol)}">Avaliar</a></td>
+          <td><a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee/evaluate/${encodeURIComponent(s.protocol)}">Avaliar</a></td>
         </tr>
       `;
     }).join('');
@@ -605,7 +911,7 @@ app.get('/committee', basicAuth, (req, res) => {
       <div class="container">
         <header class="main-header"><h1>Comissão - Avaliações</h1></header>
         <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
-          <a class="btn-secondary" href="/admin">Admin</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">Admin</a>
         </div>
         
         <section class="panel">
@@ -663,7 +969,7 @@ app.get('/committee', basicAuth, (req, res) => {
 });
 
 // Página de resultados com ranking
-app.get('/committee/results', basicAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, (req, res) => {
   const subs = storage.listSubmissions();
   const evals = storage.listEvaluations();
   const evalMap = new Map(evals.map(e => [e.protocol, e]));
@@ -727,7 +1033,9 @@ app.get('/committee/results', basicAuth, (req, res) => {
       <div class="container">
         <header class="main-header"><h1>Resultados (Ranking)</h1></header>
         <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
-          <a class="btn-secondary" href="/admin">← Voltar</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee/results/csv">Baixar CSV</a>
+          <button class="btn-secondary" type="button" id="btn-print-ranking">Imprimir / PDF</button>
           <span class="admin-badge">Pesos: Projeto=4, Entrevista=5, Língua=1 (normalizados)</span>
         </div>
 
@@ -780,12 +1088,89 @@ app.get('/committee/results', basicAuth, (req, res) => {
           </div>
         </section>` : ''}
       </div>
+      <script>
+        document.getElementById('btn-print-ranking').addEventListener('click', function() {
+          window.print();
+        });
+      </script>
+      <style>
+        @media print {
+          .admin-actions, .main-header { display: none !important; }
+          .container { width: 100% !important; max-width: none !important; margin: 0 !important; padding: 0 !important; }
+          body { background: white !important; -webkit-print-color-adjust: exact; }
+          .panel { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
+        }
+      </style>
     </body>
     </html>
   `);
 });
 
-app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
+// Exportar Ranking CSV
+app.get(`/secret/${ADMIN_SECRET}/committee/results/csv`, checkAdminIP, adminAuth, (req, res) => {
+  const subs = storage.listSubmissions();
+  const evals = storage.listEvaluations();
+  const evalMap = new Map(evals.map(e => [e.protocol, e]));
+  const WEIGHTS = { project: 4, interview: 5, language: 1 };
+  const MAX = { project: 10, interview: 10, language: 10 };
+
+  function totalScore(e) {
+    if (!e) return 0;
+    const projNorm = Math.max(0, Math.min(1, Number(e.proj_total || 0) / MAX.project));
+    const intrNorm = Math.max(0, Math.min(1, Number(e.int_total || 0) / MAX.interview));
+    const langNorm = Math.max(0, Math.min(1, Number(e.lang_total || 0) / MAX.language));
+    return (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+  }
+
+  const rowsData = subs.map(s => {
+    const e = evalMap.get(s.protocol);
+    return {
+      protocol: s.protocol,
+      nome: s.identified?.nome || '',
+      titulo: s.project?.titulo_pt || '',
+      area: s.project?.area || '',
+      proj: e?.proj_total ?? '',
+      intr: e?.int_total ?? '',
+      lang: e?.lang_total ?? '',
+      total: totalScore(e),
+      eliminado: e?.eliminado ? 'Sim' : 'Não',
+      reserva: s.identified?.cotas || '',
+    };
+  }).sort((a, b) => b.total - a.total);
+
+  const header = ['Protocolo', 'Nome', 'Título', 'Área', 'Nota Projeto', 'Nota Entrevista', 'Nota Língua', 'Total Ponderado', 'Eliminado', 'Cotas'].join(';');
+  
+  const csvEscape = (field) => {
+    if (field == null) return '';
+    const s = String(field).replace(/"/g, '""');
+    return `"${s}"`;
+  };
+
+  const lines = rowsData.map(r => {
+    return [
+      r.protocol,
+      r.nome,
+      r.titulo,
+      r.area,
+      String(r.proj),
+      String(r.intr),
+      String(r.lang),
+      r.total.toFixed(2),
+      r.eliminado,
+      r.reserva
+    ].map(csvEscape).join(';');
+  });
+
+  // Adiciona BOM (\uFEFF) para forçar Excel a reconhecer UTF-8
+  const csv = '\uFEFF' + [header, ...lines].join('\r\n') + '\r\n';
+  const filename = `ranking_${new Date().toISOString().slice(0, 10)}.csv`;
+
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  return res.send(csv);
+});
+
+app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, adminAuth, (req, res) => {
   const protocol = req.params.protocol;
   const s = storage.getByProtocol(protocol);
   if (!s) return res.status(404).send('Não encontrado');
@@ -847,7 +1232,7 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
         <section class="panel">
           <div class="panel-header"><h2>Avaliação</h2></div>
           <div class="panel-body">
-            <form method="POST" action="/committee/evaluate/${encodeURIComponent(protocol)}">
+            <form method="POST" action="/secret/${ADMIN_SECRET}/committee/evaluate/${encodeURIComponent(protocol)}">
               <h3 style="color:#003366;">Projeto (3 Avaliadores)</h3>
               <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                 ${[{key:'avaliador1',label:'Avaliador 1'},{key:'avaliador2',label:'Avaliador 2'},{key:'avaliador3',label:'Comissão'}].map(ev => {
@@ -1002,7 +1387,8 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
               const sum = elems.reduce((s, el) => s + (parseFloat(el.value) || 0), 0);
               if (sum > 0) { total += sum; count += 1; }
             });
-            const avg = count ? (total / count) : 0;
+            // Divide sempre por 3 (número fixo de avaliadores) para refletir a média real do processo
+            const avg = (total / 3);
             if (notaProjeto) notaProjeto.value = avg.toFixed(2);
           }
 
@@ -1014,7 +1400,8 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
               const sum = elems.reduce((s, el) => s + (parseFloat(el.value) || 0), 0);
               if (sum > 0) { total += sum; count += 1; }
             });
-            const avg = count ? (total / count) : 0;
+            // Divide sempre por 3
+            const avg = (total / 3);
             if (notaEntrevista) notaEntrevista.value = avg.toFixed(2);
           }
 
@@ -1031,7 +1418,8 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
               const sum = (c * 0.3) + (d * 0.4) + (a * 0.3);
               if (sum > 0) { total += sum; count += 1; }
             });
-            const avg = count ? (total / count) : 0;
+            // Divide sempre por 3
+            const avg = (total / 3);
             if (langTotalCalc) langTotalCalc.value = avg.toFixed(2);
           }
 
@@ -1060,7 +1448,7 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
   `);
 });
 
-app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, adminAuth, (req, res) => {
   const protocol = req.params.protocol;
   const s = storage.getByProtocol(protocol);
   if (!s) return res.status(404).send('Não encontrado');
@@ -1082,9 +1470,8 @@ app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
     });
     projEvaluatorSums.push(sumEv);
   });
-  // Average across evaluators that provided a score
-  const projCount = projEvaluatorSums.filter(x => x > 0).length;
-  const projTotal = projCount ? (projEvaluatorSums.reduce((a,b) => a + b, 0) / projCount) : 0;
+  // Average across evaluators (fixed divisor 3)
+  const projTotal = (projEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
 
   // Entrevista: 3 avaliadores, cada com 4 itens
   const interviewScores = {};
@@ -1101,9 +1488,8 @@ app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
     interviewScores[`${prefix}_justificativa`] = ji;
     intEvaluatorSums.push(ap + hp + df + ji);
   });
-  // Average across evaluators that provided a score
-  const intCount = intEvaluatorSums.filter(x => x > 0).length;
-  const intTotal = intCount ? (intEvaluatorSums.reduce((a,b) => a + b, 0) / intCount) : 0;
+  // Average across evaluators (fixed divisor 3)
+  const intTotal = (intEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
 
   const proj_possible_supervisor = String(req.body?.proj_possible_supervisor || '');
   const proj_potential_interview = String(req.body?.proj_potential_interview || '');
@@ -1127,8 +1513,8 @@ app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
     // Weighted sum per evaluator
     langEvaluatorSums.push((c * 0.3) + (d * 0.4) + (a * 0.3));
   });
-  const langCount = langEvaluatorSums.filter(x => x > 0).length;
-  const lang_total = langCount ? (langEvaluatorSums.reduce((a,b) => a + b, 0) / langCount) : 0;
+  // Average across evaluators (fixed divisor 3)
+  const lang_total = (langEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
 
   storage.upsertEvaluation({
     protocol,
@@ -1148,10 +1534,10 @@ app.post('/committee/evaluate/:protocol', basicAuth, (req, res) => {
     eliminado,
     observacoes,
   });
-  return res.redirect(`/committee/evaluate/${encodeURIComponent(protocol)}`);
+  return res.redirect(`/secret/${ADMIN_SECRET}/committee/evaluate/${encodeURIComponent(protocol)}`);
 });
 
-app.post('/admin/submission/:protocol', basicAuth, (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, (req, res) => {
   const protocol = req.params.protocol;
   const record = storage.getByProtocol(protocol);
   if (!record) return res.status(404).send('Não encontrado');
@@ -1165,10 +1551,10 @@ app.post('/admin/submission/:protocol', basicAuth, (req, res) => {
     adminNotes: notes,
   });
 
-  return res.redirect(`/admin/submission/${encodeURIComponent(protocol)}`);
+  return res.redirect(`/secret/${ADMIN_SECRET}/admin/submission/${encodeURIComponent(protocol)}`);
 });
 
-app.get('/admin/submission/:protocol', basicAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, (req, res) => {
   const protocol = req.params.protocol;
   const record = storage.getByProtocol(protocol);
   if (!record) return res.status(404).send('Não encontrado');
@@ -1186,6 +1572,30 @@ app.get('/admin/submission/:protocol', basicAuth, (req, res) => {
   const hashValid = computedHash === record.hash;
   const recordStatus = normalizeStatus(record.status);
   const adminNotes = String(record.adminNotes ?? '');
+
+  // Lógica de Situação / Nota
+  const evaluation = storage.getEvaluation(protocol);
+  let situationDisplay = '<span class="muted">Em análise / Aguardando avaliação</span>';
+  
+  if (recordStatus.toLowerCase() === 'indeferido') {
+    situationDisplay = '<span style="color:red; font-weight:bold;">INDEFERIDO</span>';
+  } else if (evaluation) {
+    const proj = Number(evaluation.proj_total || 0);
+    const intr = Number(evaluation.int_total || 0);
+    const lang = Number(evaluation.lang_total || 0);
+    
+    if (proj < 7 || intr < 7 || lang < 7) {
+        situationDisplay = '<span style="color:red; font-weight:bold;">REPROVADO (Nota < 7 em alguma etapa)</span>';
+    } else {
+        const WEIGHTS = { project: 4, interview: 5, language: 1 };
+        const MAX = { project: 10, interview: 10, language: 10 };
+        const projNorm = Math.max(0, Math.min(1, proj / MAX.project));
+        const intrNorm = Math.max(0, Math.min(1, intr / MAX.interview));
+        const langNorm = Math.max(0, Math.min(1, lang / MAX.language));
+        const weighted = (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+        situationDisplay = `<span style="color:green; font-weight:bold;">DEFERIDA (Nota: ${weighted.toFixed(2)})</span>`;
+    }
+  }
 
   function safeValue(value) {
     const text = String(value ?? '').trim();
@@ -1249,7 +1659,7 @@ app.get('/admin/submission/:protocol', basicAuth, (req, res) => {
         </header>
 
         <div class="admin-actions" style="justify-content: center; margin-bottom: 10px;">
-          <a class="btn-secondary" href="/admin">← Voltar</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar</a>
           <button class="btn-secondary" type="button" id="print-btn">Imprimir / Salvar em PDF</button>
           <span class="admin-badge">Protocolo: <span class="mono" id="protocol">${escapeHtml(protocol)}</span></span>
           <span class="admin-badge">Status integridade: ${hashValid ? 'Íntegra (hash confere)' : 'Atenção: hash não confere'}</span>
@@ -1265,10 +1675,13 @@ app.get('/admin/submission/:protocol', basicAuth, (req, res) => {
               <div><strong>Email:</strong> ${safeValue(record.identified?.email)}</div>
               <div><strong>Versão do formulário:</strong> ${safeValue(record.formVersion)}</div>
               <div><strong>Verificação (JSON):</strong> <a href="${verifyUrl}">${verifyUrl}</a></div>
+              <div style="grid-column: 1 / -1; margin-top: 8px; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
+                <strong>Situação Atual:</strong> ${situationDisplay}
+              </div>
             </div>
 
             <div class="sectionTitle"><strong>Status e observações internas</strong></div>
-            <form method="POST" action="/admin/submission/${encodeURIComponent(protocol)}">
+            <form method="POST" action="/secret/${ADMIN_SECRET}/admin/submission/${encodeURIComponent(protocol)}">
               <div class="grid" style="grid-template-columns: 1fr; gap: 8px;">
                 <div class="form-group" style="margin-bottom: 0;">
                   <label for="status">Status</label>
@@ -1426,7 +1839,390 @@ app.get('/admin/submission/:protocol', basicAuth, (req, res) => {
   `);
 });
 
+// --- ROTAS PARA AVALIADORES INDIVIDUAIS ---
+
+// 1. Página de Credenciais para o Presidente copiar
+app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req, res) => {
+  const loginUrl = `${req.protocol}://${req.get('host')}/secret/${ADMIN_SECRET}/`;
+  
+  const users = [
+    { label: 'Linha 1 - Avaliador 1', user: 'av1-l1', pass: 'planter2025' },
+    { label: 'Linha 1 - Avaliador 2', user: 'av2-l1', pass: 'planter2025' },
+    { label: 'Linha 1 - Avaliador 3', user: 'av3-l1', pass: 'planter2025' },
+    { label: 'Linha 2 - Avaliador 1', user: 'av1-l2', pass: 'planter2025' },
+    { label: 'Linha 2 - Avaliador 2', user: 'av2-l2', pass: 'planter2025' },
+    { label: 'Linha 2 - Avaliador 3', user: 'av3-l2', pass: 'planter2025' },
+  ];
+
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Credenciais dos Avaliadores</title>
+      <link rel="stylesheet" href="/theme.css" />
+      <style>
+        .link-box { background: white; padding: 15px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .link-url { font-family: monospace; background: #f5f5f5; padding: 8px; border: 1px solid #ccc; display: block; margin-top: 5px; word-break: break-all; }
+        .cred-row { display: flex; gap: 10px; margin-top: 5px; }
+        .cred-item { flex: 1; }
+        .cred-label { font-size: 0.8rem; color: #666; }
+        .cred-val { font-family: monospace; font-weight: bold; background: #eee; padding: 4px 8px; border-radius: 4px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header"><h1>Credenciais de Acesso - Avaliadores</h1></header>
+        <div class="admin-actions" style="justify-content:center; margin-bottom:20px;">
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
+        </div>
+        
+        <div class="panel">
+          <div class="panel-body">
+            <p>Envie o link de login e as credenciais abaixo para cada avaliador.</p>
+            
+            <div class="link-box" style="background: #eef; border-color: #ccf;">
+              <strong>Link de Login (Comum a todos):</strong>
+              <input type="text" class="link-url" value="${loginUrl}" readonly onclick="this.select();">
+            </div>
+
+            ${users.map(u => `
+              <div class="link-box">
+                <strong>${escapeHtml(u.label)}</strong>
+                <div class="cred-row">
+                  <div class="cred-item">
+                    <div class="cred-label">Usuário</div>
+                    <div class="cred-val">${u.user}</div>
+                  </div>
+                  <div class="cred-item">
+                    <div class="cred-label">Senha</div>
+                    <div class="cred-val">${u.pass}</div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// Middleware para verificar autenticação de avaliador
+function evaluatorAuth(req, res, next) {
+  const token = req.session.token || (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+  if (!token) return res.redirect(`/secret/${ADMIN_SECRET}/`);
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    // Se for admin, deixa passar (tem acesso a tudo)
+    if (decoded.role === 'admin') return next();
+    
+    // Se for avaliador, verifica se está acessando a rota correta
+    if (decoded.role === 'evaluator') {
+      const { line, num } = req.params;
+      // Se a rota tem parametros line/num, verifica se batem
+      if (line && num) {
+        if (String(decoded.line) !== String(line) || String(decoded.num) !== String(num)) {
+          return res.status(403).send('Acesso negado: Você não tem permissão para acessar a área de outro avaliador.');
+        }
+      }
+      return next();
+    }
+    
+    res.status(403).send('Acesso não autorizado');
+  } catch (e) {
+    res.redirect(`/secret/${ADMIN_SECRET}/`);
+  }
+}
+
+// 2. Dashboard do Avaliador
+app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res) => {
+  const line = req.params.line; // '1' or '2'
+  const num = req.params.num;   // '1', '2', or '3'
+  
+  if (!['1', '2'].includes(line) || !['1', '2', '3'].includes(num)) {
+    return res.status(404).send('Link inválido');
+  }
+
+  const subs = storage.listSubmissions();
+  const evals = storage.listEvaluations();
+  const evalMap = new Map(evals.map(e => [e.protocol, e]));
+
+  // Filter by Line
+  const lineStr = line === '1' ? 'Linha de Pesquisa 1' : 'Linha de Pesquisa 2';
+  const mySubs = subs.filter(s => (s.project?.area || '').includes(lineStr));
+
+  // Helper to check if this evaluator has evaluated
+  function getStatus(protocol) {
+    const e = evalMap.get(protocol);
+    if (!e) return 'Pendente';
+    
+    // Check if any field for this evaluator is filled
+    // e.g. proj_avaliador1_intro
+    const prefix = `proj_avaliador${num}_`;
+    const hasScore = Object.keys(e).some(k => k.startsWith(prefix) && e[k] !== '');
+    return hasScore ? 'Avaliado (Parcial ou Completo)' : 'Pendente';
+  }
+
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Avaliador ${num} - Linha ${line}</title>
+      <link rel="stylesheet" href="/theme.css" />
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <h1>Painel do Avaliador ${num}</h1>
+              <h2 style="font-size: 1rem; font-weight: normal;">Linha ${line}</h2>
+            </div>
+            <form action="/secret/${ADMIN_SECRET}/logout" method="POST" style="display:inline; margin:0;">
+              <button type="submit" class="btn-secondary" style="font-size:0.8rem;">Sair</button>
+            </form>
+          </div>
+        </header>
+        
+        <section class="panel">
+          <div class="panel-body" style="background-color:#fff;">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Protocolo</th>
+                  <th>Título</th>
+                  <th>Status da Avaliação</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${mySubs.length ? mySubs.map(s => `
+                  <tr>
+                    <td>${escapeHtml(s.protocol)}</td>
+                    <td>${escapeHtml((s.project?.titulo_pt || '').slice(0, 80))}</td>
+                    <td>${getStatus(s.protocol)}</td>
+                    <td>
+                      <a class="btn-primary" href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/evaluate/${encodeURIComponent(s.protocol)}">Avaliar</a>
+                    </td>
+                  </tr>
+                `).join('') : '<tr><td colspan="4">Nenhum candidato nesta linha.</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// 3. Formulário de Avaliação Individual
+app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, (req, res) => {
+  const { line, num, protocol } = req.params;
+  const s = storage.getByProtocol(protocol);
+  if (!s) return res.status(404).send('Não encontrado');
+  
+  const e = storage.getEvaluation(protocol) || {};
+  const who = `avaliador${num}`; // avaliador1, avaliador2, avaliador3
+
+  // Rubrics (copied from main)
+  const projectRubric = [
+    { key: 'proj_intro', label: '1 – Introdução / Contextualização', max: 1 },
+    { key: 'proj_problem', label: '2 – Problema ou questão de pesquisa', max: 1.5 },
+    { key: 'proj_just', label: '3 – Justificativa (relevância e viabilidade)', max: 1 },
+    { key: 'proj_objectives', label: '4 – Objetivos (geral e específicos)', max: 2 },
+    { key: 'proj_review', label: '5 – Revisão da literatura', max: 1 },
+    { key: 'proj_methods', label: '6 – Procedimentos metodológicos', max: 2.5 },
+    { key: 'proj_schedule', label: '7 – Cronograma (2 anos)', max: 0.5 },
+    { key: 'proj_refs', label: '8 – Referências (ABNT)', max: 0.5 },
+  ];
+
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Avaliar - ${escapeHtml(protocol)}</title>
+      <link rel="stylesheet" href="/theme.css" />
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header"><h1>Avaliação Individual</h1></header>
+        <div class="admin-actions" style="justify-content:center; gap:8px;">
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}">← Voltar para Lista</a>
+          <span class="admin-badge">Avaliador ${num} | Linha ${line}</span>
+        </div>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Candidato</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <div><strong>Protocolo:</strong> ${escapeHtml(protocol)}</div>
+            <div><strong>Título:</strong> ${escapeHtml(s.project?.titulo_pt || '')}</div>
+          </div>
+        </section>
+
+        <form method="POST" action="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/evaluate/${encodeURIComponent(protocol)}">
+          
+          <section class="panel">
+            <div class="panel-header"><h2>1. Projeto de Pesquisa</h2></div>
+            <div class="panel-body">
+              ${projectRubric.map(item => {
+                const key = `proj_${who}_${item.key}`;
+                const val = e[key] ?? '';
+                return `
+                  <div class="form-group">
+                    <label for="${key}">${escapeHtml(item.label)} (máx. ${item.max})</label>
+                    <input type="number" id="${key}" name="${key}" min="0" max="${item.max}" step="0.1" value="${escapeHtml(String(val))}" required />
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>2. Entrevista</h2></div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Apresentação (máx. 3)</label>
+                <input type="number" name="int_${who}_apresentacao" min="0" max="3" step="0.1" value="${escapeHtml(String(e[`int_${who}_apresentacao`] ?? ''))}" required />
+              </div>
+              <div class="form-group">
+                <label>Histórico Profissional (máx. 2)</label>
+                <input type="number" name="int_${who}_historico" min="0" max="2" step="0.1" value="${escapeHtml(String(e[`int_${who}_historico`] ?? ''))}" required />
+              </div>
+              <div class="form-group">
+                <label>Defesa da proposta (máx. 3)</label>
+                <input type="number" name="int_${who}_defesa" min="0" max="3" step="0.1" value="${escapeHtml(String(e[`int_${who}_defesa`] ?? ''))}" required />
+              </div>
+              <div class="form-group">
+                <label>Justificativa/interesse + disponibilidade (máx. 2)</label>
+                <input type="number" name="int_${who}_justificativa" min="0" max="2" step="0.1" value="${escapeHtml(String(e[`int_${who}_justificativa`] ?? ''))}" required />
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>3. Prova de Língua</h2></div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Clareza e Coesão (0-10)</label>
+                <input type="number" name="lang_${who}_clareza" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_clareza`] ?? ''))}" required />
+              </div>
+              <div class="form-group">
+                <label>Domínio do Conteúdo (0-10)</label>
+                <input type="number" name="lang_${who}_domino" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_domino`] ?? ''))}" required />
+              </div>
+              <div class="form-group">
+                <label>Análise Crítica (0-10)</label>
+                <input type="number" name="lang_${who}_analise" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_analise`] ?? ''))}" required />
+              </div>
+            </div>
+          </section>
+
+          <div class="admin-actions" style="justify-content:center; margin-top:20px;">
+            <button class="btn-primary" type="submit">Salvar Minha Avaliação</button>
+          </div>
+        </form>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// 4. Processar Avaliação Individual
+app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, (req, res) => {
+  const { line, num, protocol } = req.params;
+  const who = `avaliador${num}`;
+  
+  // Ler avaliação existente para não perder dados de outros avaliadores
+  const existing = storage.getEvaluation(protocol) || {};
+  
+  // Atualizar APENAS os campos deste avaliador
+  const updates = {};
+  
+  // Projeto
+  ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs'].forEach(k => {
+    const key = `proj_${who}_${k}`;
+    updates[key] = Number(req.body[key] || 0);
+  });
+  
+  // Entrevista
+  ['apresentacao','historico','defesa','justificativa'].forEach(k => {
+    const key = `int_${who}_${k}`;
+    updates[key] = Number(req.body[`int_${who}_${k}`] || 0);
+  });
+  
+  // Língua
+  ['clareza','domino','analise'].forEach(k => {
+    const key = `lang_${who}_${k}`;
+    updates[key] = Number(req.body[`lang_${who}_${k}`] || 0);
+  });
+
+  // Merge para calcular totais
+  const merged = { ...existing, ...updates };
+  
+  // Recalcular Totais (Cópia da lógica principal)
+  const evaluators = ['avaliador1','avaliador2','avaliador3'];
+  
+  // Total Projeto
+  const projEvaluatorSums = evaluators.map(ev => {
+    return ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs']
+      .reduce((sum, k) => sum + Number(merged[`proj_${ev}_${k}`] || 0), 0);
+  });
+  // Average across evaluators (fixed divisor 3)
+  const projTotal = (projEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
+
+  // Total Entrevista
+  const intEvaluatorSums = evaluators.map(ev => {
+    return ['apresentacao','historico','defesa','justificativa']
+      .reduce((sum, k) => sum + Number(merged[`int_${ev}_${k}`] || 0), 0);
+  });
+  // Average across evaluators (fixed divisor 3)
+  const intTotal = (intEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
+
+  // Total Língua
+  const langEvaluatorSums = evaluators.map(ev => {
+    const c = Number(merged[`lang_${ev}_clareza`] || 0);
+    const d = Number(merged[`lang_${ev}_domino`] || 0);
+    const a = Number(merged[`lang_${ev}_analise`] || 0);
+    return (c * 0.3) + (d * 0.4) + (a * 0.3);
+  });
+  // Average across evaluators (fixed divisor 3)
+  const langTotal = (langEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
+
+  // Salvar
+  storage.upsertEvaluation({
+    protocol,
+    ...updates, // Salva apenas os campos novos/atualizados (upsert faz merge)
+    proj_total: projTotal,
+    int_total: intTotal,
+    lang_total: langTotal
+  });
+
+  res.redirect(`/secret/${ADMIN_SECRET}/evaluator/${line}/${num}`);
+});
+
+// Rotas falsas para enganar scanners
+app.get(['/admin', '/administrator', '/login', '/wp-admin', '/committee'], (req, res) => {
+  logSecurityEvent('HONEYPOT_TRIGGERED', { path: req.path, ip: req.ip });
+  // Delay artificial para desperdiçar tempo do atacante
+  setTimeout(() => {
+    res.status(404).send('Not Found');
+  }, 2000);
+});
+
 app.listen(PORT, () => {
-  console.log(`Servidor rodando em http://localhost:${PORT}`);
-  console.log(`Admin em http://localhost:${PORT}/admin (Basic Auth)`);
+  console.log(`\n🚀 Servidor rodando em http://localhost:${PORT}`);
+  console.log(`🔒 Segurança ativada:`);
+  console.log(`   - Admin Secret: /secret/${ADMIN_SECRET}/...`);
+  console.log(`   - JWT Auth: Ativo`);
+  console.log(`   - Rate Limiting: Ativo`);
+  console.log(`   - Logs: server/logs/\n`);
 });
