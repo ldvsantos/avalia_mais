@@ -60,6 +60,14 @@ const {
 
 const app = express();
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+// Em produção atrás de Nginx/Load Balancer (AWS), confie em X-Forwarded-* para
+// preservar IP real, req.secure e cookies/sessão com HTTPS.
+if (IS_PRODUCTION) {
+  app.set('trust proxy', 1);
+}
+
 // Governança: requestId + contexto de auditoria por requisição
 app.use(requestContextMiddleware);
 
@@ -99,21 +107,25 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"], // Necessário para alguns scripts inline
+      // Permite o bundle do html2pdf (carregado via CDN no index.html)
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdnjs.cloudflare.com'],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", 'data:', 'https:'],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", 'https://cdnjs.cloudflare.com'],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
+      // IMPORTANTE: em cenário sem HTTPS (IP/porta 80), isso força o browser a tentar https:// e pode quebrar o carregamento de CSS/JS.
+      // Mantemos desabilitado para compatibilidade; habilite HTTPS de verdade antes de reativar.
+      'upgrade-insecure-requests': null,
     },
   },
-  hsts: {
+  hsts: IS_PRODUCTION && process.env.ENABLE_HSTS === 'true' ? {
     maxAge: 31536000,
     includeSubDomains: true,
     preload: true,
-  },
+  } : false,
   crossOriginEmbedderPolicy: false,
 }));
 app.use(securityHeaders);
@@ -145,7 +157,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
+    secure: IS_PRODUCTION ? 'auto' : false,
     httpOnly: true,
     maxAge: 2 * 60 * 60 * 1000 // 2 horas
   }

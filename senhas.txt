@@ -1,0 +1,8 @@
+Admin
+
+Usuário: admin
+Senha gerada agora: 4e7296b1f1d152fe95855f292d8773b6 (guarde isso)
+URL do admin é do tipo: http://13.59.123.67/secret/a7b9c2d1-e4f6-8g9h-0i1j-k2l3m4n5o6p7/admin
+Para pegar o {UUID} na EC2: cat/opt/planterr/server/.admin-secret
+Inscrição:
+http://13.59.123.67/

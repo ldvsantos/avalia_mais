@@ -67,3 +67,7 @@ out/
 # ===== Jupyter =====
 .ipynb_checkpoints/
 *.ipynb_checkpoints
+
+# ===== Deploy local (Windows) =====
+scripts/deploy-config.ps1
+*.tgz

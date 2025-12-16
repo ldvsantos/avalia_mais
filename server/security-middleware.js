@@ -67,17 +67,26 @@ function detectAttackPatterns(req, res, next) {
  * Middleware para adicionar headers de segurança personalizados
  */
 function securityHeaders(req, res, next) {
-  res.set({
+  const headers = {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',
-    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
     'Referrer-Policy': 'no-referrer',
     'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
     'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
     'Pragma': 'no-cache',
     'Expires': '0',
-  });
+  };
+
+  // Evita “prender” o acesso em HTTPS em ambientes sem domínio/cert válido.
+  // Só envia HSTS quando explicitamente habilitado e a requisição é HTTPS.
+  const enableHsts = process.env.ENABLE_HSTS === 'true';
+  const isHttps = req.secure || req.headers['x-forwarded-proto'] === 'https';
+  if (enableHsts && isHttps) {
+    headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload';
+  }
+
+  res.set(headers);
   
   // Remover headers que revelam tecnologia
   res.removeHeader('X-Powered-By');

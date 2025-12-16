@@ -135,21 +135,22 @@ textarea {
     padding: 5px;
     background-color: #fff;
     min-height: 20px;
-.btn-secondary {
-     background-color: #e9ecef;
-     color: #212529;
-     border: 1px solid #ced4da;
-    padding: 5px 15px;
-    font-size: 12px;
-     cursor: pointer;
-    font-weight: bold;
-    font-family: Verdana, Arial, sans-serif;
-}
     white-space: pre-wrap;
     font-size: 11px;
     font-family: Verdana, Arial, Helvetica, sans-serif;
     color: #000;
     margin-top: 2px;
+}
+
+.btn-secondary {
+    background-color: #e9ecef;
+    color: #212529;
+    border: 1px solid #ced4da;
+    padding: 5px 15px;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    font-family: Verdana, Arial, sans-serif;
 }
 
 .pdf-header-info {
