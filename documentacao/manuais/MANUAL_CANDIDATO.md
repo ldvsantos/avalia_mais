@@ -158,24 +158,38 @@ Aguarde o processamento sem fechar o navegador. Você verá mensagens como "Regi
 
 ![](../../prints/manual/fig-17-pdf-protocolo-hash.png){width=75%}
 
+A ficha oficial contém três seções: seus dados pessoais, o projeto de pesquisa completo e as informações de registro. Verifique se todas as informações estão corretas. No rodapé da ficha você encontrará o protocolo, que é o número único da sua inscrição no formato `2025-PLANTERR-XXXXX`, e o hash SHA-256, um código criptográfico que garante a autenticidade do documento. A figura abaixo mostra o cabeçalho da ficha oficial.
+
+**Figura 18** — Cabeçalho da ficha oficial de inscrição
+
+![](../../prints/manual/fig-54-cabecalho-ficha.png){width=75%}
+
+No canto superior direito da ficha há um código QR que permite validar rapidamente a autenticidade da sua inscrição. Para usar o QR Code, abra o aplicativo de câmera do seu celular, aponte para o código e toque no link que aparecer. Você será direcionado à página de verificação com seu protocolo já preenchido. O QR Code é especialmente útil para comissões avaliadoras e coordenação que precisam verificar rapidamente a autenticidade de múltiplas inscrições. A figura abaixo mostra a localização do QR Code no canto superior direito da ficha oficial.
+
+**Figura 19** — QR Code no canto superior direito da ficha oficial
+
+![](../../prints/manual/fig-53-qrcode_pdf+ficha.png){width=75%}
+
+
+
 
 ## 8. GUARDAR E VERIFICAR A INSCRIÇÃO
 
 Guarde o PDF oficial gerado e anote o número do protocolo em local seguro. Se a coordenação solicitar, é possível verificar a autenticidade da inscrição pelo protocolo. Encontre o número do protocolo no PDF conforme mostrado abaixo.
 
-**Figura 18** — PDF: Protocolo destacado
+**Figura 120** — PDF: Protocolo destacado
 
-![](../../prints/manual/fig-18-pdf-protocolo-destaque.jpg){width=75%}
+![](../../prints/manual/fig-18-pdf-protocolo-destaque.png){width=75%}
 
 Para verificar, abra o navegador e acesse a página de verificação no mesmo domínio do sistema de inscrição.
 
-**Figura 19** — Página de Verificação do Protocolo"
+**Figura 21** — Página de Verificação do Protocolo"
 
 ![](../../prints/manual/fig-19-url-verify-protocolo.png){width=75%}
 
 Se a inscrição estiver correta, aparecerá a inscrição foi encontrada e é autentica.
 
-**Figura 20** — Verificação do Protocolo: resultado
+**Figura 22** — Verificação do Protocolo: resultado
 
 ![](../../prints/manual/fig-20-json-verify-valid-true.png){width=75%}
 
