@@ -76,7 +76,7 @@ class AdminDashboardPresenter {
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
               <h1>Administração de Inscrições - AVALIA+</h1>
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>

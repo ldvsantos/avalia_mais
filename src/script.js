@@ -329,7 +329,7 @@ async function generateDraft() {
             <!-- PÁGINA 1: FICHA DE INSCRIÇÃO -->
             <div class="page-1">
                 <div class="header-container">
-                    <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
+                    <div class="header-left"><img src="/img/logo_planter.png" alt="Logo PLANTERR"></div>
                     <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO RASCUNHO (SEM VALIDADE)</div>
                     <div class="header-right">
                         <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:60px; margin-bottom:5px;">
@@ -376,7 +376,7 @@ async function generateDraft() {
             <!-- PÁGINA 2: ANTEPROJETO -->
             <div class="page-2">
                 <div class="header-container">
-                    <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
+                    <div class="header-left"><img src="/img/logo_planter.png" alt="Logo PLANTERR"></div>
                     <div class="header-center">ANTEPROJETO (RASCUNHO)</div>
                     <div class="header-right">
                         <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
@@ -601,6 +601,8 @@ async function generatePDF() {
     }
 
     const registrationNumber = serverReceipt.protocol;
+    const verifyLandingUrl = `${window.location.origin}/consulta.html?protocol=${encodeURIComponent(registrationNumber)}&auto=1`;
+    const qrSrc = `/api/qrcode?data=${encodeURIComponent(verifyLandingUrl)}`;
 
     if (btn) btn.innerText = 'Gerando...';
 
@@ -729,6 +731,39 @@ async function generatePDF() {
                     overflow: hidden;
                     max-width: 100%;
                 }
+                .qr-box {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    gap: 4px;
+                }
+                .qr-wrap {
+                    border: 1px solid #86A3C2;
+                    border-radius: 8px;
+                    padding: 6px;
+                    background: #F4F9FD;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .qr-box img { width: 90px; height: 90px; background: #fff; border-radius: 4px; }
+                .qr-caption { font-size: 9px; color: #003366; text-align: center; font-weight: bold; letter-spacing: 0.2px; }
+                .qr-footer {
+                    display: flex;
+                    justify-content: flex-start;
+                    align-items: flex-start;
+                    gap: 10px;
+                    margin-top: 6px;
+                    page-break-inside: avoid;
+                    break-inside: avoid;
+                }
+                .qr-side-text {
+                    font-size: 10px;
+                    color: #003366;
+                    font-weight: bold;
+                    text-align: left;
+                    line-height: 1.25;
+                }
                 svg { max-width: 100% !important; }
                 #barcode, #barcode2 { height: 30px; width: 100% !important; max-width: 100% !important; }
 
@@ -831,7 +866,7 @@ async function generatePDF() {
             <!-- PÁGINA 1: FICHA DE INSCRIÇÃO (TABELA) -->
             <div class="page-1">
                 <div class="header-container">
-                    <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
+                    <div class="header-left"><img src="/img/logo_planter.png" alt="Logo PLANTERR"></div>
                     <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO</div>
                     <div class="header-right">
                         <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
@@ -1008,6 +1043,20 @@ async function generatePDF() {
                         </td>
                     </tr>
                 </table>
+
+                <div class="qr-footer">
+                    <div class="qr-box">
+                        <div class="qr-wrap">
+                            <img id="qr-verify" alt="QR Code de validação" src="${qrSrc}" />
+                        </div>
+                        <div class="qr-caption">VALIDAR INSCRIÇÃO</div>
+                    </div>
+                    <div class="qr-side-text">
+                        Escaneie o QR Code ao lado para verificar a autenticidade desta inscrição.<br>
+                        Inscrição registrada no sistema AVALIA+ do PLANTERR, mas condicionada à aprovação após o envio à secretaria.<br>
+                        Inscrição nº: <strong>${registrationNumber}</strong><br>
+                    </div>
+                </div>
             </div>
 
             <div class="page-break"></div>
@@ -1017,7 +1066,7 @@ async function generatePDF() {
             <!-- PÁGINA 2: ANTEPROJETO (BLIND REVIEW - ESTILO ANTIGO) -->
             <div class="page-2">
                 <div class="header-container">
-                    <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
+                    <div class="header-left"><img src="/img/logo_planter.png" alt="Logo PLANTERR"></div>
                     <div class="header-center">ANTEPROJETO DE TCC</div>
                     <div class="header-right">
                         <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
@@ -1088,6 +1137,7 @@ async function generatePDF() {
                     JsBarcode("#barcode", "${registrationNumber}", config);
                     JsBarcode("#barcode2", "${registrationNumber}", config);
                 } catch (e) { console.error("Erro ao gerar barcode:", e); }
+
             <\/script>
         </body>
         </html>
@@ -1135,8 +1185,31 @@ async function generatePDF() {
         }
     };
 
-    // Aumentar um pouco o tempo para garantir que o JsBarcode carregue e renderize
-    setTimeout(finalizePrint, 1500);
+    // Aguardar QR carregar (evita "figura quebrada" no PDF)
+    const startWait = Date.now();
+    const waitForQr = () => {
+        const doc = printFrame.contentWindow.document;
+        const img = doc.getElementById('qr-verify');
+        const ok = img && img.complete && img.naturalWidth > 0;
+
+        if (ok) {
+            // Pequeno delay para estabilizar layout antes do print
+            setTimeout(finalizePrint, 150);
+            return;
+        }
+
+        // Timeout: se não carregar, oculta para não aparecer quebrado
+        if (Date.now() - startWait > 6000) {
+            if (img) img.style.display = 'none';
+            setTimeout(finalizePrint, 150);
+            return;
+        }
+
+        setTimeout(waitForQr, 150);
+    };
+
+    // Mantém o comportamento atual do barcode (quando disponível) e garante QR antes de imprimir
+    setTimeout(waitForQr, 250);
 }
 
 function escapeHtml(text) {

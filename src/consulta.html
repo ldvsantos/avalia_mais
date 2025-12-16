@@ -11,7 +11,7 @@
     <div class="container">
         <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                <img src="img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+                <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
                 <h1>Consulta de Inscrição - AVALIA+</h1>
                 <img src="img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
@@ -70,6 +70,24 @@
         }
 
         verifyProtocolInput.addEventListener('input', updateVerifyUrl);
+
+        // Suporte a QR Code / deep link: consulta.html?protocol=...&auto=1
+        (function initFromQueryString() {
+            try {
+                const qs = new URLSearchParams(window.location.search);
+                const protocol = (qs.get('protocol') || qs.get('p') || '').trim();
+                const auto = (qs.get('auto') || '').trim();
+                if (!protocol) return;
+                verifyProtocolInput.value = protocol;
+                updateVerifyUrl();
+                if (auto === '1' || auto.toLowerCase() === 'true') {
+                    // Pequeno delay para garantir que o DOM terminou de atualizar
+                    setTimeout(() => btnOpenVerify.click(), 50);
+                }
+            } catch (e) {
+                console.warn('Falha ao ler querystring:', e);
+            }
+        })();
 
         btnOpenVerify.addEventListener('click', async () => {
             const protocol = verifyProtocolInput.value.trim();

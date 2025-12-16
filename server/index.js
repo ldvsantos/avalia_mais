@@ -7,6 +7,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
+const QRCode = require('qrcode');
 
 // --- CLEAN ARCHITECTURE IMPORTS ---
 const JsonSubmissionRepository = require('./src/infrastructure/repositories/JsonSubmissionRepository');
@@ -160,6 +161,28 @@ app.use('/api/', apiLimiter);
 
 // Serve the existing static site from /src
 app.use('/', express.static(path.join(__dirname, '..', 'src')));
+
+// QR Code (para validação via PDF)
+app.get('/api/qrcode', async (req, res) => {
+  try {
+    const data = String(req.query.data || '').trim();
+    if (!data) return res.status(400).send('Parâmetro "data" é obrigatório');
+
+    // Limite simples para evitar abuso
+    if (data.length > 2048) return res.status(413).send('QR data muito grande');
+
+    res.setHeader('Cache-Control', 'no-store');
+    res.type('png');
+    return QRCode.toFileStream(res, data, {
+      type: 'png',
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 220,
+    });
+  } catch (err) {
+    return res.status(500).send('Falha ao gerar QR Code');
+  }
+});
 
 function checkAdminIP(req, res, next) {
   const clientIP = getClientIP(req);
@@ -423,7 +446,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
     <body style="min-height:100vh; display:flex; align-items:center; justify-content:center;">
       <div class="container" style="width:100%; max-width:520px;">
         <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;">
-          <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height: 48px; width:auto;">
+          <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height: 48px; width:auto;">
           <h1 style="margin:0;">Acesso Restrito</h1>
           <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+" style="max-height: 48px; width:auto;">
         </div>
@@ -569,7 +592,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, (req, res)
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
             <h1>Comissão - Avaliações</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -697,7 +720,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, (r
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
             <h1>Resultados (Ranking)</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -915,7 +938,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
             <h1>Avaliação de Projeto</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -1359,7 +1382,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
             <h1>Administração de Inscrições - AVALIA+</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -1582,7 +1605,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
             <h1>Credenciais de Acesso - Avaliadores</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -1724,7 +1747,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
             <div style="text-align:center;">
               <h1 style="margin:0;">Painel do Avaliador ${num}</h1>
               <div style="font-size: 1rem; font-weight: normal; color:#003366; margin-top:2px;">Linha ${line}</div>
@@ -1804,7 +1827,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
             <h1>Avaliação Individual</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
