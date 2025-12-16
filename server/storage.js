@@ -4,6 +4,16 @@ const path = require('path');
 const DATA_DIR = path.join(__dirname, 'data');
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const EVALUATIONS_FILE = path.join(DATA_DIR, 'evaluations.json');
+const EVALUATORS_FILE = path.join(DATA_DIR, 'evaluators.json');
+
+const DEFAULT_EVALUATORS = {
+  'av1-l1': { pass: 'planter2025', line: '1', num: '1' },
+  'av2-l1': { pass: 'planter2025', line: '1', num: '2' },
+  'av3-l1': { pass: 'planter2025', line: '1', num: '3' },
+  'av1-l2': { pass: 'planter2025', line: '2', num: '1' },
+  'av2-l2': { pass: 'planter2025', line: '2', num: '2' },
+  'av3-l2': { pass: 'planter2025', line: '2', num: '3' },
+};
 
 function ensureFile() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -12,6 +22,9 @@ function ensureFile() {
   }
   if (!fs.existsSync(EVALUATIONS_FILE)) {
     fs.writeFileSync(EVALUATIONS_FILE, JSON.stringify({ evaluations: [] }, null, 2), 'utf8');
+  }
+  if (!fs.existsSync(EVALUATORS_FILE)) {
+    fs.writeFileSync(EVALUATORS_FILE, JSON.stringify(DEFAULT_EVALUATORS, null, 2), 'utf8');
   }
 }
 
@@ -116,6 +129,21 @@ function getEvaluation(protocol) {
   return evaluations.find(e => e.protocol === protocol) || null;
 }
 
+function getEvaluators() {
+  ensureFile();
+  try {
+    const raw = fs.readFileSync(EVALUATORS_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return DEFAULT_EVALUATORS;
+  }
+}
+
+function saveEvaluators(evaluators) {
+  ensureFile();
+  fs.writeFileSync(EVALUATORS_FILE, JSON.stringify(evaluators, null, 2), 'utf8');
+}
+
 module.exports = {
   listSubmissions,
   getByProtocol,
@@ -126,4 +154,6 @@ module.exports = {
   upsertEvaluation,
   listEvaluations,
   getEvaluation,
+  getEvaluators,
+  saveEvaluators,
 };

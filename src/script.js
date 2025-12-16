@@ -390,7 +390,40 @@ async function generateDraft() {
     setTimeout(() => {
         printFrame.contentWindow.focus();
         printFrame.contentWindow.print();
+        alert("Rascunho gerado com sucesso!\n\nATENÇÃO: Este documento é apenas um rascunho e NÃO possui validade como inscrição.");
     }, 1000);
+}
+
+function askConfirmation() {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const btnCancel = document.getElementById('btn-modal-cancel');
+        const btnConfirm = document.getElementById('btn-modal-confirm');
+        
+        if (!modal || !btnCancel || !btnConfirm) {
+            // Fallback if modal elements are missing
+            resolve(confirm("Tem certeza que deseja enviar sua inscrição?"));
+            return;
+        }
+
+        modal.style.display = 'flex';
+        
+        // Clean up previous listeners by cloning
+        const newCancel = btnCancel.cloneNode(true);
+        const newConfirm = btnConfirm.cloneNode(true);
+        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+        btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+
+        newCancel.addEventListener('click', () => {
+            modal.style.display = 'none';
+            resolve(false);
+        });
+
+        newConfirm.addEventListener('click', () => {
+            modal.style.display = 'none';
+            resolve(true);
+        });
+    });
 }
 
 async function generatePDF() {
@@ -450,6 +483,10 @@ async function generatePDF() {
         alert('Atenção: foi detectado possível dado pessoal (CPF/e-mail/telefone) nos campos do projeto. Remova para manter a avaliação às cegas.');
         return;
     }
+
+    // Confirmação de envio
+    const confirmed = await askConfirmation();
+    if (!confirmed) return;
 
     /*
     const submittedCPFs = JSON.parse(localStorage.getItem('planterr_submitted_cpfs') || '[]');
@@ -1137,6 +1174,16 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             console.log('Botão Gerar Rascunho clicado via listener');
             generateDraft();
+        });
+    }
+
+    // Botão Enviar Inscrição e Gerar PDF
+    const btnGeneratePDF = document.getElementById('btn-generate-pdf');
+    if (btnGeneratePDF) {
+        btnGeneratePDF.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Botão Enviar Inscrição clicado via listener');
+            generatePDF();
         });
     }
 });

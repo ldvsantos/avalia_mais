@@ -509,16 +509,6 @@ app.get('/api/verify/:protocol', (req, res) => {
 
 // --- ROTAS DE AUTENTICAÇÃO ---
 
-// Credenciais dos Avaliadores (Hardcoded para simplificação)
-const EVALUATORS = {
-  'av1-l1': { pass: 'planter2025', line: '1', num: '1' },
-  'av2-l1': { pass: 'planter2025', line: '1', num: '2' },
-  'av3-l1': { pass: 'planter2025', line: '1', num: '3' },
-  'av1-l2': { pass: 'planter2025', line: '2', num: '1' },
-  'av2-l2': { pass: 'planter2025', line: '2', num: '2' },
-  'av3-l2': { pass: 'planter2025', line: '2', num: '3' },
-};
-
 // Endpoint de Login
 app.post(`/secret/${ADMIN_SECRET}/login`, apiLimiter, (req, res) => {
   const { username, password } = req.body;
@@ -536,6 +526,7 @@ app.post(`/secret/${ADMIN_SECRET}/login`, apiLimiter, (req, res) => {
   }
 
   // 2. Tentar login como Avaliador
+  const EVALUATORS = storage.getEvaluators();
   const evaluator = EVALUATORS[username];
   if (evaluator && evaluator.pass === password) {
     const token = jwt.sign(
@@ -564,7 +555,7 @@ app.post(`/secret/${ADMIN_SECRET}/login`, apiLimiter, (req, res) => {
 });
 
 // Endpoint de Logout
-app.post(`/secret/${ADMIN_SECRET}/logout`, (req, res) => {
+app.use(`/secret/${ADMIN_SECRET}/logout`, (req, res) => {
   req.session.destroy((err) => {
     res.redirect(`/secret/${ADMIN_SECRET}/`);
   });
@@ -787,6 +778,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, (req, res) => 
                 <input type="hidden" name="confirm" value="sim" />
                 <button class="btn-secondary" type="submit">Limpar inscrições (teste)</button>
               </form>
+              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/logout" style="background-color: #d9534f; border-color: #d43f3a;">Sair</a>
             </div>
             <form method="GET" action="/secret/${ADMIN_SECRET}/admin">
               <div class="filters-grid" style="margin-top: 8px;">
@@ -1845,14 +1837,12 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
 app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req, res) => {
   const loginUrl = `${req.protocol}://${req.get('host')}/secret/${ADMIN_SECRET}/`;
   
-  const users = [
-    { label: 'Linha 1 - Avaliador 1', user: 'av1-l1', pass: 'planter2025' },
-    { label: 'Linha 1 - Avaliador 2', user: 'av2-l1', pass: 'planter2025' },
-    { label: 'Linha 1 - Avaliador 3', user: 'av3-l1', pass: 'planter2025' },
-    { label: 'Linha 2 - Avaliador 1', user: 'av1-l2', pass: 'planter2025' },
-    { label: 'Linha 2 - Avaliador 2', user: 'av2-l2', pass: 'planter2025' },
-    { label: 'Linha 2 - Avaliador 3', user: 'av3-l2', pass: 'planter2025' },
-  ];
+  const EVALUATORS = storage.getEvaluators();
+  const users = Object.entries(EVALUATORS).map(([user, data]) => ({
+    user,
+    pass: data.pass,
+    label: `Avaliador ${data.num} - Linha ${data.line}`
+  }));
 
   res.type('html').send(`
     <!doctype html>
@@ -1864,11 +1854,13 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
       <link rel="stylesheet" href="/theme.css" />
       <style>
         .link-box { background: white; padding: 15px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
-        .link-url { font-family: monospace; background: #f5f5f5; padding: 8px; border: 1px solid #ccc; display: block; margin-top: 5px; word-break: break-all; }
-        .cred-row { display: flex; gap: 10px; margin-top: 5px; }
+        .link-url { font-family: monospace; background: #f5f5f5; padding: 8px; border: 1px solid #ccc; display: block; margin-top: 5px; word-break: break-all; width: 100%; box-sizing: border-box; }
+        .cred-row { display: flex; gap: 10px; margin-top: 5px; align-items: flex-end; }
         .cred-item { flex: 1; }
-        .cred-label { font-size: 0.8rem; color: #666; }
-        .cred-val { font-family: monospace; font-weight: bold; background: #eee; padding: 4px 8px; border-radius: 4px; }
+        .cred-label { font-size: 0.8rem; color: #666; margin-bottom: 4px; display: block; }
+        .cred-input { font-family: monospace; font-weight: bold; padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; }
+        .btn-update { background-color: #003366; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+        .btn-update:hover { background-color: #002244; }
       </style>
     </head>
     <body>
@@ -1880,7 +1872,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
         
         <div class="panel">
           <div class="panel-body">
-            <p>Envie o link de login e as credenciais abaixo para cada avaliador.</p>
+            <p>Envie o link de login e as credenciais abaixo para cada avaliador. Você pode alterar o usuário e senha conforme necessário.</p>
             
             <div class="link-box" style="background: #eef; border-color: #ccf;">
               <strong>Link de Login (Comum a todos):</strong>
@@ -1890,16 +1882,22 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
             ${users.map(u => `
               <div class="link-box">
                 <strong>${escapeHtml(u.label)}</strong>
-                <div class="cred-row">
-                  <div class="cred-item">
-                    <div class="cred-label">Usuário</div>
-                    <div class="cred-val">${u.user}</div>
+                <form action="/secret/${ADMIN_SECRET}/update-evaluator" method="POST" style="margin-top: 10px;">
+                  <input type="hidden" name="originalUser" value="${u.user}">
+                  <div class="cred-row">
+                    <div class="cred-item">
+                      <label class="cred-label">Usuário (Login)</label>
+                      <input type="text" name="newUser" class="cred-input" value="${u.user}" required>
+                    </div>
+                    <div class="cred-item">
+                      <label class="cred-label">Senha</label>
+                      <input type="text" name="newPass" class="cred-input" value="${u.pass}" required>
+                    </div>
+                    <div class="cred-item" style="flex: 0 0 auto;">
+                      <button type="submit" class="btn-update">Salvar</button>
+                    </div>
                   </div>
-                  <div class="cred-item">
-                    <div class="cred-label">Senha</div>
-                    <div class="cred-val">${u.pass}</div>
-                  </div>
-                </div>
+                </form>
               </div>
             `).join('')}
           </div>
@@ -1908,6 +1906,31 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
     </body>
     </html>
   `);
+});
+
+// Rota para atualizar credenciais
+app.post(`/secret/${ADMIN_SECRET}/update-evaluator`, checkAdminIP, adminAuth, (req, res) => {
+  const { originalUser, newUser, newPass } = req.body;
+  const evaluators = storage.getEvaluators();
+
+  if (!evaluators[originalUser]) {
+    return res.status(404).send('Avaliador original não encontrado.');
+  }
+
+  // Se o usuário mudou, precisamos criar uma nova entrada e remover a antiga
+  if (originalUser !== newUser) {
+    if (evaluators[newUser]) {
+      return res.status(400).send('Este nome de usuário já está em uso.');
+    }
+    evaluators[newUser] = { ...evaluators[originalUser], pass: newPass };
+    delete evaluators[originalUser];
+  } else {
+    // Apenas atualiza a senha
+    evaluators[originalUser].pass = newPass;
+  }
+
+  storage.saveEvaluators(evaluators);
+  res.redirect(`/secret/${ADMIN_SECRET}/evaluator-links`);
 });
 
 // Middleware para verificar autenticação de avaliador
