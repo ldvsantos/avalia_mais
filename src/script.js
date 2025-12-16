@@ -148,6 +148,73 @@ async function registerSubmissionOnServer(payload) {
     return body;
 }
 
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = String(value ?? '');
+}
+
+function showSubmissionSuccess(serverReceipt, formData) {
+    const formContent = document.getElementById('form-content');
+    const actionsBar = document.querySelector('.actions-bar');
+    const successContent = document.getElementById('success-content');
+
+    if (!successContent) return;
+
+    if (formContent) formContent.style.display = 'none';
+    if (actionsBar) actionsBar.style.display = 'none';
+    successContent.style.display = 'block';
+
+    const protocol = serverReceipt?.protocol || '';
+    const hash = serverReceipt?.hash || '';
+    const createdAt = serverReceipt?.createdAt || formData?.data_registro || '';
+
+    setText('success-protocol', protocol);
+    setText('success-hash', hash);
+    setText('success-created-at', createdAt ? new Date(createdAt).toLocaleString('pt-BR') : '');
+
+    const verifyInput = document.getElementById('verify-protocol-input');
+    if (verifyInput) verifyInput.value = protocol;
+
+    const verifyLink = document.getElementById('verify-link');
+
+    const updateVerifyUI = () => {
+        const proto = String(verifyInput?.value || '').trim();
+        const path = proto ? `/api/verify/${encodeURIComponent(proto)}` : '#';
+
+        if (verifyLink) verifyLink.href = path;
+        setText('success-verify-url', proto ? `${window.location.origin}${path}` : '');
+        return path;
+    };
+
+    if (verifyInput) {
+        verifyInput.addEventListener('input', updateVerifyUI, { passive: true });
+    }
+
+    const btnOpenVerify = document.getElementById('btn-open-verify');
+    if (btnOpenVerify) {
+        btnOpenVerify.onclick = () => {
+            const path = updateVerifyUI();
+            if (path === '#') {
+                alert('Informe um protocolo para consultar a verificação.');
+                return;
+            }
+            window.open(path, '_blank', 'noopener');
+        };
+    }
+
+    updateVerifyUI();
+
+    // Resumo do que foi enviado
+    setText('success-summary-nome', formData?.nome || '');
+    setText('success-summary-email', formData?.email || '');
+    setText('success-summary-cpf', formData?.cpf || '');
+    setText('success-summary-titulo', formData?.titulo_pt || '');
+    setText('success-summary-area', formData?.area || '');
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 async function generateDraft() {
     console.log("Gerando rascunho...");
     const MAX_RESUMO = 1800;
@@ -502,8 +569,8 @@ async function generatePDF() {
     const getCheckboxes = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value).join(', ');
 
     // Feedback visual imediato
-    const btn = document.querySelector('button[onclick="generatePDF()"]');
-    const originalText = btn ? btn.innerText : 'Gerar PDF';
+    const btn = document.getElementById('btn-generate-pdf');
+    const originalText = btn ? btn.innerText : 'Enviar Inscrição e Gerar PDF';
     if (btn) { btn.disabled = true; btn.innerText = 'Registrando...'; }
 
     let serverReceipt;
@@ -1086,7 +1153,7 @@ async function generatePDF() {
             // localStorage.setItem('planterr_submitted_cpfs', JSON.stringify(submittedCPFs));
             
             if(btn) { btn.disabled = false; btn.innerText = originalText; }
-            alert(`Processo finalizado!\nSeu número de inscrição é: ${registrationNumber}`);
+            showSubmissionSuccess(serverReceipt, formData);
         } catch (e) {
             console.error("Erro ao imprimir:", e);
             if(btn) { btn.disabled = false; btn.innerText = originalText; }

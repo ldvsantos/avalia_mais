@@ -6,8 +6,10 @@ class Submission {
     this.status = data.status || 'Recebido';
     this.cpfHash = data.cpfHash;
     this.cpfLast4 = data.cpfLast4;
+    this.formVersion = data.formVersion || data.form_version || '';
     this.identified = data.identified || {}; // Personal data
-    this.blind = data.blind || {}; // Project data (blind)
+    this.project = data.project || data.blind || {}; // Project data
+    this.blind = data.blind || data.project || {}; // Project data (blind)
     this.adminUpdatedAt = data.adminUpdatedAt;
   }
 

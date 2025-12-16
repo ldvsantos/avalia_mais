@@ -350,12 +350,15 @@ app.get('/api/verify/:protocol', (req, res) => {
   const record = storage.getByProtocol(protocol);
   if (!record) return res.status(404).json({ error: 'Não encontrado' });
 
+  const formVersion = record.formVersion || record.form_version || '';
+  const project = record.project || record.blind || {};
+
   const payloadForHash = {
     protocol: record.protocol,
     createdAt: record.createdAt,
-    form_version: record.formVersion,
+    form_version: formVersion,
     identified: record.identified,
-    project: record.project,
+    project,
   };
 
   const canonical = stableStringify(payloadForHash);
@@ -1216,12 +1219,15 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
 
   const verifyUrl = `/api/verify/${encodeURIComponent(protocol)}`;
 
+  const formVersion = record.formVersion || record.form_version || '';
+  const project = record.project || record.blind || {};
+
   const payloadForHash = {
     protocol: record.protocol,
     createdAt: record.createdAt,
-    form_version: record.formVersion,
+    form_version: formVersion,
     identified: record.identified,
-    project: record.project,
+    project,
   };
   const computedHash = sha256Hex(stableStringify(payloadForHash));
   const hashValid = computedHash === record.hash;

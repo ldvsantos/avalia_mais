@@ -23,8 +23,8 @@
                 <ol style="margin:0; padding-left:20px;">
                     <li>Preencha todos os campos obrigatórios.</li>
                     <li>Respeite o limite de caracteres de cada campo.</li>
-                    <li>Ao finalizar, clique no botão "Gerar PDF" para baixar sua proposta.</li>
-                    <li>Envie o PDF gerado para a equipe do Planterr.</li>
+                    <li>Ao finalizar, clique em <strong>Enviar Inscrição e Gerar PDF</strong>.</li>
+                    <li>Guarde o PDF gerado com <strong>Protocolo</strong> e <strong>Hash</strong> (comprovante).</li>
                 </ol>
             </div>
         </section>
@@ -284,6 +284,78 @@
         </section>
     </div>
 
+    <!-- Tela final: confirmação de envio (aparece após concluir a inscrição) -->
+    <div class="container" id="success-content" style="display:none;">
+        <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <img src="img/logo_planter.png" alt="Logo Planterr" style="max-height:80px; width:auto;">
+                <h1>Inscrição concluída - PLANTERR</h1>
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Confirmação</h2></div>
+            <div class="panel-body">
+                <p style="margin:0 0 8px 0;">
+                    Sua inscrição foi registrada com sucesso.
+                </p>
+                <p style="margin:0;">
+                    <strong>Importante:</strong> guarde o PDF gerado. Ele contém o Protocolo e o Hash.
+                </p>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Dados da inscrição</h2></div>
+            <div class="panel-body">
+                <div class="grid">
+                    <div class="box">
+                        <div><strong>Protocolo:</strong> <span id="success-protocol" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></span></div>
+                        <div style="margin-top:6px;"><strong>Data/Hora:</strong> <span id="success-created-at"></span></div>
+                    </div>
+                    <div class="box">
+                        <div style="word-break: break-all;"><strong>Hash (SHA-256):</strong> <span id="success-hash" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Verificação (consulta)</h2></div>
+            <div class="panel-body">
+                <p style="margin:0 0 8px 0;">
+                    Para conferir a autenticidade (quando solicitado), use o Protocolo.
+                </p>
+                <div class="form-group" style="margin-bottom:8px;">
+                    <label for="verify-protocol-input">Protocolo</label>
+                    <input type="text" id="verify-protocol-input" placeholder="Ex.: PLANTERR-2025-AB12" />
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="btn-open-verify" class="btn-primary" type="button">Consultar verificação</button>
+                    <a id="verify-link" class="btn-secondary" href="#" target="_blank" rel="noopener noreferrer">Abrir em nova guia</a>
+                </div>
+                <div style="margin-top:10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; word-break: break-all;">
+                    <span id="success-verify-url"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Resumo do que foi enviado</h2></div>
+            <div class="panel-body" style="overflow-x:auto;">
+                <table class="admin-table">
+                    <tbody>
+                        <tr><th>Nome</th><td id="success-summary-nome"></td></tr>
+                        <tr><th>E-mail</th><td id="success-summary-email"></td></tr>
+                        <tr><th>CPF</th><td id="success-summary-cpf"></td></tr>
+                        <tr><th>Título do projeto</th><td id="success-summary-titulo"></td></tr>
+                        <tr><th>Área / Linha de pesquisa</th><td id="success-summary-area"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
     <div class="actions-bar" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:16px;">
         <button id="btn-fill-example" class="btn-secondary">Preencher Exemplo</button>
         <button id="btn-generate-draft" class="btn-secondary">Baixar Rascunho (Não Envia)</button>
@@ -302,6 +374,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=7"></script>
+    <script src="script.js?v=8"></script>
 </body>
 </html>
