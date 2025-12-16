@@ -117,6 +117,64 @@ function updateAreaFeedback() {
     setFeedback('area-feedback', val ? '' : 'Selecione uma linha de pesquisa.');
 }
 
+function updateVagaReservadaAviso() {
+    const aviso = document.getElementById('vaga-reservada-aviso');
+    if (!aviso) return;
+
+    const itensEl = document.getElementById('vaga-reservada-aviso-itens');
+
+    const vagaReservada = document.querySelector('input[name="vaga_reservada"]:checked')?.value || '';
+    const algumaCotaMarcada = document.querySelectorAll('input[name="cotas"]:checked').length > 0;
+
+    const show = (vagaReservada === 'Sim') || algumaCotaMarcada;
+    aviso.style.display = show ? 'block' : 'none';
+
+    if (!itensEl) return;
+    if (!show) {
+        itensEl.innerHTML = '';
+        return;
+    }
+
+    const vinculo = document.querySelector('input[name="vinculo_empregaticio"]:checked')?.value || '';
+    const isChecked = (id) => Boolean(document.getElementById(id)?.checked);
+
+    const anexos = [];
+
+    // Anexo IV: usuário pediu para lembrar no fluxo de vaga reservada
+    anexos.push('ANEXO IV – ANTEPROJETO DE TRABALHO DE CONCLUSÃO DE CURSO (TCC) SEM IDENTIFICAÇÃO');
+
+    // Anexo III: quando houver vínculo empregatício
+    if (vinculo === 'Sim') {
+        anexos.push('ANEXO III – DECLARAÇÃO DE LIBERAÇÃO PELO EMPREGADOR');
+    }
+
+    // Cotas específicas
+    if (isChecked('cotas_negro')) {
+        anexos.push('ANEXO V – AUTODECLARAÇÃO PARA HETEREOIDENTIFICAÇÃO');
+        anexos.push('ANEXO VI – AUTODECLARAÇÃO DE PERTENCIMENTO SOCIAL');
+    }
+    if (isChecked('cotas_indigena')) {
+        anexos.push('ANEXO VII – DOCUMENTO COMPROBATÓRIO DE PERTENCIMENTO A INDÍGENA');
+    }
+    if (isChecked('cotas_quilombola')) {
+        anexos.push('ANEXO VIII – DOCUMENTO COMPROBATÓRIO DE PERTENCIMENTO À COMUNIDADE QUILOMBOLA');
+    }
+    if (isChecked('cotas_cigano')) {
+        anexos.push('ANEXO IX – DOCUMENTO COMPROBATÓRIO DE PERTENCIMENTO A COMUNIDADE CIGANA');
+    }
+    if (isChecked('cotas_trans')) {
+        anexos.push('ANEXO X – AUTODECLARAÇÃO DE IDENTIDADE TRANS: TRAVESTI, TRANSEXUAL OU TRANSGÊNERO');
+        anexos.push('ANEXO XI – DECLARAÇÃO DE ANUÊNCIA EXPEDIDA POR CONSELHO ESTADUAL DOS DIREITOS DA POPULAÇÃO LGBT');
+    }
+    if (isChecked('cotas_pcd')) {
+        anexos.push('Documentação comprobatória de Pessoa com Deficiência (ver edital)');
+    }
+
+    // Remove duplicados e renderiza
+    const unique = Array.from(new Set(anexos));
+    itensEl.innerHTML = '<ul style="margin:0; padding-left:18px;">' + unique.map(a => `<li>${escapeHtml(a)}</li>`).join('') + '</ul>';
+}
+
 function detectPersonalInfoInProject(text) {
     const t = String(text || '');
     if (!t.trim()) return false;
@@ -1270,6 +1328,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Área (feedback)
     const area = document.getElementById('area');
     if (area) { area.addEventListener('change', updateAreaFeedback); updateAreaFeedback(); }
+
+    // Vaga reservada / cotas (aviso de anexos)
+    document.querySelectorAll('input[name="vaga_reservada"]').forEach((el) => {
+        el.addEventListener('change', updateVagaReservadaAviso);
+    });
+    document.querySelectorAll('input[name="cotas"]').forEach((el) => {
+        el.addEventListener('change', updateVagaReservadaAviso);
+    });
+    document.querySelectorAll('input[name="vinculo_empregaticio"]').forEach((el) => {
+        el.addEventListener('change', updateVagaReservadaAviso);
+    });
+    updateVagaReservadaAviso();
 
     // Botão Preencher Exemplo
     const btnFillExample = document.getElementById('btn-fill-example');
