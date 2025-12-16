@@ -5,6 +5,7 @@ const DATA_DIR = path.join(__dirname, 'data');
 const SUBMISSIONS_FILE = path.join(DATA_DIR, 'submissions.json');
 const EVALUATIONS_FILE = path.join(DATA_DIR, 'evaluations.json');
 const EVALUATORS_FILE = path.join(DATA_DIR, 'evaluators.json');
+const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 
 const DEFAULT_EVALUATORS = {
   'av1-l1': { pass: 'planterr2025', line: '1', num: '1' },
@@ -25,6 +26,13 @@ function ensureFile() {
   }
   if (!fs.existsSync(EVALUATORS_FILE)) {
     fs.writeFileSync(EVALUATORS_FILE, JSON.stringify(DEFAULT_EVALUATORS, null, 2), 'utf8');
+  }
+  if (!fs.existsSync(CONFIG_FILE)) {
+    const defaultConfig = {
+      registrationWindow: { startISO: null, endISO: null },
+      updatedAt: new Date().toISOString()
+    };
+    fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaultConfig, null, 2), 'utf8');
   }
 }
 
@@ -144,6 +152,66 @@ function saveEvaluators(evaluators) {
   fs.writeFileSync(EVALUATORS_FILE, JSON.stringify(evaluators, null, 2), 'utf8');
 }
 
+function readConfig() {
+  ensureFile();
+  try {
+    const raw = fs.readFileSync(CONFIG_FILE, 'utf8');
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return { registrationWindow: { startISO: null, endISO: null } };
+    const rw = parsed.registrationWindow || { startISO: null, endISO: null };
+    return { registrationWindow: rw };
+  } catch {
+    return { registrationWindow: { startISO: null, endISO: null } };
+  }
+}
+
+function writeConfig(config) {
+  ensureFile();
+  const next = {
+    ...(readConfig()),
+    ...(config || {}),
+    updatedAt: new Date().toISOString(),
+  };
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(next, null, 2), 'utf8');
+  return next;
+}
+
+function getRegistrationWindow() {
+  const { registrationWindow } = readConfig();
+  return registrationWindow || { startISO: null, endISO: null };
+}
+
+function setRegistrationWindow({ startDateStr, endDateStr }) {
+  // startDateStr/endDateStr: YYYY-MM-DD (local) ou vazio
+  const toStartISO = (s) => {
+    const raw = String(s || '').trim();
+    if (!raw) return null;
+    const d = new Date(raw + 'T00:00:00');
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  };
+  const toEndISO = (s) => {
+    const raw = String(s || '').trim();
+    if (!raw) return null;
+    const d = new Date(raw + 'T23:59:59.999');
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+  };
+
+  const startISO = toStartISO(startDateStr);
+  const endISO = toEndISO(endDateStr);
+  const config = writeConfig({ registrationWindow: { startISO, endISO } });
+  return config.registrationWindow;
+}
+
+function isRegistrationOpen(now = new Date()) {
+  const { startISO, endISO } = getRegistrationWindow();
+  const t = now.getTime();
+  const startOk = startISO ? new Date(startISO).getTime() : null;
+  const endOk = endISO ? new Date(endISO).getTime() : null;
+  if (startOk != null && t < startOk) return false;
+  if (endOk != null && t > endOk) return false;
+  return true;
+}
+
 module.exports = {
   listSubmissions,
   getByProtocol,
@@ -156,4 +224,10 @@ module.exports = {
   getEvaluation,
   getEvaluators,
   saveEvaluators,
+  // config
+  readConfig,
+  writeConfig,
+  getRegistrationWindow,
+  setRegistrationWindow,
+  isRegistrationOpen,
 };

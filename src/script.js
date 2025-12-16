@@ -1384,3 +1384,39 @@ function fillExample() {
         alert('Erro ao preencher exemplo: ' + err.message);
     }
 }
+
+// Controle de janela de inscrições
+async function initRegistrationWindowStatus() {
+    try {
+        const res = await fetch('/api/registration-window', { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        const open = Boolean(data && data.open);
+        const startISO = data?.registrationWindow?.startISO || null;
+        const endISO = data?.registrationWindow?.endISO || null;
+
+        const container = document.getElementById('form-content');
+        if (container) {
+            const banner = document.createElement('div');
+            banner.style.margin = '10px 0';
+            banner.style.padding = '10px';
+            banner.style.border = '1px solid';
+            banner.style.borderColor = open ? '#2e7d32' : '#b71c1c';
+            banner.style.backgroundColor = open ? '#E8F5E9' : '#FFEBEE';
+            banner.style.color = open ? '#2e7d32' : '#b71c1c';
+            const startStr = startISO ? new Date(startISO).toLocaleDateString('pt-BR') : '—';
+            const endStr = endISO ? new Date(endISO).toLocaleDateString('pt-BR') : '—';
+            banner.textContent = `Inscrições ${open ? 'ABERTAS' : 'FECHADAS'} | Início: ${startStr} | Fim: ${endStr}`;
+            container.insertBefore(banner, container.firstChild);
+        }
+
+        const submitBtn = document.getElementById('btn-generate-pdf');
+        if (submitBtn) {
+            submitBtn.disabled = !open;
+            if (!open) submitBtn.title = 'Inscrições fechadas';
+        }
+    } catch (e) {
+        // Silenciosamente não bloqueia caso falhe; mantém comportamento atual
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initRegistrationWindowStatus);

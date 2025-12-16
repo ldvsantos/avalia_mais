@@ -1,4 +1,5 @@
 const { parseDateRange, csvEscape, formatPtBrDateTime } = require('../../../util');
+const storage = require('../../../storage');
 
 class AdminController {
   constructor(listSubmissionsUseCase, listEvaluationsUseCase, adminDashboardPresenter) {
@@ -17,12 +18,17 @@ class AdminController {
     const submissions = this.listSubmissionsUseCase.execute({ q, status, from, to });
     const evaluations = this.listEvaluationsUseCase.execute();
 
+    const window = storage.getRegistrationWindow();
+    const open = storage.isRegistrationOpen(new Date());
+
     const html = this.adminDashboardPresenter.render(submissions, evaluations, {
       q,
       status,
       fromStr,
       toStr,
-      adminStatusOptions: ['Recebida', 'Em Análise', 'Aprovado', 'Reprovado', 'Indeferido']
+      adminStatusOptions: ['Recebida', 'Em Análise', 'Aprovado', 'Reprovado', 'Indeferido'],
+      registrationWindow: window,
+      registrationOpen: open,
     });
 
     res.type('html').send(html);

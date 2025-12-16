@@ -13,7 +13,7 @@ class AdminDashboardPresenter {
   }
 
   render(submissions, evaluations, filters) {
-    const { q, status, fromStr, toStr, adminStatusOptions } = filters;
+    const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen } = filters;
     const evalMap = new Map(evaluations.map(e => [e.protocol, e]));
 
     const WEIGHTS = { project: 4, interview: 5, language: 1 };
@@ -56,6 +56,13 @@ class AdminDashboardPresenter {
       `;
     }).join('');
 
+    const toDateInput = (iso) => {
+      if (!iso) return '';
+      try { return new Date(iso).toISOString().slice(0,10); } catch { return ''; }
+    };
+    const startVal = toDateInput(registrationWindow?.startISO);
+    const endVal = toDateInput(registrationWindow?.endISO);
+
     return `
       <!doctype html>
       <html lang="pt-BR">
@@ -81,6 +88,34 @@ class AdminDashboardPresenter {
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Calendário de Inscrições</h2></div>
+            <div class="panel-body">
+              <div style="margin-bottom:10px;">
+                <span class="admin-badge" style="background:${registrationOpen ? '#2e7d32' : '#b71c1c'}; color:white;">Status: ${registrationOpen ? 'ABERTO' : 'FECHADO'}</span>
+                <span class="admin-badge">Início: ${startVal || '—'}</span>
+                <span class="admin-badge">Fim: ${endVal || '—'}</span>
+              </div>
+              <form method="POST" action="/secret/${this.adminSecret}/admin/registration-window">
+                <div class="filters-grid" style="margin-top: 8px; grid-template-columns: 1fr 1fr;">
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label for="start">Início das inscrições</label>
+                    <input id="start" name="start" type="date" value="${startVal}" />
+                  </div>
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label for="end">Fim das inscrições</label>
+                    <input id="end" name="end" type="date" value="${endVal}" />
+                  </div>
+                </div>
+                <div class="filters-actions">
+                  <button class="btn-primary" type="submit">Salvar Calendário</button>
+                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Atualizar</a>
+                </div>
+                <p class="hint">Deixe vazio para início/fim sem restrição. Quando definido, o sistema bloqueia novas inscrições fora do período.</p>
+              </form>
+            </div>
+          </section>
 
           <section class="panel">
             <div class="panel-header"><h2>Busca e filtros</h2></div>

@@ -184,6 +184,17 @@ app.get('/api/qrcode', async (req, res) => {
   }
 });
 
+// Estado do calendário de inscrições (público)
+app.get('/api/registration-window', (req, res) => {
+  try {
+    const window = storage.getRegistrationWindow();
+    const open = storage.isRegistrationOpen(new Date());
+    return res.json({ registrationWindow: window, open, now: new Date().toISOString() });
+  } catch (err) {
+    return res.status(500).json({ error: 'Falha ao obter calendário' });
+  }
+});
+
 function checkAdminIP(req, res, next) {
   const clientIP = getClientIP(req);
   
@@ -529,6 +540,20 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
 });
 
 app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, (req, res) => adminController.dashboard(req, res));
+
+// Atualizar calendário de inscrições (admin)
+app.post(`/secret/${ADMIN_SECRET}/admin/registration-window`, checkAdminIP, adminAuth, (req, res) => {
+  try {
+    const start = String(req.body?.start || '').trim();
+    const end = String(req.body?.end || '').trim();
+    const rw = storage.setRegistrationWindow({ startDateStr: start, endDateStr: end });
+    logAdminAction('SET_REGISTRATION_WINDOW', getClientIP(req), { startISO: rw.startISO, endISO: rw.endISO });
+    return res.redirect(`/secret/${ADMIN_SECRET}/admin`);
+  } catch (err) {
+    logAdminAction('SET_REGISTRATION_WINDOW_FAILED', getClientIP(req), { error: String(err && err.message || err) });
+    return res.status(500).send('Falha ao salvar calendário de inscrições');
+  }
+});
 
 // Committee evaluation pages and API
 app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, (req, res) => {
