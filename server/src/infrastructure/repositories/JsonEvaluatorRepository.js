@@ -9,12 +9,12 @@ class JsonEvaluatorRepository {
     
     // Default evaluators if file doesn't exist
     this.defaultEvaluators = {
-      'av1-l1': { pass: 'planter2025', line: '1', num: '1' },
-      'av2-l1': { pass: 'planter2025', line: '1', num: '2' },
-      'av3-l1': { pass: 'planter2025', line: '1', num: '3' },
-      'av1-l2': { pass: 'planter2025', line: '2', num: '1' },
-      'av2-l2': { pass: 'planter2025', line: '2', num: '2' },
-      'av3-l2': { pass: 'planter2025', line: '2', num: '3' },
+      'av1-l1': { pass: 'planterr2025', line: '1', num: '1' },
+      'av2-l1': { pass: 'planterr2025', line: '1', num: '2' },
+      'av3-l1': { pass: 'planterr2025', line: '1', num: '3' },
+      'av1-l2': { pass: 'planterr2025', line: '2', num: '1' },
+      'av2-l2': { pass: 'planterr2025', line: '2', num: '2' },
+      'av3-l2': { pass: 'planterr2025', line: '2', num: '3' },
     };
     
     this.ensureFile();
