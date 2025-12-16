@@ -1,9 +1,22 @@
 class Evaluation {
   constructor(data) {
     this.protocol = data.protocol;
-    this.projectScores = data.projectScores || {};
-    this.interviewScores = data.interviewScores || {};
-    this.languageScores = data.languageScores || {};
+    const src = data && typeof data === 'object' ? data : {};
+
+    const hasNonEmptyObject = (obj) => obj && typeof obj === 'object' && Object.keys(obj).length > 0;
+    const pickByPrefix = (prefix) => {
+      const out = {};
+      for (const [k, v] of Object.entries(src)) {
+        if (k.startsWith(prefix)) out[k] = v;
+      }
+      return out;
+    };
+
+    // Compat: se vierem chaves planas no topo do objeto (proj_*, int_*, lang_*),
+    // mapeia para as estruturas esperadas pelo domínio.
+    this.projectScores = hasNonEmptyObject(src.projectScores) ? src.projectScores : pickByPrefix('proj_');
+    this.interviewScores = hasNonEmptyObject(src.interviewScores) ? src.interviewScores : pickByPrefix('int_');
+    this.languageScores = hasNonEmptyObject(src.languageScores) ? src.languageScores : pickByPrefix('lang_');
     
     this.proj_total = data.proj_total || 0;
     this.int_total = data.int_total || 0;

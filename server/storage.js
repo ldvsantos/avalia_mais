@@ -58,6 +58,9 @@ function readAllEvaluations() {
   const raw = fs.readFileSync(EVALUATIONS_FILE, 'utf8');
   try {
     const parsed = JSON.parse(raw);
+    // Compat: se o arquivo estiver no formato antigo/errado como array puro
+    // ex.: []
+    if (Array.isArray(parsed)) return { evaluations: parsed };
     if (!parsed || !Array.isArray(parsed.evaluations)) return { evaluations: [] };
     return parsed;
   } catch {

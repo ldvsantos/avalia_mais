@@ -1709,6 +1709,7 @@ function evaluatorAuth(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
     // Se for admin, deixa passar (tem acesso a tudo)
     if (decoded.role === 'admin') return next();
     
@@ -1730,6 +1731,70 @@ function evaluatorAuth(req, res, next) {
   }
 }
 
+function assertSubmissionBelongsToLine(submission, line) {
+  const lineStr = line === '1' ? 'Linha de Pesquisa 1' : 'Linha de Pesquisa 2';
+  return String(submission?.project?.area || '').includes(lineStr);
+}
+
+function normalizeEvaluationRecord(raw) {
+  // Compat: algumas rotas gravam { projectScores, interviewScores, languageScores }
+  // enquanto as telas do painel usam chaves planas (proj_avaliadorX_..., etc.).
+  const e = raw && typeof raw === 'object' ? raw : {};
+  const flat = { ...e };
+
+  if (e.projectScores && typeof e.projectScores === 'object') {
+    for (const [k, v] of Object.entries(e.projectScores)) {
+      if (flat[k] === undefined) flat[k] = v;
+    }
+  }
+  if (e.interviewScores && typeof e.interviewScores === 'object') {
+    for (const [k, v] of Object.entries(e.interviewScores)) {
+      if (flat[k] === undefined) flat[k] = v;
+    }
+  }
+  if (e.languageScores && typeof e.languageScores === 'object') {
+    for (const [k, v] of Object.entries(e.languageScores)) {
+      if (flat[k] === undefined) flat[k] = v;
+    }
+  }
+
+  return flat;
+}
+
+function computeTotalsFromFlatEvaluation(e) {
+  const evaluators = ['avaliador1', 'avaliador2', 'avaliador3'];
+  const projectKeys = ['proj_intro', 'proj_problem', 'proj_just', 'proj_objectives', 'proj_review', 'proj_methods', 'proj_schedule', 'proj_refs'];
+
+  const projEvaluatorSums = evaluators.map(who => {
+    return projectKeys.reduce((sum, k) => {
+      const key = `proj_${who}_${k}`;
+      return sum + (Number(e[key]) || 0);
+    }, 0);
+  });
+  const proj_total = projEvaluatorSums.reduce((a, b) => a + b, 0) / 3;
+
+  const intEvaluatorSums = evaluators.map(who => {
+    const prefix = `int_${who}`;
+    const ap = Number(e[`${prefix}_apresentacao`]) || 0;
+    const hp = Number(e[`${prefix}_historico`]) || 0;
+    const df = Number(e[`${prefix}_defesa`]) || 0;
+    const ji = Number(e[`${prefix}_justificativa`]) || 0;
+    return ap + hp + df + ji;
+  });
+  const int_total = intEvaluatorSums.reduce((a, b) => a + b, 0) / 3;
+
+  const langEvaluatorSums = evaluators.map(who => {
+    const prefix = `lang_${who}`;
+    const c = Number(e[`${prefix}_clareza`]) || 0;
+    const d = Number(e[`${prefix}_domino`]) || 0;
+    const a = Number(e[`${prefix}_analise`]) || 0;
+    return (c * 0.3) + (d * 0.4) + (a * 0.3);
+  });
+  const lang_total = langEvaluatorSums.reduce((a, b) => a + b, 0) / 3;
+
+  return { proj_total, int_total, lang_total };
+}
+
 // 2. Dashboard do Avaliador
 app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res) => {
   const line = req.params.line; // '1' or '2'
@@ -1749,7 +1814,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res
 
   // Helper to check if this evaluator has evaluated
   function getStatus(protocol) {
-    const e = evalMap.get(protocol);
+    const e = normalizeEvaluationRecord(evalMap.get(protocol));
     if (!e) return 'Pendente';
     
     // Check if any field for this evaluator is filled
@@ -1804,7 +1869,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res
                     <td>${escapeHtml((s.project?.titulo_pt || '').slice(0, 80))}</td>
                     <td>${getStatus(s.protocol)}</td>
                     <td>
-                      <a class="btn-primary" href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/evaluate/${encodeURIComponent(s.protocol)}">Avaliar</a>
+                      <a class="btn-primary" href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/project/${encodeURIComponent(s.protocol)}">Avaliar</a>
                     </td>
                   </tr>
                 `).join('') : '<tr><td colspan="4">Nenhum candidato nesta linha.</td></tr>'}
@@ -1823,11 +1888,29 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
   const { line, num, protocol } = req.params;
   const s = storage.getByProtocol(protocol);
   if (!s) return res.status(404).send('Não encontrado');
-  
-  const e = storage.getEvaluation(protocol) || {};
-  const who = `avaliador${num}`; // avaliador1, avaliador2, avaliador3
 
-  // Rubrics (copied from main)
+  if (req.user?.role !== 'admin' && !assertSubmissionBelongsToLine(s, line)) {
+    return res.status(403).send('Acesso negado: candidato não pertence à sua linha.');
+  }
+
+  // Tela /evaluate ficou redundante: agora o avaliador avalia diretamente na página do projeto.
+  return res.redirect(`/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/project/${encodeURIComponent(protocol)}`);
+});
+
+// 3.1 Visualizar/Imprimir Projeto (sem ficha) — Avaliador
+app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evaluatorAuth, (req, res) => {
+  const { line, num, protocol } = req.params;
+  const s = storage.getByProtocol(protocol);
+  if (!s) return res.status(404).send('Não encontrado');
+
+  if (req.user?.role !== 'admin' && !assertSubmissionBelongsToLine(s, line)) {
+    return res.status(403).send('Acesso negado: candidato não pertence à sua linha.');
+  }
+
+  const e = normalizeEvaluationRecord(storage.getEvaluation(protocol) || {});
+  const who = `avaliador${num}`; // avaliador1, avaliador2, avaliador3
+  const project = s.project || {};
+
   const projectRubric = [
     { key: 'proj_intro', label: '1 – Introdução / Contextualização', max: 1 },
     { key: 'proj_problem', label: '2 – Problema ou questão de pesquisa', max: 1.5 },
@@ -1839,39 +1922,152 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
     { key: 'proj_refs', label: '8 – Referências (ABNT)', max: 0.5 },
   ];
 
+  const savedProjTotal = e.proj_total != null ? Number(e.proj_total) : null;
+  const savedIntTotal = e.int_total != null ? Number(e.int_total) : null;
+  const savedLangTotal = e.lang_total != null ? Number(e.lang_total) : null;
+  const savedUpdatedAt = e.updatedAt ? String(e.updatedAt) : '';
+
+  function safeValue(value) {
+    const text = String(value ?? '').trim();
+    return text ? escapeHtml(text) : '<span class="muted">—</span>';
+  }
+
+  function safeMultiline(value) {
+    const text = String(value ?? '').trim();
+    if (!text) return '<span class="muted">—</span>';
+    return escapeHtml(text).replace(/\n/g, '<br>');
+  }
+
+  function coalesceProjectField(...values) {
+    for (const v of values) {
+      const text = String(v ?? '').trim();
+      if (text) return text;
+    }
+    return '';
+  }
+
   res.type('html').send(`
     <!doctype html>
     <html lang="pt-BR">
     <head>
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Avaliar - ${escapeHtml(protocol)}</title>
+      <title>Projeto e Avaliação - ${escapeHtml(protocol)}</title>
       <link rel="stylesheet" href="/theme.css" />
+      <style>
+        .muted { color: #003366; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .sectionTitle { margin: 10px 0 6px; }
+        .box { border: 1px solid #86A3C2; background-color: #fff; padding: 8px; }
+        .kv { width: 100%; border-collapse: collapse; background-color: #fff; }
+        .kv th, .kv td { border: 1px solid #86A3C2; padding: 6px; vertical-align: top; }
+        .kv th { background-color: #D0E5F5; color: #003366; text-align: left; width: 34%; }
+
+        .eval-kv { width: 100%; border-collapse: collapse; background-color: #fff; }
+        .eval-kv th, .eval-kv td { border: 1px solid #86A3C2; padding: 6px; vertical-align: middle; }
+        .eval-kv th { background-color: #D0E5F5; color: #003366; text-align: left; }
+        .eval-kv td.note { width: 120px; }
+        .eval-kv td.max { width: 90px; text-align: center; }
+        .eval-input {
+          width: 100%;
+          padding: 6px;
+          border: 1px solid #86A3C2;
+          border-radius: 4px;
+          box-sizing: border-box;
+          font-size: 12px;
+          background: #fff;
+        }
+
+        .panel-body input[type="number"],
+        .panel-body input[type="text"],
+        .panel-body textarea {
+          border-radius: 4px;
+        }
+
+        @media print {
+          body { background: #fff; padding: 0; }
+          .container { border: none; max-width: none; margin: 0; }
+          a, button { display: none !important; }
+          .admin-actions { display: none !important; }
+          /* Evita página em branco quando um painel é maior que uma folha */
+          .panel { break-inside: auto; page-break-inside: auto; }
+          .panel-header { break-after: avoid; page-break-after: avoid; }
+        }
+
+        @page { margin: 12mm; }
+      </style>
     </head>
     <body>
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
             <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
-            <h1>Avaliação Individual</h1>
+            <div style="text-align:center;">
+              <h1 style="margin:0;">Projeto e Avaliação</h1>
+              <div style="font-size: 0.95rem; font-weight: normal; color:#003366; margin-top:2px;">(visualização e preenchimento)</div>
+            </div>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
-        <div class="admin-actions" style="justify-content:center; gap:8px;">
+
+        <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}">← Voltar para Lista</a>
-          <span class="admin-badge">Avaliador ${num} | Linha ${line}</span>
+          <button class="btn-secondary" type="button" id="print-btn">Imprimir / Salvar em PDF</button>
+          <span class="admin-badge">Protocolo: <span class="mono" id="protocol">${escapeHtml(protocol)}</span></span>
+          <span class="admin-badge">Avaliador ${escapeHtml(String(num))} | Linha ${escapeHtml(String(line))}</span>
         </div>
 
         <section class="panel">
-          <div class="panel-header"><h2>Candidato</h2></div>
+          <div class="panel-header"><h2>Projeto (blind review)</h2></div>
           <div class="panel-body" style="background-color:#fff;">
-            <div><strong>Protocolo:</strong> ${escapeHtml(protocol)}</div>
-            <div><strong>Título:</strong> ${escapeHtml(s.project?.titulo_pt || '')}</div>
+            <table class="kv" role="table">
+              <tbody>
+                <tr><th>Protocolo</th><td>${escapeHtml(protocol)}</td></tr>
+                <tr><th>Título (PT)</th><td>${safeValue(project?.titulo_pt)}</td></tr>
+                <tr><th>Título (EN)</th><td>${safeValue(project?.titulo_en)}</td></tr>
+                <tr><th>Área</th><td>${safeValue(project?.area)}</td></tr>
+                <tr><th>Palavras-chave (PT)</th><td>${safeValue(project?.palavras_pt)}</td></tr>
+                <tr><th>Keywords (EN)</th><td>${safeValue(project?.palavras_en)}</td></tr>
+              </tbody>
+            </table>
+
+            <div class="sectionTitle"><strong>Justificativa para enquadramento na linha de pesquisa</strong></div>
+            <div class="box">${safeMultiline(project?.justificativa_enquadramento)}</div>
+
+            <div class="sectionTitle"><strong>Resumo</strong></div>
+            <div class="box">${safeMultiline(project?.resumo)}</div>
+
+            <div class="sectionTitle"><strong>1 – Introdução / Contextualização</strong></div>
+            <div class="box">${safeMultiline(project?.introducao)}</div>
+
+            <div class="sectionTitle"><strong>2 – Problema ou questão de pesquisa</strong></div>
+            <div class="box">${safeMultiline(project?.problema_pesquisa)}</div>
+
+            <div class="sectionTitle"><strong>3 – Justificativa (relevância do tema)</strong></div>
+            <div class="box">${safeMultiline(project?.justificativa_relevancia)}</div>
+
+            <div class="sectionTitle"><strong>4 – Objetivos</strong></div>
+            <div class="sectionTitle"><strong>Objetivo geral</strong></div>
+            <div class="box">${safeMultiline(coalesceProjectField(project?.objetivo_geral, project?.objetivos_geral_especificos, project?.objetivos))}</div>
+
+            <div class="sectionTitle"><strong>Objetivos específicos</strong></div>
+            <div class="box">${safeMultiline(coalesceProjectField(project?.objetivos_especificos))}</div>
+
+            <div class="sectionTitle"><strong>5 – Revisão da literatura</strong></div>
+            <div class="box">${safeMultiline(project?.revisao_literatura)}</div>
+
+            <div class="sectionTitle"><strong>6 – Procedimentos metodológicos</strong></div>
+            <div class="box">${safeMultiline(project?.procedimentos_metodologicos)}</div>
+
+            <div class="sectionTitle"><strong>7 – Cronograma</strong></div>
+            <div class="box">${safeMultiline(project?.cronograma)}</div>
+
+            <div class="sectionTitle"><strong>8 – Referências (ABNT)</strong></div>
+            <div class="box">${safeMultiline(project?.referencias)}</div>
           </div>
         </section>
 
-        <form method="POST" action="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/evaluate/${encodeURIComponent(protocol)}">
-          
+        <form method="POST" action="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/evaluate/${encodeURIComponent(protocol)}" style="margin-top: 10px;">
           <section class="panel">
             <div class="panel-header"><h2>1. Projeto de Pesquisa</h2></div>
             <div class="panel-body">
@@ -1881,7 +2077,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
                 return `
                   <div class="form-group">
                     <label for="${key}">${escapeHtml(item.label)} (máx. ${item.max})</label>
-                    <input type="number" id="${key}" name="${key}" min="0" max="${item.max}" step="0.1" value="${escapeHtml(String(val))}" required />
+                    <input type="number" id="${key}" name="${key}" min="0" max="${item.max}" step="0.1" value="${escapeHtml(String(val))}" />
                   </div>
                 `;
               }).join('')}
@@ -1893,19 +2089,19 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
             <div class="panel-body">
               <div class="form-group">
                 <label>Apresentação (máx. 3)</label>
-                <input type="number" name="int_${who}_apresentacao" min="0" max="3" step="0.1" value="${escapeHtml(String(e[`int_${who}_apresentacao`] ?? ''))}" required />
+                <input type="number" name="int_${who}_apresentacao" min="0" max="3" step="0.1" value="${escapeHtml(String(e[`int_${who}_apresentacao`] ?? ''))}" />
               </div>
               <div class="form-group">
                 <label>Histórico Profissional (máx. 2)</label>
-                <input type="number" name="int_${who}_historico" min="0" max="2" step="0.1" value="${escapeHtml(String(e[`int_${who}_historico`] ?? ''))}" required />
+                <input type="number" name="int_${who}_historico" min="0" max="2" step="0.1" value="${escapeHtml(String(e[`int_${who}_historico`] ?? ''))}" />
               </div>
               <div class="form-group">
                 <label>Defesa da proposta (máx. 3)</label>
-                <input type="number" name="int_${who}_defesa" min="0" max="3" step="0.1" value="${escapeHtml(String(e[`int_${who}_defesa`] ?? ''))}" required />
+                <input type="number" name="int_${who}_defesa" min="0" max="3" step="0.1" value="${escapeHtml(String(e[`int_${who}_defesa`] ?? ''))}" />
               </div>
               <div class="form-group">
                 <label>Justificativa/interesse + disponibilidade (máx. 2)</label>
-                <input type="number" name="int_${who}_justificativa" min="0" max="2" step="0.1" value="${escapeHtml(String(e[`int_${who}_justificativa`] ?? ''))}" required />
+                <input type="number" name="int_${who}_justificativa" min="0" max="2" step="0.1" value="${escapeHtml(String(e[`int_${who}_justificativa`] ?? ''))}" />
               </div>
             </div>
           </section>
@@ -1915,16 +2111,64 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
             <div class="panel-body">
               <div class="form-group">
                 <label>Clareza e Coesão (0-10)</label>
-                <input type="number" name="lang_${who}_clareza" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_clareza`] ?? ''))}" required />
+                <input type="number" name="lang_${who}_clareza" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_clareza`] ?? ''))}" />
               </div>
               <div class="form-group">
                 <label>Domínio do Conteúdo (0-10)</label>
-                <input type="number" name="lang_${who}_domino" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_domino`] ?? ''))}" required />
+                <input type="number" name="lang_${who}_domino" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_domino`] ?? ''))}" />
               </div>
               <div class="form-group">
                 <label>Análise Crítica (0-10)</label>
-                <input type="number" name="lang_${who}_analise" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_analise`] ?? ''))}" required />
+                <input type="number" name="lang_${who}_analise" min="0" max="10" step="0.1" value="${escapeHtml(String(e[`lang_${who}_analise`] ?? ''))}" />
               </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Resumo de Notas (Avaliador)</h2></div>
+            <div class="panel-body">
+              <div class="hint" style="margin-bottom:8px;">
+                As “médias registradas” abaixo são atualizadas quando você clica em “Salvar Minha Avaliação”.
+              </div>
+
+              <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="my_proj_total">Minha nota do Projeto (0–10)</label>
+                  <input type="text" id="my_proj_total" readonly style="background-color:#eee; font-weight:bold;" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="my_int_total">Minha nota da Entrevista (0–10)</label>
+                  <input type="text" id="my_int_total" readonly style="background-color:#eee; font-weight:bold;" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="my_lang_total">Minha nota da Língua (0–10)</label>
+                  <input type="text" id="my_lang_total" readonly style="background-color:#eee; font-weight:bold;" />
+                </div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top:8px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="saved_proj_total">Média registrada (Projeto / 3)</label>
+                  <input type="text" id="saved_proj_total" readonly style="background-color:#eee;" value="${savedProjTotal == null ? '' : escapeHtml(savedProjTotal.toFixed(2))}" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="saved_int_total">Média registrada (Entrevista / 3)</label>
+                  <input type="text" id="saved_int_total" readonly style="background-color:#eee;" value="${savedIntTotal == null ? '' : escapeHtml(savedIntTotal.toFixed(2))}" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="saved_lang_total">Média registrada (Língua / 3)</label>
+                  <input type="text" id="saved_lang_total" readonly style="background-color:#eee;" value="${savedLangTotal == null ? '' : escapeHtml(savedLangTotal.toFixed(2))}" />
+                </div>
+              </div>
+
+              <div class="grid" style="grid-template-columns: 1fr; gap: 8px; margin-top:8px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="saved_final_score">Nota final registrada (P=4, E=5, L=1)</label>
+                  <input type="text" id="saved_final_score" readonly style="background-color:#eee; font-weight:bold;" />
+                </div>
+              </div>
+
+              <div class="hint" id="saved_updated_at" style="margin-top:8px;"></div>
             </div>
           </section>
 
@@ -1933,13 +2177,135 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
           </div>
         </form>
       </div>
+
+      <script>
+        const printBtn = document.getElementById('print-btn');
+        if (printBtn) {
+          printBtn.addEventListener('click', () => {
+            window.print();
+          });
+        }
+
+        (function () {
+          const WHO = ${JSON.stringify(who)};
+
+          const savedProj = ${savedProjTotal == null ? 'null' : savedProjTotal.toFixed(10)};
+          const savedInt = ${savedIntTotal == null ? 'null' : savedIntTotal.toFixed(10)};
+          const savedLang = ${savedLangTotal == null ? 'null' : savedLangTotal.toFixed(10)};
+          const savedUpdatedAt = ${JSON.stringify(savedUpdatedAt)};
+
+          const myProjEl = document.getElementById('my_proj_total');
+          const myIntEl = document.getElementById('my_int_total');
+          const myLangEl = document.getElementById('my_lang_total');
+          const savedFinalEl = document.getElementById('saved_final_score');
+          const updatedAtEl = document.getElementById('saved_updated_at');
+
+          function num(v) {
+            const n = Number(String(v || '').replace(',', '.'));
+            return Number.isFinite(n) ? n : 0;
+          }
+
+          function calcMine() {
+            const projInputs = Array.from(document.querySelectorAll('input[name^="proj_' + WHO + '_"]'));
+            const projSum = projInputs.reduce((s, el) => s + num(el.value), 0);
+
+            const intInputs = Array.from(document.querySelectorAll('input[name^="int_' + WHO + '_"]'));
+            const intSum = intInputs.reduce((s, el) => s + num(el.value), 0);
+
+            const c = num((document.querySelector('input[name="lang_' + WHO + '_clareza"]') || {}).value);
+            const d = num((document.querySelector('input[name="lang_' + WHO + '_domino"]') || {}).value);
+            const a = num((document.querySelector('input[name="lang_' + WHO + '_analise"]') || {}).value);
+            const langSum = (c * 0.3) + (d * 0.4) + (a * 0.3);
+
+            if (myProjEl) myProjEl.value = projSum.toFixed(2);
+            if (myIntEl) myIntEl.value = intSum.toFixed(2);
+            if (myLangEl) myLangEl.value = langSum.toFixed(2);
+          }
+
+          function calcSavedFinal() {
+            if (savedProj == null || savedInt == null || savedLang == null) {
+              if (savedFinalEl) savedFinalEl.value = '';
+              return;
+            }
+            const WEIGHTS = { project: 4, interview: 5, language: 1 };
+            const MAX = { project: 10, interview: 10, language: 10 };
+
+            const projNorm = Math.max(0, Math.min(1, savedProj / MAX.project));
+            const intNorm = Math.max(0, Math.min(1, savedInt / MAX.interview));
+            const langNorm = Math.max(0, Math.min(1, savedLang / MAX.language));
+            const finalScore = (projNorm * WEIGHTS.project) + (intNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+            if (savedFinalEl) savedFinalEl.value = Number.isFinite(finalScore) ? finalScore.toFixed(2) : '';
+          }
+
+          function renderUpdatedAt() {
+            if (!updatedAtEl) return;
+            if (!savedUpdatedAt) {
+              updatedAtEl.textContent = '';
+              return;
+            }
+            try {
+              const d = new Date(savedUpdatedAt);
+              if (Number.isNaN(d.getTime())) throw new Error('invalid date');
+              updatedAtEl.textContent = 'Registrado em: ' + d.toLocaleString('pt-BR');
+            } catch {
+              updatedAtEl.textContent = 'Registrado em: ' + savedUpdatedAt;
+            }
+          }
+
+          const inputs = Array.from(document.querySelectorAll('input[name^="proj_' + WHO + '_"], input[name^="int_' + WHO + '_"], input[name^="lang_' + WHO + '_"]'));
+          inputs.forEach(el => el.addEventListener('input', calcMine));
+
+          calcMine();
+          calcSavedFinal();
+          renderUpdatedAt();
+        })();
+      </script>
     </body>
     </html>
   `);
 });
 
-// 4. Processar Avaliação Individual
-app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, (req, res) => evaluationController.submit(req, res));
+// 4. Processar Avaliação Individual (persistindo no storage para refletir em todas as telas)
+app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, (req, res) => {
+  const { line, protocol } = req.params;
+  const s = storage.getByProtocol(protocol);
+  if (!s) return res.status(404).send('Não encontrado');
+
+  if (req.user?.role !== 'admin' && !assertSubmissionBelongsToLine(s, line)) {
+    return res.status(403).send('Acesso negado: candidato não pertence à sua linha.');
+  }
+
+  const current = normalizeEvaluationRecord(storage.getEvaluation(protocol) || {});
+  const patch = {};
+
+  for (const [key, value] of Object.entries(req.body || {})) {
+    if (key.startsWith('proj_') || key.startsWith('int_') || key.startsWith('lang_')) {
+      const raw = String(value ?? '').trim();
+      // Importante: se vier vazio, NÃO sobrescreve valor anterior (avaliação por fases)
+      if (raw === '') continue;
+      const n = Number(raw.replace(',', '.'));
+      if (!Number.isFinite(n)) continue;
+      patch[key] = n;
+    }
+    if (key === 'eliminado') patch.eliminado = String(value) === 'Sim';
+    if (key === 'observacoes') patch.observacoes = String(value ?? '').slice(0, 2000);
+  }
+
+  const next = {
+    ...current,
+    ...patch,
+    protocol,
+  };
+
+  const totals = computeTotalsFromFlatEvaluation(next);
+
+  storage.upsertEvaluation({
+    ...next,
+    ...totals,
+  });
+
+  return res.redirect('back');
+});
 
 // Rotas falsas para enganar scanners
 app.get(['/admin', '/administrator', '/login', '/wp-admin', '/committee'], (req, res) => {

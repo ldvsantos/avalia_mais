@@ -61,24 +61,34 @@ class AdminController {
       let projCount = 0, intCount = 0, langCount = 0;
 
       if (e) {
+        const getAny = (key) => {
+          if (e[key] != null) return e[key];
+          if (e.projectScores && e.projectScores[key] != null) return e.projectScores[key];
+          if (e.interviewScores && e.interviewScores[key] != null) return e.interviewScores[key];
+          if (e.languageScores && e.languageScores[key] != null) return e.languageScores[key];
+          return 0;
+        };
+
         const projPrefixes = ['proj_avaliador1', 'proj_avaliador2', 'proj_avaliador3'];
         const intPrefixes = ['int_avaliador1', 'int_avaliador2', 'int_avaliador3'];
         const langPrefixes = ['lang_avaliador1', 'lang_avaliador2', 'lang_avaliador3'];
 
         projCount = projPrefixes.reduce((acc, p) => {
-          const sum = ['_intro','_problem','_just','_objectives','_review','_methods','_schedule','_refs'].reduce((s, suf) => s + (Number(e[p + suf] || 0)), 0);
+          const sum = ['_proj_intro','_proj_problem','_proj_just','_proj_objectives','_proj_review','_proj_methods','_proj_schedule','_proj_refs']
+            .reduce((s, suf) => s + (Number(getAny(p + suf)) || 0), 0);
           return acc + (sum > 0 ? 1 : 0);
         }, 0);
 
         intCount = intPrefixes.reduce((acc, p) => {
-          const sum = ['_apresentacao','_historico','_defesa','_justificativa'].reduce((s, suf) => s + (Number(e[p + suf] || 0)), 0);
+          const sum = ['_apresentacao','_historico','_defesa','_justificativa']
+            .reduce((s, suf) => s + (Number(getAny(p + suf)) || 0), 0);
           return acc + (sum > 0 ? 1 : 0);
         }, 0);
 
         langCount = langPrefixes.reduce((acc, p) => {
-          const c = Number(e[p + '_clareza'] || 0);
-          const d = Number(e[p + '_domino'] || 0);
-          const a = Number(e[p + '_analise'] || 0);
+          const c = Number(getAny(p + '_clareza') || 0);
+          const d = Number(getAny(p + '_domino') || 0);
+          const a = Number(getAny(p + '_analise') || 0);
           const sum = (c * 0.3) + (d * 0.4) + (a * 0.3);
           return acc + (sum > 0 ? 1 : 0);
         }, 0);

@@ -21,7 +21,8 @@ class JsonEvaluationRepository {
     try {
       const raw = fs.readFileSync(this.filePath, 'utf8');
       const parsed = JSON.parse(raw);
-      return (parsed.evaluations || []).map(data => new Evaluation(data));
+      const list = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.evaluations) ? parsed.evaluations : []);
+      return list.map(data => new Evaluation(data));
     } catch {
       return [];
     }
