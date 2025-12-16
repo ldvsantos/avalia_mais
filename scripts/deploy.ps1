@@ -16,7 +16,7 @@ param(
   [string]$Pm2Name = 'planterr',
 
   [Parameter(Mandatory = $false)]
-  [string]$Branch = 'master',
+  [string]$Branch = '',
 
   [Parameter(Mandatory = $false)]
   [switch]$SkipGit,
@@ -113,14 +113,30 @@ try {
     git fetch --prune
     if ($LASTEXITCODE -ne 0) { Fail 'git fetch falhou' }
 
-    # Garante que estamos no branch esperado
+    # Detecta branch atual (e usa ele por padrão, se não foi configurado)
     $currentBranch = (git rev-parse --abbrev-ref HEAD).Trim()
+    if (-not $Branch -or -not $Branch.Trim()) {
+      $Branch = $currentBranch
+    }
+
+    # Garante que estamos no branch esperado
     if ($currentBranch -ne $Branch) {
       Fail "Branch atual é '$currentBranch', mas o deploy está configurado para '$Branch'. Troque de branch ou passe -Branch $currentBranch."
     }
 
     git pull --rebase
     if ($LASTEXITCODE -ne 0) { Fail 'git pull --rebase falhou' }
+
+    # Corrige configuração comum no Windows: helper 'manager-core' sem o subcomando disponível.
+    $globalHelpers = @(git config --global --get-all credential.helper 2>$null)
+    if ($globalHelpers -contains 'manager-core') {
+      git credential-manager-core --version 1>$null 2>$null
+      if ($LASTEXITCODE -ne 0) {
+        Write-Host "Aviso: Git Credential Manager Core não está disponível, ajustando helper para 'manager'..." -ForegroundColor Yellow
+        git config --global --replace-all credential.helper manager
+        if ($LASTEXITCODE -ne 0) { Fail "Falha ao ajustar credential.helper. Rode: git config --global --replace-all credential.helper manager" }
+      }
+    }
 
     git push
     if ($LASTEXITCODE -ne 0) { Fail 'git push falhou' }
