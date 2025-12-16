@@ -34,11 +34,17 @@ Este manual orienta o **avaliador** a acessar o sistema e registrar as notas dos
 2. Digite usuário e senha.
 3. Clique em **Entrar**.
 
-![Figura 53 — Login do avaliador: tela e campos.](prints/manual/fig-53-avaliador-login-tela.png)
+**Figura 53 — Login do avaliador: tela e campos**
 
-![Figura 54 — Login do avaliador: campos preenchidos (exemplo).](prints/manual/fig-54-avaliador-login-campos.png)
+![](../../prints/manual/fig-53-avaliador-login-tela.png){width=60%}
 
-![Figura 55 — Login do avaliador: botão “Entrar”.](prints/manual/fig-55-avaliador-login-botao-entrar.png)
+**Figura 54 — Login do avaliador: campos preenchidos (exemplo)**
+
+![](../../prints/manual/fig-54-avaliador-login-campos.png){width=60%}
+
+**Figura 55 — Login do avaliador: botão "Entrar"**
+
+![](../../prints/manual/fig-55-avaliador-login-botao-entrar.png){width=60%}
 
 ---
 
@@ -48,7 +54,9 @@ Após o login, você verá a lista de projetos atribuídos.
 
 - Cada linha normalmente tem um **protocolo** e uma ação **Avaliar**.
 
-![Figura 56 — Área do avaliador: lista de projetos e ação “Avaliar”.](prints/manual/fig-56-avaliador-lista-projetos.png)
+**Figura 56 — Área do avaliador: lista de projetos e ação "Avaliar"**
+
+![](../../prints/manual/fig-56-avaliador-lista-projetos.png){width=60%}
 
 ---
 
@@ -59,9 +67,13 @@ Após o login, você verá a lista de projetos atribuídos.
 1. Encontre o protocolo.
 2. Clique em **Avaliar**.
 
-![Figura 57 — Avaliador: linha do protocolo na listagem.](prints/manual/fig-57-avaliador-lista-linha-protocolo.png)
+**Figura 57 — Avaliador: linha do protocolo na listagem**
 
-![Figura 58 — Avaliador: botão “Avaliar” no protocolo.](prints/manual/fig-58-avaliador-botao-avaliar.png)
+![](../../prints/manual/fig-57-avaliador-lista-linha-protocolo.png){width=60%}
+
+**Figura 58 — Avaliador: botão "Avaliar" no protocolo**
+
+![](../../prints/manual/fig-58-avaliador-botao-avaliar.png){width=60%}
 
 ### 5.2. Preencher notas
 
@@ -69,24 +81,34 @@ O formulário possui campos numéricos para os critérios.
 
 1. Preencha as notas do **Projeto**.
 
-![Figura 59 — Formulário do avaliador: campos numéricos do Projeto.](prints/manual/fig-59-avaliador-formulario-projeto-campos.png)
+**Figura 59 — Formulário do avaliador: campos numéricos do Projeto**
+
+![](../../prints/manual/fig-59-avaliador-formulario-projeto-campos.png){width=60%}
 
 2. Preencha as notas da **Entrevista**.
 
-![Figura 60 — Formulário do avaliador: campos da Entrevista.](prints/manual/fig-60-avaliador-formulario-entrevista-campos.png)
+**Figura 60 — Formulário do avaliador: campos da Entrevista**
+
+![](../../prints/manual/fig-60-avaliador-formulario-entrevista-campos.png){width=60%}
 
 3. Preencha as notas da **Língua**.
 
-![Figura 61 — Formulário do avaliador: campos da Língua.](prints/manual/fig-61-avaliador-formulario-lingua-campos.png)
+**Figura 61 — Formulário do avaliador: campos da Língua**
+
+![](../../prints/manual/fig-61-avaliador-formulario-lingua-campos.png){width=60%}
 
 ### 5.3. Salvar avaliação
 
 1. Clique em **Salvar avaliação**.
 2. Aguarde a confirmação e volte para a lista.
 
-![Figura 62 — Formulário do avaliador: botão “Salvar avaliação”.](prints/manual/fig-62-avaliador-botao-salvar-avaliacao.png)
+**Figura 62 — Formulário do avaliador: botão "Salvar avaliação"**
 
-![Figura 63 — Avaliador: listagem após salvar (protocolo avaliado).](prints/manual/fig-63-avaliador-lista-apos-salvar.png)
+![](../../prints/manual/fig-62-avaliador-botao-salvar-avaliacao.png){width=60%}
+
+**Figura 63 — Avaliador: listagem após salvar (protocolo avaliado)**
+
+![](../../prints/manual/fig-63-avaliador-lista-apos-salvar.png){width=60%}
 
 ---
 

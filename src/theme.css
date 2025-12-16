@@ -86,7 +86,7 @@ label {
     color: #003366;
 }
 
-input[type="text"], input[type="email"], input[type="date"], input[type="number"], textarea, select {
+input[type="text"], input[type="email"], input[type="password"], input[type="date"], input[type="number"], textarea, select {
     width: 100%;
     padding: 3px;
     border: 1px solid #7F9DB9;

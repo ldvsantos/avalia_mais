@@ -47,7 +47,6 @@ class AdminController {
       'Título', 'Área',
       'Nota Projeto', 'Nota Entrevista', 'Nota Língua', 'Nota Final',
       'Qtd Aval Proj', 'Qtd Aval Ent', 'Qtd Aval Ling',
-      'Hash'
     ].join(';');
 
     const lines = submissions.map(s => {
@@ -108,7 +107,6 @@ class AdminController {
         String(projCount),
         String(intCount),
         String(langCount),
-        (s.hash || '').slice(0, 16) + '…',
       ].map(csvEscape);
       return row.join(';');
     });

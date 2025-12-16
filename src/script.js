@@ -155,6 +155,8 @@ function setText(id, value) {
 }
 
 function showSubmissionSuccess(serverReceipt, formData) {
+    console.log('showSubmissionSuccess chamado:', { serverReceipt, formData });
+    
     const formContent = document.getElementById('form-content');
     const actionsBar = document.querySelector('.actions-bar');
     const successContent = document.getElementById('success-content');
@@ -172,38 +174,6 @@ function showSubmissionSuccess(serverReceipt, formData) {
     setText('success-protocol', protocol);
     setText('success-hash', hash);
     setText('success-created-at', createdAt ? new Date(createdAt).toLocaleString('pt-BR') : '');
-
-    const verifyInput = document.getElementById('verify-protocol-input');
-    if (verifyInput) verifyInput.value = protocol;
-
-    const verifyLink = document.getElementById('verify-link');
-
-    const updateVerifyUI = () => {
-        const proto = String(verifyInput?.value || '').trim();
-        const path = proto ? `/api/verify/${encodeURIComponent(proto)}` : '#';
-
-        if (verifyLink) verifyLink.href = path;
-        setText('success-verify-url', proto ? `${window.location.origin}${path}` : '');
-        return path;
-    };
-
-    if (verifyInput) {
-        verifyInput.addEventListener('input', updateVerifyUI, { passive: true });
-    }
-
-    const btnOpenVerify = document.getElementById('btn-open-verify');
-    if (btnOpenVerify) {
-        btnOpenVerify.onclick = () => {
-            const path = updateVerifyUI();
-            if (path === '#') {
-                alert('Informe um protocolo para consultar a verificação.');
-                return;
-            }
-            window.open(path, '_blank', 'noopener');
-        };
-    }
-
-    updateVerifyUI();
 
     // Resumo do que foi enviado
     setText('success-summary-nome', formData?.nome || '');
@@ -1231,6 +1201,15 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             console.log('Botão Preencher Exemplo clicado via listener');
             fillExample();
+        });
+    }
+
+    // Botão Consultar Inscrição
+    const btnConsultar = document.getElementById('btn-consultar');
+    if (btnConsultar) {
+        btnConsultar.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'consulta.html';
         });
     }
 

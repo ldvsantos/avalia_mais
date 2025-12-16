@@ -36,6 +36,11 @@ class JsonEvaluationRepository {
     return this.readAll();
   }
 
+  // Compat: alguns casos de uso esperam getAll()
+  getAll() {
+    return this.findAll();
+  }
+
   findByProtocol(protocol) {
     const evaluations = this.readAll();
     return evaluations.find(e => e.protocol === protocol) || null;

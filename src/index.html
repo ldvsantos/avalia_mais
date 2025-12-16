@@ -321,26 +321,6 @@
         </section>
 
         <section class="panel">
-            <div class="panel-header"><h2>Verificação (consulta)</h2></div>
-            <div class="panel-body">
-                <p style="margin:0 0 8px 0;">
-                    Para conferir a autenticidade (quando solicitado), use o Protocolo.
-                </p>
-                <div class="form-group" style="margin-bottom:8px;">
-                    <label for="verify-protocol-input">Protocolo</label>
-                    <input type="text" id="verify-protocol-input" placeholder="Ex.: PLANTERR-2025-AB12" />
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button id="btn-open-verify" class="btn-primary" type="button">Consultar verificação</button>
-                    <a id="verify-link" class="btn-secondary" href="#" target="_blank" rel="noopener noreferrer">Abrir em nova guia</a>
-                </div>
-                <div style="margin-top:10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; word-break: break-all;">
-                    <span id="success-verify-url"></span>
-                </div>
-            </div>
-        </section>
-
-        <section class="panel">
             <div class="panel-header"><h2>Resumo do que foi enviado</h2></div>
             <div class="panel-body" style="overflow-x:auto;">
                 <table class="admin-table">
@@ -354,10 +334,15 @@
                 </table>
             </div>
         </section>
+
+        <div style="text-align:center; margin-top:24px; margin-bottom:24px;">
+            <a href="consulta.html" class="btn-secondary">Consultar inscrição em outro momento</a>
+        </div>
     </div>
 
     <div class="actions-bar" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:center; padding:16px;">
         <button id="btn-fill-example" class="btn-secondary">Preencher Exemplo</button>
+        <button id="btn-consultar" class="btn-secondary">Consultar Inscrição</button>
         <button id="btn-generate-draft" class="btn-secondary">Baixar Rascunho (Não Envia)</button>
         <button id="btn-generate-pdf" class="btn-primary">Enviar Inscrição e Gerar PDF</button>
     </div>

@@ -74,6 +74,17 @@ function formatPtBrDateTime(iso) {
   }
 }
 
+function parseDateRange(fromStr, toStr) {
+  const fromRaw = String(fromStr ?? '').trim();
+  const toRaw = String(toStr ?? '').trim();
+
+  const from = fromRaw ? new Date(fromRaw + 'T00:00:00') : null;
+  const to = toRaw ? new Date(toRaw + 'T23:59:59.999') : null;
+  const fromOk = from && !Number.isNaN(from.getTime()) ? from : null;
+  const toOk = to && !Number.isNaN(to.getTime()) ? to : null;
+  return { from: fromOk, to: toOk };
+}
+
 module.exports = {
   stableStringify,
   sha256Hex,
@@ -83,4 +94,5 @@ module.exports = {
   escapeHtml,
   csvEscape,
   formatPtBrDateTime,
+  parseDateRange,
 };

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Inscrição - PLANTERR</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme.css">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <img src="img/logo_planter.png" alt="Logo Planterr" style="max-height:80px; width:auto;">
+                <h1>Consulta de Inscrição - PLANTERR</h1>
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Verificação de Autenticidade</h2></div>
+            <div class="panel-body">
+                <p style="margin:0 0 16px 0;">
+                    Para conferir a autenticidade da sua inscrição, informe o número de protocolo que consta no PDF gerado.
+                </p>
+                <div class="form-group" style="margin-bottom:16px;">
+                    <label for="verify-protocol-input">Protocolo</label>
+                    <input type="text" id="verify-protocol-input" placeholder="Ex.: PLANTERR-2025-AB12" />
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button id="btn-open-verify" class="btn-primary" type="button">Consultar verificação</button>
+                    <a id="verify-link" class="btn-secondary" href="#" target="_blank" rel="noopener noreferrer">Abrir em nova guia</a>
+                </div>
+                <div style="margin-top:10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; word-break: break-all;">
+                    <span id="verify-url"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel" id="result-section" style="display:none;">
+            <div class="panel-header"><h2>Resultado da Consulta</h2></div>
+            <div class="panel-body">
+                <div id="result-content"></div>
+            </div>
+        </section>
+
+        <div style="text-align:center; margin-top:24px;">
+            <a href="index.html" class="btn-secondary">Voltar para página inicial</a>
+        </div>
+    </div>
+
+    <script>
+        const verifyProtocolInput = document.getElementById('verify-protocol-input');
+        const btnOpenVerify = document.getElementById('btn-open-verify');
+        const verifyLink = document.getElementById('verify-link');
+        const verifyUrl = document.getElementById('verify-url');
+        const resultSection = document.getElementById('result-section');
+        const resultContent = document.getElementById('result-content');
+
+        function updateVerifyUrl() {
+            const protocol = verifyProtocolInput.value.trim();
+            if (!protocol) {
+                verifyUrl.textContent = '';
+                verifyLink.href = '#';
+                return;
+            }
+            const url = `/api/verify/${encodeURIComponent(protocol)}`;
+            verifyUrl.textContent = window.location.origin + url;
+            verifyLink.href = url;
+        }
+
+        verifyProtocolInput.addEventListener('input', updateVerifyUrl);
+
+        btnOpenVerify.addEventListener('click', async () => {
+            const protocol = verifyProtocolInput.value.trim();
+            if (!protocol) {
+                alert('Por favor, informe o protocolo.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/verify/${encodeURIComponent(protocol)}`);
+                const data = await response.json();
+
+                resultSection.style.display = 'block';
+                
+                if (data.valid) {
+                    const info = data.data || data.submission || {};
+                    const nome = info.nome || data.identified?.nome || '-';
+                    const email = info.email || data.identified?.email || '-';
+                    const cpf = info.cpf || data.identified?.cpf || '-';
+                    const titulo = info.titulo || data.project?.titulo_pt || '-';
+                    const area = info.area || data.project?.area || '-';
+                    const createdAt = data.createdAt ? new Date(data.createdAt).toLocaleString('pt-BR') : '-';
+
+                    resultContent.innerHTML = `
+                        <div style="padding:16px; background:#d4edda; border:1px solid #c3e6cb; border-radius:4px; margin-bottom:16px;">
+                            <div style="color:#155724; font-weight:bold; margin-bottom:8px;">✓ Inscrição válida</div>
+                            <div style="color:#155724; font-size:14px;">A inscrição foi encontrada e é autêntica.</div>
+                        </div>
+                        <table class="admin-table">
+                            <tbody>
+                                <tr><th>Protocolo</th><td style="font-family: monospace;">${data.protocol || '-'}</td></tr>
+                                <tr><th>Data/Hora</th><td>${createdAt}</td></tr>
+                                <tr><th>Hash (SHA-256)</th><td style="font-family: monospace; word-break: break-all;">${data.storedHash || 'undefined'}</td></tr>
+                                <tr><th>Nome</th><td>${nome}</td></tr>
+                                <tr><th>E-mail</th><td>${email}</td></tr>
+                                <tr><th>CPF</th><td>${cpf}</td></tr>
+                                <tr><th>Título do projeto</th><td>${titulo}</td></tr>
+                                <tr><th>Área / Linha de pesquisa</th><td>${area}</td></tr>
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    resultContent.innerHTML = `
+                        <div style="padding:16px; background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px;">
+                            <div style="color:#721c24; font-weight:bold; margin-bottom:8px;">✗ Inscrição não encontrada</div>
+                            <div style="color:#721c24; font-size:14px;">O protocolo informado não foi encontrado no sistema.</div>
+                        </div>
+                    `;
+                }
+
+                // Scroll suave até o resultado
+                resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            } catch (error) {
+                console.error('Erro ao verificar:', error);
+                resultSection.style.display = 'block';
+                resultContent.innerHTML = `
+                    <div style="padding:16px; background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px;">
+                        <div style="color:#721c24; font-weight:bold; margin-bottom:8px;">✗ Erro na consulta</div>
+                        <div style="color:#721c24; font-size:14px;">Não foi possível realizar a consulta. Verifique sua conexão e tente novamente.</div>
+                    </div>
+                `;
+            }
+        });
+
+        // Enter para consultar
+        verifyProtocolInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                btnOpenVerify.click();
+            }
+        });
+    </script>
+</body>
+</html>

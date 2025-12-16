@@ -52,7 +52,6 @@ class AdminDashboardPresenter {
           <td>${escapeHtml((s.identified?.nome || '').slice(0, 60))}</td>
           <td>${escapeHtml((s.identified?.email || '').slice(0, 60))}</td>
           <td>${scoreDisplay}</td>
-          <td style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;">${escapeHtml((s.hash || '').slice(0, 16))}…</td>
         </tr>
       `;
     }).join('');
@@ -132,7 +131,7 @@ class AdminDashboardPresenter {
           <section class="panel">
             <div class="panel-header"><h2>Inscrições Recebidas (${submissions.length})</h2></div>
             <div class="panel-body" style="overflow-x: auto;">
-              <table class="table">
+              <table class="admin-table">
                 <thead>
                   <tr>
                     <th>Data</th>
@@ -142,7 +141,6 @@ class AdminDashboardPresenter {
                     <th>Nome</th>
                     <th>Email</th>
                     <th>Nota Final</th>
-                    <th>Hash (Início)</th>
                   </tr>
                 </thead>
                 <tbody>

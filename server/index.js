@@ -369,6 +369,14 @@ app.get('/api/verify/:protocol', (req, res) => {
     storedHash: record.hash,
     computedHash: computed,
     valid: computed === record.hash,
+    createdAt: record.createdAt,
+    data: {
+      nome: record.identified?.nome || '',
+      email: record.identified?.email || '',
+      cpf: record.identified?.cpf || '',
+      titulo: record.project?.titulo_pt || '',
+      area: record.project?.area || ''
+    }
   });
 });
 
@@ -415,42 +423,42 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
   // Servir página de login simples
   res.send(`
     <!DOCTYPE html>
-    <html>
+    <html lang="pt-BR">
     <head>
       <title>Acesso Restrito</title>
+      <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="/theme.css">
-      <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #f5f5f5; }
-        .login-box { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; }
-        input { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; }
-        button { width: 100%; padding: 0.75rem; background: #003366; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #002244; }
-        button:disabled { background: #ccc; cursor: not-allowed; }
-        .error { color: red; margin-bottom: 1rem; display: none; padding: 10px; background: #ffe6e6; border-radius: 4px; }
-      </style>
     </head>
     <body>
-      <div class="login-box">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="/img/logo_planter.png" alt="Logo Planterr" style="max-width: 180px; height: auto; margin-bottom: 10px;">
-          <div style="color: #666; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">Administração do Processo Seletivo - PLANTERR</div>
-        </div>
-        <h2 style="text-align: center; color: #003366; margin-top: 0;">Acesso Restrito</h2>
-        <div id="error-msg" class="error"></div>
-        <form id="login-form">
-          <div class="form-group">
-            <label>Usuário</label>
-            <input type="text" name="username" required autocomplete="username">
+      <div class="container" style="max-width: 420px;">
+        <header class="main-header" style="margin-bottom: 10px;">
+          <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
+            <img src="/img/logo_planter.png" alt="Logo Planterr" style="max-height: 70px; width:auto;">
+            <h1>Acesso Restrito</h1>
           </div>
-          <div class="form-group">
-            <label>Senha</label>
-            <input type="password" name="password" required autocomplete="current-password">
+        </header>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Administração do Processo Seletivo - PLANTERR</h2></div>
+          <div class="panel-body">
+            <div id="error-msg" class="field-feedback error" style="display:none; margin-bottom: 8px;"></div>
+
+            <form id="login-form">
+              <div class="form-group">
+                <label for="username">Usuário</label>
+                <input id="username" type="text" name="username" required autocomplete="username">
+              </div>
+              <div class="form-group">
+                <label for="password">Senha</label>
+                <input id="password" type="password" name="password" required autocomplete="current-password">
+              </div>
+              <div class="actions-bar" style="margin-top: 10px;">
+                <button class="btn-primary" type="submit" id="btn-submit">Entrar</button>
+              </div>
+            </form>
           </div>
-          <button type="submit" id="btn-submit">Entrar</button>
-        </form>
+        </section>
       </div>
       <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {

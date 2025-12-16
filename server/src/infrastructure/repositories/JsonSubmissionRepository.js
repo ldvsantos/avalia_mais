@@ -36,6 +36,11 @@ class JsonSubmissionRepository {
     return this.readAll().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
   }
 
+  // Compat: alguns casos de uso esperam getAll()
+  getAll() {
+    return this.findAll();
+  }
+
   findByProtocol(protocol) {
     const submissions = this.readAll();
     return submissions.find(s => s.protocol === protocol) || null;
