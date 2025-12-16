@@ -60,6 +60,20 @@ function escapeHtml(s) {
     .replace(/'/g, '&#039;');
 }
 
+function csvEscape(value) {
+  const s = String(value ?? '');
+  if (/[";\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function formatPtBrDateTime(iso) {
+  try {
+    return new Date(iso).toLocaleString('pt-BR');
+  } catch {
+    return String(iso ?? '');
+  }
+}
+
 module.exports = {
   stableStringify,
   sha256Hex,
@@ -67,4 +81,6 @@ module.exports = {
   generateProtocol,
   isValidCPF,
   escapeHtml,
+  csvEscape,
+  formatPtBrDateTime,
 };

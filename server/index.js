@@ -21,6 +21,10 @@ const SubmitEvaluation = require('./src/application/SubmitEvaluation');
 const SubmissionController = require('./src/interfaces/http/controllers/SubmissionController');
 const AuthController = require('./src/interfaces/http/controllers/AuthController');
 const EvaluationController = require('./src/interfaces/http/controllers/EvaluationController');
+const AdminController = require('./src/interfaces/controllers/AdminController');
+const AdminDashboardPresenter = require('./src/interfaces/presenters/AdminDashboardPresenter');
+const ListSubmissions = require('./src/application/ListSubmissions');
+const ListEvaluations = require('./src/application/ListEvaluations');
 // ----------------------------------
 
 // Módulos de segurança
@@ -73,10 +77,15 @@ const jwtService = new JwtService(JWT_SECRET);
 const registerSubmissionUseCase = new RegisterSubmission(submissionRepo, HMAC_SECRET);
 const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
 const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);
+const listSubmissionsUseCase = new ListSubmissions(submissionRepo);
+const listEvaluationsUseCase = new ListEvaluations(evaluationRepo);
+
+const adminDashboardPresenter = new AdminDashboardPresenter(ADMIN_SECRET);
 
 const submissionController = new SubmissionController(registerSubmissionUseCase);
 const authController = new AuthController(authenticateUserUseCase, ADMIN_SECRET);
 const evaluationController = new EvaluationController(submitEvaluationUseCase);
+const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, adminDashboardPresenter);
 // -----------------------------------------
 
 // 1. Headers de Segurança (Helmet + Custom)
@@ -322,187 +331,9 @@ function formatPtBrDateTime(iso) {
   }
 }
 
-app.post('/api/submissions', (req, res) => {
-  const honeypot = String(req.body?.website || '').trim();
-  if (honeypot) {
-    return res.status(400).json({ error: 'Invalid submission' });
-  }
+app.post('/api/submissions', (req, res) => submissionController.register(req, res));
 
-  const formVersion = String(req.body?.form_version || '');
-  const cpfDigits = String(req.body?.cpf || '').replace(/\D/g, '');
-
-  if (!isValidCPF(cpfDigits)) {
-    return res.status(400).json({ error: 'CPF inválido' });
-  }
-
-  if (String(req.body?.termo_compromisso || '') !== 'Concordo') {
-    return res.status(400).json({ error: 'Declaração obrigatória' });
-  }
-
-  const { identified, project } = pickSubmissionPayload(req.body);
-
-  if (!identified.nome || identified.nome.trim().length < 5) {
-    return res.status(400).json({ error: 'Nome obrigatório' });
-  }
-  if (!project.titulo_pt || project.titulo_pt.trim().length < 3) {
-    return res.status(400).json({ error: 'Título do projeto obrigatório' });
-  }
-
-  const cpfHash = hmacSha256Hex(HMAC_SECRET, cpfDigits);
-  if (storage.hasCpfHash(cpfHash)) {
-    return res.status(409).json({ error: 'CPF já possui inscrição registrada' });
-  }
-
-  const protocol = generateProtocol('PLANTERR', '2025');
-  const createdAt = new Date().toISOString();
-
-  const payloadForHash = {
-    protocol,
-    createdAt,
-    form_version: formVersion,
-    identified,
-    project,
-  };
-
-  const canonical = stableStringify(payloadForHash);
-  const hash = sha256Hex(canonical);
-
-  const record = {
-    protocol,
-    createdAt,
-    ip: req.ip,
-    userAgent: req.headers['user-agent'] || '',
-    formVersion,
-    cpfHash,
-    cpfLast4: cpfDigits.slice(-4),
-    hash,
-    status: 'Recebida',
-    adminNotes: '',
-    identified,
-    project,
-  };
-
-  storage.addSubmission(record);
-
-  return res.status(201).json({
-    protocol,
-    hash,
-    createdAt,
-  });
-});
-
-app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => {
-  const q = String(req.query.q ?? '');
-  const status = String(req.query.status ?? '');
-  const fromStr = String(req.query.from ?? '');
-  const toStr = String(req.query.to ?? '');
-  const { from, to } = parseDateRange(fromStr, toStr);
-
-  const submissions = filterSubmissions(storage.listSubmissions(), { q, status, from, to });
-
-  const evals = storage.listEvaluations();
-  const evalMap = new Map(evals.map(e => [e.protocol, e]));
-
-  // Pesos e máximos para normalização
-  const WEIGHTS = { project: 4, interview: 5, language: 1 };
-  const MAX = { project: 10, interview: 10, language: 10 };
-
-  const header = [
-    'protocolo',
-    'data_hora',
-    'status',
-    'cpf_ultimos_4',
-    'nome',
-    'email',
-    'titulo',
-    'linha',
-    'nota_projeto',
-    'nota_entrevista',
-    'nota_lingua',
-    'nota_final',
-    'avaliadores_projeto',
-    'avaliadores_entrevista',
-    'avaliadores_lingua',
-    'hash_curto',
-  ].join(';');
-
-  const lines = submissions.map(s => {
-    const e = evalMap.get(s.protocol);
-
-    // Contar avaliadores que efetivamente deram nota por fase
-    const projPrefixes = ['proj_avaliador1', 'proj_avaliador2', 'proj_avaliador3'];
-    const intPrefixes = ['int_avaliador1', 'int_avaliador2', 'int_avaliador3'];
-    const langPrefixes = ['lang_avaliador1', 'lang_avaliador2', 'lang_avaliador3'];
-
-    let projCount = 0; let intCount = 0; let langCount = 0;
-    let projTotal = '';
-    let intTotal = '';
-    let langTotal = '';
-    let finalScore = '';
-
-    if (e) {
-      projCount = projPrefixes.reduce((acc, p) => {
-        const sum = Object.keys(e).filter(k => k.startsWith(p + '_')).reduce((s, k) => s + (Number(e[k] || 0)), 0);
-        return acc + (sum > 0 ? 1 : 0);
-      }, 0);
-
-      intCount = intPrefixes.reduce((acc, p) => {
-        const sum = ['_apresentacao','_historico','_defesa','_justificativa'].reduce((s, suf) => s + (Number(e[p + suf] || 0)), 0);
-        return acc + (sum > 0 ? 1 : 0);
-      }, 0);
-
-      langCount = langPrefixes.reduce((acc, p) => {
-        const c = Number(e[p + '_clareza'] || 0);
-        const d = Number(e[p + '_domino'] || 0);
-        const a = Number(e[p + '_analise'] || 0);
-        const sum = (c * 0.3) + (d * 0.4) + (a * 0.3);
-        return acc + (sum > 0 ? 1 : 0);
-      }, 0);
-
-      projTotal = e.proj_total != null ? Number(e.proj_total) : '';
-      intTotal = e.int_total != null ? Number(e.int_total) : '';
-      langTotal = e.lang_total != null ? Number(e.lang_total) : '';
-
-      // Calcular nota final ponderada
-      const projNorm = projTotal !== '' ? Math.max(0, Math.min(1, Number(projTotal) / MAX.project)) : 0;
-      const intNorm = intTotal !== '' ? Math.max(0, Math.min(1, Number(intTotal) / MAX.interview)) : 0;
-      const langNorm = langTotal !== '' ? Math.max(0, Math.min(1, Number(langTotal) / MAX.language)) : 0;
-      finalScore = (projNorm * WEIGHTS.project) + (intNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
-      finalScore = finalScore ? finalScore.toFixed(2) : '';
-      projTotal = projTotal !== '' ? Number(projTotal).toFixed(2) : '';
-      intTotal = intTotal !== '' ? Number(intTotal).toFixed(2) : '';
-      langTotal = langTotal !== '' ? Number(langTotal).toFixed(2) : '';
-    }
-
-    const row = [
-      s.protocol,
-      formatPtBrDateTime(s.createdAt),
-      normalizeStatus(s.status),
-      s.cpfLast4,
-      s.identified?.nome || '',
-      s.identified?.email || '',
-      s.project?.titulo_pt || '',
-      s.project?.area || '',
-      projTotal,
-      intTotal,
-      langTotal,
-      finalScore,
-      String(projCount),
-      String(intCount),
-      String(langCount),
-      (s.hash || '').slice(0, 16) + '…',
-    ].map(csvEscape);
-    return row.join(';');
-  });
-
-  // Adiciona BOM (\uFEFF) para forçar Excel a reconhecer UTF-8
-  const csv = '\uFEFF' + [header, ...lines].join('\r\n') + '\r\n';
-  const filename = `inscricoes_${new Date().toISOString().slice(0, 10)}.csv`;
-
-  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  return res.send(csv);
-});
+app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => adminController.exportCsv(req, res));
 
 app.post(`/secret/${ADMIN_SECRET}/admin/reset`, checkAdminIP, adminAuth, (req, res) => {
   const confirm = String(req.body?.confirm ?? '').trim().toLowerCase();
@@ -541,49 +372,7 @@ app.get('/api/verify/:protocol', (req, res) => {
 // --- ROTAS DE AUTENTICAÇÃO ---
 
 // Endpoint de Login
-app.post(`/secret/${ADMIN_SECRET}/login`, apiLimiter, (req, res) => {
-  const { username, password } = req.body;
-  
-  // 1. Tentar login como Admin
-  if (username === ADMIN_USER && password === ADMIN_PASS) {
-    const token = jwt.sign(
-      { user: username, role: 'admin', iat: Date.now() },
-      JWT_SECRET,
-      { expiresIn: '4h' }
-    );
-    req.session.token = token;
-    logLoginSuccess(username, req.ip, req.headers['user-agent']);
-    return res.json({ success: true, token, redirect: `/secret/${ADMIN_SECRET}/admin` });
-  }
-
-  // 2. Tentar login como Avaliador
-  const EVALUATORS = storage.getEvaluators();
-  const evaluator = EVALUATORS[username];
-  if (evaluator && evaluator.pass === password) {
-    const token = jwt.sign(
-      { 
-        user: username, 
-        role: 'evaluator', 
-        line: evaluator.line, 
-        num: evaluator.num,
-        iat: Date.now() 
-      },
-      JWT_SECRET,
-      { expiresIn: '4h' }
-    );
-    req.session.token = token;
-    logLoginSuccess(username, req.ip, req.headers['user-agent']);
-    return res.json({ 
-      success: true, 
-      token, 
-      redirect: `/secret/${ADMIN_SECRET}/evaluator/${evaluator.line}/${evaluator.num}` 
-    });
-  }
-  
-  // Falha
-  logLoginFailed(username, req.ip, 'INVALID_CREDENTIALS');
-  return res.status(401).json({ error: 'Credenciais inválidas' });
-});
+app.post(`/secret/${ADMIN_SECRET}/login`, apiLimiter, (req, res) => authController.login(req, res));
 
 // Endpoint de Logout
 app.use(`/secret/${ADMIN_SECRET}/logout`, (req, res) => {
@@ -713,164 +502,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
   `);
 });
 
-app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, (req, res) => {
-  const q = String(req.query.q ?? '');
-  const status = String(req.query.status ?? '');
-  const fromStr = String(req.query.from ?? '');
-  const toStr = String(req.query.to ?? '');
-  const { from, to } = parseDateRange(fromStr, toStr);
-
-  const submissions = filterSubmissions(storage.listSubmissions(), { q, status, from, to });
-  const evals = storage.listEvaluations();
-  const evalMap = new Map(evals.map(e => [e.protocol, e]));
-
-  // Pesos: Projeto=4, Entrevista=5, Língua=1
-  // Agora todas as notas (proj, int, lang) são salvas na escala 0-10.
-  const WEIGHTS = { project: 4, interview: 5, language: 1 };
-  const MAX = { project: 10, interview: 10, language: 10 };
-
-  function getScoreDisplay(s) {
-    const sStatus = normalizeStatus(s.status);
-    if (sStatus.toLowerCase() === 'indeferido') return '<span style="color:red; font-weight:bold;">INDEFERIDO</span>';
-
-    const e = evalMap.get(s.protocol);
-    if (!e) return '<span style="color:#ccc;">—</span>';
-
-    const proj = Number(e.proj_total || 0);
-    const intr = Number(e.int_total || 0);
-    const lang = Number(e.lang_total || 0);
-
-    // Se alguma nota for menor que 7, considera reprovado
-    if (proj < 7 || intr < 7 || lang < 7) {
-      return '<span style="color:red; font-weight:bold;">REPROVADO (< 7)</span>';
-    }
-
-    const projNorm = Math.max(0, Math.min(1, proj / MAX.project));
-    const intrNorm = Math.max(0, Math.min(1, intr / MAX.interview));
-    const langNorm = Math.max(0, Math.min(1, lang / MAX.language));
-    const weighted = (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
-    return weighted.toFixed(2);
-  }
-
-  const qs = new URLSearchParams({ q, status, from: fromStr, to: toStr }).toString();
-  const exportUrl = `/secret/${ADMIN_SECRET}/admin/export.csv` + (qs ? `?${qs}` : '');
-
-  const rows = submissions.map(s => {
-    const sStatus = normalizeStatus(s.status);
-    const scoreDisplay = getScoreDisplay(s);
-    return `
-      <tr>
-        <td>${escapeHtml(new Date(s.createdAt).toLocaleString('pt-BR'))}</td>
-        <td><a href="/secret/${ADMIN_SECRET}/admin/submission/${encodeURIComponent(s.protocol)}">${escapeHtml(s.protocol)}</a></td>
-        <td>${escapeHtml(sStatus)}</td>
-        <td>${escapeHtml(s.cpfLast4)}</td>
-        <td>${escapeHtml((s.identified?.nome || '').slice(0, 60))}</td>
-        <td>${escapeHtml((s.identified?.email || '').slice(0, 60))}</td>
-        <td>${scoreDisplay}</td>
-        <td style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px;">${escapeHtml((s.hash || '').slice(0, 16))}…</td>
-      </tr>
-    `;
-  }).join('');
-
-  res.type('html').send(`
-    <!doctype html>
-    <html lang="pt-BR">
-    <head>
-      <meta charset="utf-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <title>Admin - Inscrições PLANTERR</title>
-      <link rel="stylesheet" href="/theme.css" />
-      <style>
-        .hint { color: #003366; font-size: 11px; }
-        .filters-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; align-items: end; }
-        .filters-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 8px; }
-        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-        @media (max-width: 900px) { .filters-grid { grid-template-columns: 1fr; } }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <header class="main-header">
-          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo Planterr" style="max-height:80px; width:auto;">
-            <h1>Administração de Inscrições - PLANTERR</h1>
-          </div>
-        </header>
-
-        <section class="panel">
-          <div class="panel-header"><h2>Busca e filtros</h2></div>
-          <div class="panel-body">
-            <div class="hint">Dica: clique no protocolo para ver detalhes, status e verificação.</div>
-            <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
-              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee">Área da Comissão</a>
-              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee/results">Ranking / Resultados</a>
-              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/evaluator-links">Credenciais Avaliadores</a>
-              <form method="POST" action="/secret/${ADMIN_SECRET}/admin/reset" onsubmit="return confirm('Isso vai apagar TODAS as inscrições registradas.\n\nUse apenas para TESTE.\n\nDeseja continuar?');" style="margin:0;">
-                <input type="hidden" name="confirm" value="sim" />
-                <button class="btn-secondary" type="submit">Limpar inscrições (teste)</button>
-              </form>
-              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/logout" style="background-color: #d9534f; border-color: #d43f3a;">Sair</a>
-            </div>
-            <form method="GET" action="/secret/${ADMIN_SECRET}/admin">
-              <div class="filters-grid" style="margin-top: 8px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="q">Busca (protocolo, nome, email, título)</label>
-                  <input id="q" name="q" type="text" value="${escapeHtml(q)}" placeholder="Ex.: PLANTERR-2025..." />
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="status">Status</label>
-                  <select id="status" name="status">
-                    ${['Todos', ...ADMIN_STATUS_OPTIONS].map(opt => {
-                      const sel = String(status || 'Todos') === opt ? 'selected' : '';
-                      return `<option value="${escapeHtml(opt)}" ${sel}>${escapeHtml(opt)}</option>`;
-                    }).join('')}
-                  </select>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="from">De</label>
-                  <input id="from" name="from" type="date" value="${escapeHtml(fromStr)}" />
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
-                  <label for="to">Até</label>
-                  <input id="to" name="to" type="date" value="${escapeHtml(toStr)}" />
-                </div>
-              </div>
-              <div class="filters-actions">
-                <button class="btn-primary" type="submit">Filtrar</button>
-                <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">Limpar</a>
-                <a class="btn-secondary" href="${exportUrl}">Baixar CSV</a>
-              </div>
-            </form>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-header"><h2>Inscrições</h2></div>
-          <div class="panel-body" style="background-color:#fff;">
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Protocolo</th>
-                  <th>Status</th>
-                  <th>CPF (últ. 4)</th>
-                  <th>Nome</th>
-                  <th>Email</th>
-                  <th>Nota Final</th>
-                  <th>Hash</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${rows || '<tr><td colspan="8">Nenhuma inscrição encontrada.</td></tr>'}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-    </body>
-    </html>
-  `);
-});
+app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, (req, res) => adminController.dashboard(req, res));
 
 // Committee evaluation pages and API
 app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, (req, res) => {
@@ -2191,77 +1823,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
 });
 
 // 4. Processar Avaliação Individual
-app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, (req, res) => {
-  const { line, num, protocol } = req.params;
-  const who = `avaliador${num}`;
-  
-  // Ler avaliação existente para não perder dados de outros avaliadores
-  const existing = storage.getEvaluation(protocol) || {};
-  
-  // Atualizar APENAS os campos deste avaliador
-  const updates = {};
-  
-  // Projeto
-  ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs'].forEach(k => {
-    const key = `proj_${who}_${k}`;
-    updates[key] = Number(req.body[key] || 0);
-  });
-  
-  // Entrevista
-  ['apresentacao','historico','defesa','justificativa'].forEach(k => {
-    const key = `int_${who}_${k}`;
-    updates[key] = Number(req.body[`int_${who}_${k}`] || 0);
-  });
-  
-  // Língua
-  ['clareza','domino','analise'].forEach(k => {
-    const key = `lang_${who}_${k}`;
-    updates[key] = Number(req.body[`lang_${who}_${k}`] || 0);
-  });
-
-  // Merge para calcular totais
-  const merged = { ...existing, ...updates };
-  
-  // Recalcular Totais (Cópia da lógica principal)
-  const evaluators = ['avaliador1','avaliador2','avaliador3'];
-  
-  // Total Projeto
-  const projEvaluatorSums = evaluators.map(ev => {
-    return ['proj_intro','proj_problem','proj_just','proj_objectives','proj_review','proj_methods','proj_schedule','proj_refs']
-      .reduce((sum, k) => sum + Number(merged[`proj_${ev}_${k}`] || 0), 0);
-  });
-  // Average across evaluators (fixed divisor 3)
-  const projTotal = (projEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
-
-  // Total Entrevista
-  const intEvaluatorSums = evaluators.map(ev => {
-    return ['apresentacao','historico','defesa','justificativa']
-      .reduce((sum, k) => sum + Number(merged[`int_${ev}_${k}`] || 0), 0);
-  });
-  // Average across evaluators (fixed divisor 3)
-  const intTotal = (intEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
-
-  // Total Língua
-  const langEvaluatorSums = evaluators.map(ev => {
-    const c = Number(merged[`lang_${ev}_clareza`] || 0);
-    const d = Number(merged[`lang_${ev}_domino`] || 0);
-    const a = Number(merged[`lang_${ev}_analise`] || 0);
-    return (c * 0.3) + (d * 0.4) + (a * 0.3);
-  });
-  // Average across evaluators (fixed divisor 3)
-  const langTotal = (langEvaluatorSums.reduce((a,b) => a + b, 0) / 3);
-
-  // Salvar
-  storage.upsertEvaluation({
-    protocol,
-    ...updates, // Salva apenas os campos novos/atualizados (upsert faz merge)
-    proj_total: projTotal,
-    int_total: intTotal,
-    lang_total: langTotal
-  });
-
-  res.redirect(`/secret/${ADMIN_SECRET}/evaluator/${line}/${num}`);
-});
+app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, (req, res) => evaluationController.submit(req, res));
 
 // Rotas falsas para enganar scanners
 app.get(['/admin', '/administrator', '/login', '/wp-admin', '/committee'], (req, res) => {
