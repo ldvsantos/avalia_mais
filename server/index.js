@@ -965,7 +965,7 @@ app.get('/committee/evaluate/:protocol', basicAuth, (req, res) => {
                 <input type="text" id="nota_final" readonly style="background-color:#eee; font-weight:bold;" value="${escapeHtml(String(finalScoreDisplay))}" />
               </div>
               <div class="form-group">
-                <label for="eliminado">Eliminação ( Casos omissos)</label>
+                <label for="eliminado">Eliminação (Casos omissos)</label>
                 <select id="eliminado" name="eliminado">
                   ${['Não','Sim'].map(opt => {
                     const sel = String(e.eliminado ? 'Sim' : 'Não') === opt ? 'selected' : '';
