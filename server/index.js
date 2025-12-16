@@ -8,6 +8,21 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 
+// --- CLEAN ARCHITECTURE IMPORTS ---
+const JsonSubmissionRepository = require('./src/infrastructure/repositories/JsonSubmissionRepository');
+const JsonEvaluatorRepository = require('./src/infrastructure/repositories/JsonEvaluatorRepository');
+const JsonEvaluationRepository = require('./src/infrastructure/repositories/JsonEvaluationRepository');
+const JwtService = require('./src/infrastructure/security/JwtService');
+
+const RegisterSubmission = require('./src/application/RegisterSubmission');
+const AuthenticateUser = require('./src/application/AuthenticateUser');
+const SubmitEvaluation = require('./src/application/SubmitEvaluation');
+
+const SubmissionController = require('./src/interfaces/http/controllers/SubmissionController');
+const AuthController = require('./src/interfaces/http/controllers/AuthController');
+const EvaluationController = require('./src/interfaces/http/controllers/EvaluationController');
+// ----------------------------------
+
 // Módulos de segurança
 const { generateOrReadAdminSecret } = require('./admin-secret');
 const { 
@@ -47,6 +62,22 @@ const HMAC_SECRET = process.env.HMAC_SECRET || 'dev-secret-change-me';
 const JWT_SECRET = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
 const ADMIN_IPS = (process.env.ADMIN_IPS || '').split(',').filter(Boolean);
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
+
+// --- CLEAN ARCHITECTURE INITIALIZATION ---
+const dataDir = path.join(__dirname, 'data');
+const submissionRepo = new JsonSubmissionRepository(dataDir);
+const evaluatorRepo = new JsonEvaluatorRepository(dataDir);
+const evaluationRepo = new JsonEvaluationRepository(dataDir);
+const jwtService = new JwtService(JWT_SECRET);
+
+const registerSubmissionUseCase = new RegisterSubmission(submissionRepo, HMAC_SECRET);
+const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
+const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);
+
+const submissionController = new SubmissionController(registerSubmissionUseCase);
+const authController = new AuthController(authenticateUserUseCase, ADMIN_SECRET);
+const evaluationController = new EvaluationController(submitEvaluationUseCase);
+// -----------------------------------------
 
 // 1. Headers de Segurança (Helmet + Custom)
 app.use(helmet({
