@@ -1,4 +1,4 @@
-# Formulário de Inscrição - Planterr
+# Formulário de Inscrição - AVALIA+
 
 Este projeto é um formulário web para submissão de projetos, inspirado na plataforma Carlos Chagas, com funcionalidade de geração de PDF.
 

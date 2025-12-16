@@ -1,5 +1,5 @@
 ---
-title: "Manual do Usuário — Sistema PLANTERR"
+title: "Manual do Usuário — Sistema AVALIA+"
 subtitle: "Inscrições, Avaliação e Resultados"
 author: "Equipe de Desenvolvimento"
 date: "15/12/2025"
@@ -14,9 +14,9 @@ geometry: "margin=2.5cm"
 
 ---
 
-## 1. Índice de manuais
+## 1. ÍNDICE DE MANUAIS
 
-O Sistema PLANTERR possui três manuais, separados por público-alvo:
+O Sistema AVALIA+ possui três manuais, separados por público-alvo:
 
 1. Manual do candidato (inscrição e PDF): veja [MANUAL_CANDIDATO.md](MANUAL_CANDIDATO.md)
 2. Manual da equipe (Admin e Presidente): veja [MANUAL_ADMIN_E_PRESIDENTE.md](MANUAL_ADMIN_E_PRESIDENTE.md)
@@ -24,7 +24,7 @@ O Sistema PLANTERR possui três manuais, separados por público-alvo:
 
 ---
 
-## 2. Suporte
+## 2. SUPORTE
 
 Se houver erro que impeça o uso do sistema, informe à coordenação:
 

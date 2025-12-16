@@ -178,7 +178,7 @@ app.get(`/secret/${ADMIN_SECRET}/auth-status`, (req, res) => {
 |---|---|
 | `app.get('/admin', basicAuth,` | `app.get(\`/secret/${ADMIN_SECRET}/admin\`, checkAdminIP, adminAuth,` |
 | `app.get('/admin/export.csv', basicAuth,` | `app.get(\`/secret/${ADMIN_SECRET}/admin/export.csv\`, checkAdminIP, adminAuth,` |
-| `app.post('/admin/reset', basicAuth,` | `app.post(\`/secret/${ADMIN_SECRET}/admin/reset\`, checkAdminIP, adminAuth,` |
+| `app.post('/admin/reset', basicAuth,` | *(rota removida — limpeza total de inscrições foi descontinuada)* |
 | `app.get('/admin/submission/:protocol', basicAuth,` | `app.get(\`/secret/${ADMIN_SECRET}/admin/submission/:protocol\`, checkAdminIP, adminAuth,` |
 | `app.post('/admin/submission/:protocol', basicAuth,` | `app.post(\`/secret/${ADMIN_SECRET}/admin/submission/:protocol\`, checkAdminIP, adminAuth,` |
 

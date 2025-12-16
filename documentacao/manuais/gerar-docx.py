@@ -41,9 +41,11 @@ def gerar_docx(md_file, output_file, reference_doc=None):
                     print(f"[AVISO] Tentativa {attempt + 1}/{max_attempts}: Arquivo em uso, aguardando...")
                     time.sleep(0.6)
                 else:
-                    print(f"Erro: nao foi possivel remover '{output_file.name}'.")
-                    print("Certifique-se de que o arquivo não está aberto no Word ou OneDrive.")
-                    return 1
+                    alt_output_file = output_file.with_name(output_file.stem + "_NOVO" + output_file.suffix)
+                    print(f"[AVISO] Não foi possível remover '{output_file.name}' (arquivo em uso).")
+                    print("[AVISO] Certifique-se de que o arquivo não está aberto no Word/OneDrive se quiser sobrescrever.")
+                    print(f"[INFO] Gerando com nome alternativo: {alt_output_file.name}")
+                    output_file = alt_output_file
     
     # Comando Pandoc
     cmd = [

@@ -15,11 +15,11 @@ geometry: "margin=2.5cm"
 
 ---
 
-## 1. Apresentação
+## 1. APRESENTAÇÃO
 
-Este manual é destinado a usuários da **área restrita** do Sistema PLANTERR. O conteúdo cobre o trabalho do **Administrador Geral** (gestão de inscrições, relatórios e credenciais) e do **Presidente da Banca** (comissão, consolidação e resultados).
+Este manual é destinado a usuários da **área restrita** do Sistema AVALIA+. O conteúdo cobre o trabalho do **Administrador Geral** (gestão de inscrições, relatórios e credenciais) e do **Presidente da Banca** (comissão, consolidação e resultados).
 
-## 2. Acesso à área restrita
+## 2. ACESSO À ÁREA RESTRITA
 
 O acesso à área restrita é feito por um endereço específico (fornecido pela coordenação), que inclui um código de segurança na URL. Ao abrir o link, você verá a tela de login com o campo para informar seu usuário.
 
@@ -40,7 +40,7 @@ Figura 03 — Login do Admin: botão "Entrar"
 ![](../../prints/manual/fig-03-login-admin-botao-entrar.png){width=75%}
 
 
-## 3. Administrador Geral
+## 3. ADMINISTRADOR GERAL
 
 ### 3.1. Visão geral do painel
 
@@ -150,7 +150,7 @@ Após o logout, confirme que a tela de login foi exibida novamente.
 
 ----
 
-## 4. Presidente da Banca
+## 4. PRESIDENTE DA BANCA
 
 O Presidente da Banca normalmente utiliza o mesmo acesso da área restrita, mas com tarefas concentradas em **Comissão** (consolidação) e **Resultados** (ranking e exportações).
 
@@ -238,12 +238,12 @@ Figura 30 — Resultados: botão "Imprimir / PDF"
 ![](../../prints/manual/fig-30-resultados-botao-imprimir-pdf.png){width=75%}
 
 
-## 5. Boas práticas e segurança
+## 5. BOAS PRÁTICAS E SEGURANÇA
 
 A área restrita lida com dados pessoais e informações sensíveis do processo. Por isso, não compartilhe usuário/senha, finalize sempre clicando em **Sair** e evite exportar ou repassar planilhas fora do estritamente necessário para o trabalho da banca e da coordenação.
 
 
 
-## 6. Suporte
+## 6. SUPORTE
 
 Em caso de erro, informe o perfil (Admin/Presidente), descreva o que tentou fazer e envie um print do problema (se possível). Isso acelera o diagnóstico e evita retrabalho.

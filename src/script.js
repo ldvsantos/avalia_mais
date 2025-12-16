@@ -258,7 +258,7 @@ async function generateDraft() {
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>RASCUNHO - Planterr</title>
+            <title>RASCUNHO - AVALIA+</title>
             <link rel="stylesheet" href="/theme.css">
             <style>
                 @page { size: A4; margin: 14mm; }
@@ -332,6 +332,7 @@ async function generateDraft() {
                     <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
                     <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO RASCUNHO (SEM VALIDADE)</div>
                     <div class="header-right">
+                        <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:60px; margin-bottom:5px;">
                         <div><strong>Processo:</strong> ${registrationNumber}</div>
                         <div><strong>Registro:</strong> ${new Date(formData.data_registro).toLocaleString('pt-BR')}</div>
                         <div style="font-size:8px; word-break:break-all;"><strong>Hash:</strong> ${formData.hash_verificacao}</div>
@@ -378,6 +379,7 @@ async function generateDraft() {
                     <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
                     <div class="header-center">ANTEPROJETO (RASCUNHO)</div>
                     <div class="header-right">
+                        <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
                         <div><strong>Processo:</strong> ${registrationNumber}</div>
                     </div>
                 </div>
@@ -661,7 +663,7 @@ async function generatePDF() {
         <html>
         <head>
             <meta charset="UTF-8">
-            <title>Projeto Planterr - ${registrationNumber}</title>
+            <title>Projeto AVALIA+ - ${registrationNumber}</title>
             <link rel="stylesheet" href="/theme.css">
             <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"><\/script>
             <style>
@@ -832,6 +834,7 @@ async function generatePDF() {
                     <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
                     <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO</div>
                     <div class="header-right">
+                        <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
                         <div><strong>Processo:</strong> ${registrationNumber}</div>
                         <div><strong>Registro:</strong> ${new Date(formData.data_registro).toLocaleString('pt-BR')}</div>
                         <div style="font-size:8px; word-break:break-all;"><strong>Hash:</strong> ${formData.hash_verificacao}</div>
@@ -1017,6 +1020,7 @@ async function generatePDF() {
                     <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
                     <div class="header-center">ANTEPROJETO DE TCC</div>
                     <div class="header-right">
+                        <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
                         <div><strong>Processo:</strong> ${registrationNumber}</div>
                         <div><strong>Registro:</strong> ${new Date(formData.data_registro).toLocaleString('pt-BR')}</div>
                         <div style="font-size:8px; word-break:break-all;"><strong>Hash:</strong> ${formData.hash_verificacao}</div>

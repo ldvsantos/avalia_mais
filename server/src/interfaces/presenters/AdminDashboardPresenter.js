@@ -62,7 +62,7 @@ class AdminDashboardPresenter {
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Admin - Inscrições PLANTERR</title>
+        <title>Admin - Inscrições AVALIA+</title>
         <link rel="stylesheet" href="/theme.css" />
         <style>
           .hint { color: #003366; font-size: 11px; }
@@ -76,8 +76,9 @@ class AdminDashboardPresenter {
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <img src="/img/logo_planter.png" alt="Logo Planterr" style="max-height:80px; width:auto;">
-              <h1>Administração de Inscrições - PLANTERR</h1>
+              <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+              <h1>Administração de Inscrições - AVALIA+</h1>
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
 
@@ -89,10 +90,6 @@ class AdminDashboardPresenter {
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/committee">Área da Comissão</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/committee/results">Ranking / Resultados</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/evaluator-links">Credenciais Avaliadores</a>
-                <form method="POST" action="/secret/${this.adminSecret}/admin/reset" onsubmit="return confirm('Isso vai apagar TODAS as inscrições registradas.\\n\\nUse apenas para TESTE.\\n\\nDeseja continuar?');" style="margin:0;">
-                  <input type="hidden" name="confirm" value="sim" />
-                  <button class="btn-secondary" type="submit">Limpar inscrições (teste)</button>
-                </form>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/logout" style="background-color: #d9534f; border-color: #d43f3a;">Sair</a>
               </div>
               <form method="GET" action="/secret/${this.adminSecret}/admin">
