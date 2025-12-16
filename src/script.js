@@ -246,6 +246,7 @@ async function generateDraft() {
                     z-index: 9999;
                     pointer-events: none;
                     white-space: nowrap;
+                    text-align: center;
                 }
                 .content { padding: 0 2mm; max-width: 100%; }
                 .header-container {
@@ -286,13 +287,13 @@ async function generateDraft() {
             </style>
         </head>
         <body>
-            <div class="watermark">RASCUNHO</div>
+            <div class="watermark">RASCUNHO<div>SEM VALIDADE</div></div>
             <div class="content">
             <!-- PÁGINA 1: FICHA DE INSCRIÇÃO -->
             <div class="page-1">
                 <div class="header-container">
                     <div class="header-left"><img src="/img/logo_planter.png" alt="Planter Logo"></div>
-                    <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO (RASCUNHO)</div>
+                    <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO RASCUNHO (SEM VALIDADE)</div>
                     <div class="header-right">
                         <div><strong>Processo:</strong> ${registrationNumber}</div>
                         <div><strong>Registro:</strong> ${new Date(formData.data_registro).toLocaleString('pt-BR')}</div>
@@ -1118,6 +1119,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Área (feedback)
     const area = document.getElementById('area');
     if (area) { area.addEventListener('change', updateAreaFeedback); updateAreaFeedback(); }
+
+    // Botão Preencher Exemplo
+    const btnFillExample = document.getElementById('btn-fill-example');
+    if (btnFillExample) {
+        btnFillExample.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Botão Preencher Exemplo clicado via listener');
+            fillExample();
+        });
+    }
+
+    // Botão Gerar Rascunho
+    const btnGenerateDraft = document.getElementById('btn-generate-draft');
+    if (btnGenerateDraft) {
+        btnGenerateDraft.addEventListener('click', (e) => {
+            e.preventDefault();
+            console.log('Botão Gerar Rascunho clicado via listener');
+            generateDraft();
+        });
+    }
 });
 
 function fillExample() {
