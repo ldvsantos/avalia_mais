@@ -36,6 +36,12 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+# Em PowerShell 7+, alguns comandos nativos escrevendo em stderr podem virar erro (NativeCommandError)
+# quando $ErrorActionPreference='Stop'. Para o fluxo do git, isso atrapalha.
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue) {
+  $global:PSNativeCommandUseErrorActionPreference = $false
+}
+
 # Carrega configuração local opcional (não versionada)
 $configPath = Join-Path $PSScriptRoot 'deploy-config.ps1'
 if (Test-Path $configPath) {
@@ -57,6 +63,22 @@ if (Test-Path $configPath) {
 function Fail([string]$Message) {
   Write-Host "ERRO: $Message" -ForegroundColor Red
   exit 1
+}
+
+function EnsureGitCredentialHelper {
+  if (-not (Get-Command git -ErrorAction SilentlyContinue)) { return }
+
+  $globalHelpers = @(git config --global --get-all credential.helper 2>$null)
+  if ($globalHelpers -contains 'manager-core') {
+    $hasManagerCore = $null -ne (Get-Command git-credential-manager-core -ErrorAction SilentlyContinue)
+    if (-not $hasManagerCore) {
+      Write-Host "Aviso: credential.helper='manager-core' está configurado, mas 'git-credential-manager-core' não existe. Ajustando para 'manager'..." -ForegroundColor Yellow
+      git config --global --replace-all credential.helper manager
+      if ($LASTEXITCODE -ne 0) {
+        Fail "Falha ao ajustar credential.helper. Rode manualmente: git config --global --replace-all credential.helper manager"
+      }
+    }
+  }
 }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -86,6 +108,9 @@ try {
     if ($LASTEXITCODE -ne 0) {
       Fail 'Esta pasta não parece ser um repositório Git.'
     }
+
+    # Antes de qualquer operação remota (fetch/pull/push), garante que o helper de credenciais não está quebrado.
+    EnsureGitCredentialHelper
 
     $statusPorcelain = git status --porcelain
     if ($statusPorcelain) {
@@ -126,17 +151,6 @@ try {
 
     git pull --rebase
     if ($LASTEXITCODE -ne 0) { Fail 'git pull --rebase falhou' }
-
-    # Corrige configuração comum no Windows: helper 'manager-core' sem o subcomando disponível.
-    $globalHelpers = @(git config --global --get-all credential.helper 2>$null)
-    if ($globalHelpers -contains 'manager-core') {
-      git credential-manager-core --version 1>$null 2>$null
-      if ($LASTEXITCODE -ne 0) {
-        Write-Host "Aviso: Git Credential Manager Core não está disponível, ajustando helper para 'manager'..." -ForegroundColor Yellow
-        git config --global --replace-all credential.helper manager
-        if ($LASTEXITCODE -ne 0) { Fail "Falha ao ajustar credential.helper. Rode: git config --global --replace-all credential.helper manager" }
-      }
-    }
 
     git push
     if ($LASTEXITCODE -ne 0) { Fail 'git push falhou' }
