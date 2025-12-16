@@ -335,16 +335,6 @@ app.post('/api/submissions', (req, res) => submissionController.register(req, re
 
 app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => adminController.exportCsv(req, res));
 
-app.post(`/secret/${ADMIN_SECRET}/admin/reset`, checkAdminIP, adminAuth, (req, res) => {
-  const confirm = String(req.body?.confirm ?? '').trim().toLowerCase();
-  if (confirm !== 'sim') {
-    return res.status(400).send('Confirmação obrigatória');
-  }
-
-  storage.clearAllSubmissions();
-  return res.redirect(`/secret/${ADMIN_SECRET}/admin`);
-});
-
 app.get('/api/verify/:protocol', (req, res) => {
   const protocol = req.params.protocol;
   const record = storage.getByProtocol(protocol);
@@ -430,17 +420,19 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="/theme.css">
     </head>
-    <body>
-      <div class="container" style="max-width: 420px;">
-        <header class="main-header" style="margin-bottom: 10px;">
-          <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
-            <img src="/img/logo_planter.png" alt="Logo Planterr" style="max-height: 70px; width:auto;">
-            <h1>Acesso Restrito</h1>
-          </div>
-        </header>
+    <body style="min-height:100vh; display:flex; align-items:center; justify-content:center;">
+      <div class="container" style="width:100%; max-width:520px;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;">
+          <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height: 48px; width:auto;">
+          <h1 style="margin:0;">Acesso Restrito</h1>
+          <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+" style="max-height: 48px; width:auto;">
+        </div>
+        <div style="text-align:center; margin-bottom:12px;">
+          Entre com suas credenciais para continuar.
+        </div>
 
-        <section class="panel">
-          <div class="panel-header"><h2>Administração do Processo Seletivo - PLANTERR</h2></div>
+        <section class="panel" style="margin-bottom:0;">
+          <div class="panel-header"><h2>Administração do Processo Seletivo - AVALIA+</h2></div>
           <div class="panel-body">
             <div id="error-msg" class="field-feedback error" style="display:none; margin-bottom: 8px;"></div>
 
@@ -575,7 +567,13 @@ app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, (req, res)
     </head>
     <body>
       <div class="container">
-        <header class="main-header"><h1>Comissão - Avaliações</h1></header>
+        <header class="main-header">
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <h1>Comissão - Avaliações</h1>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+          </div>
+        </header>
         <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">Admin</a>
         </div>
@@ -697,7 +695,13 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, (r
     </head>
     <body>
       <div class="container">
-        <header class="main-header"><h1>Resultados (Ranking)</h1></header>
+        <header class="main-header">
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <h1>Resultados (Ranking)</h1>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+          </div>
+        </header>
         <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar</a>
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee/results/csv">Baixar CSV</a>
@@ -842,6 +846,33 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
   if (!s) return res.status(404).send('Não encontrado');
   const e = storage.getEvaluation(protocol) || {};
 
+  const secretPrefix = `/secret/${ADMIN_SECRET}`;
+  let backHref = `${secretPrefix}/committee`;
+
+  // Permite voltar para a tela do avaliador quando esta página for acessada a partir dela.
+  // (fallback seguro: sempre dentro do mesmo /secret)
+  const explicitFrom = String(req.query.from || '');
+  const explicitLine = String(req.query.line || '');
+  const explicitNum = String(req.query.num || '');
+  if (explicitFrom === 'evaluator' && explicitLine && explicitNum) {
+    backHref = `${secretPrefix}/evaluator/${encodeURIComponent(explicitLine)}/${encodeURIComponent(explicitNum)}`;
+  } else {
+    const referer = req.get('referer');
+    if (referer) {
+      try {
+        const refUrl = new URL(referer);
+        const evaluatorPrefix = `${secretPrefix}/evaluator/`;
+        if (refUrl.pathname.startsWith(evaluatorPrefix)) {
+          const rest = refUrl.pathname.slice(evaluatorPrefix.length);
+          const [line, num] = rest.split('/');
+          if (line && num) backHref = `${secretPrefix}/evaluator/${encodeURIComponent(line)}/${encodeURIComponent(num)}`;
+        }
+      } catch {
+        // ignore invalid/missing referrer URL
+      }
+    }
+  }
+
   // Projeto rubric max values
   const projectRubric = [
     { key: 'proj_intro', label: '1 – Introdução / Contextualização', max: 1 },
@@ -882,9 +913,15 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
     </head>
     <body>
       <div class="container">
-        <header class="main-header"><h1>Avaliação de Projeto</h1></header>
+        <header class="main-header">
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <h1>Avaliação de Projeto</h1>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+          </div>
+        </header>
         <div class="admin-actions" style="justify-content:center; gap:8px;">
-          <a class="btn-secondary" href="/committee">← Voltar</a>
+          <a class="btn-secondary" href="${backHref}">← Voltar</a>
           <span class="admin-badge">Protocolo: ${escapeHtml(protocol)}</span>
         </div>
         <section class="panel">
@@ -1322,8 +1359,9 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo Planterr" style="max-height:80px; width:auto;">
-            <h1>Administração de Inscrições - PLANTERR</h1>
+            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <h1>Administração de Inscrições - AVALIA+</h1>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
 
@@ -1542,7 +1580,13 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
     </head>
     <body>
       <div class="container">
-        <header class="main-header"><h1>Credenciais de Acesso - Avaliadores</h1></header>
+        <header class="main-header">
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <h1>Credenciais de Acesso - Avaliadores</h1>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+          </div>
+        </header>
         <div class="admin-actions" style="justify-content:center; margin-bottom:20px;">
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
         </div>
@@ -1679,16 +1723,20 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res
     <body>
       <div class="container">
         <header class="main-header">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <h1>Painel do Avaliador ${num}</h1>
-              <h2 style="font-size: 1rem; font-weight: normal;">Linha ${line}</h2>
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <div style="text-align:center;">
+              <h1 style="margin:0;">Painel do Avaliador ${num}</h1>
+              <div style="font-size: 1rem; font-weight: normal; color:#003366; margin-top:2px;">Linha ${line}</div>
             </div>
-            <form action="/secret/${ADMIN_SECRET}/logout" method="POST" style="display:inline; margin:0;">
-              <button type="submit" class="btn-secondary" style="font-size:0.8rem;">Sair</button>
-            </form>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
+        <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
+          <form action="/secret/${ADMIN_SECRET}/logout" method="POST" style="display:inline; margin:0;">
+            <button type="submit" class="btn-secondary" style="font-size:0.8rem;">Sair</button>
+          </form>
+        </div>
         
         <section class="panel">
           <div class="panel-body" style="background-color:#fff;">
@@ -1754,7 +1802,13 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
     </head>
     <body>
       <div class="container">
-        <header class="main-header"><h1>Avaliação Individual</h1></header>
+        <header class="main-header">
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTER" style="max-height:80px; width:auto;">
+            <h1>Avaliação Individual</h1>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+          </div>
+        </header>
         <div class="admin-actions" style="justify-content:center; gap:8px;">
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}">← Voltar para Lista</a>
           <span class="admin-badge">Avaliador ${num} | Linha ${line}</span>
