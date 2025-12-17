@@ -42,7 +42,12 @@
 
                     <div class="form-group">
                         <label for="etapa_processo">Etapa do Processo Objeto do Recurso: *</label>
-                        <input type="text" id="etapa_processo" name="etapa_processo" required maxlength="100" placeholder="Ex: Homologação das Inscrições, Resultado da Fase 1, etc.">
+                        <select id="etapa_processo" name="etapa_processo" required>
+                            <option value="">Selecione a etapa...</option>
+                            <option value="Avaliação do Projeto">Avaliação do Projeto</option>
+                            <option value="Entrevista">Entrevista</option>
+                            <option value="Prova de Língua Estrangeira">Prova de Língua Estrangeira</option>
+                        </select>
                     </div>
 
                     <div class="form-group">
