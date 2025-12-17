@@ -77,6 +77,14 @@
                         <button type="submit" class="btn-primary">Enviar Recurso</button>
                     </div>
                 </form>
+
+                <div id="appeal-success" style="display:none; margin-top:18px; text-align:center;">
+                    <div style="margin-bottom:10px; font-size:12px;">
+                        Recurso enviado com sucesso. Protocolo:
+                        <strong id="appeal-success-protocol" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></strong>
+                    </div>
+                    <a id="appeal-download" class="btn-primary" href="#" target="_blank" rel="noopener">Baixar PDF do recurso</a>
+                </div>
             </div>
         </section>
 
@@ -110,7 +118,17 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    alert(`Recurso enviado com sucesso!\nProtocolo: ${result.protocol}`);
+                    const protocol = result && result.protocol ? String(result.protocol) : '';
+
+                    const successBox = document.getElementById('appeal-success');
+                    const successProtocol = document.getElementById('appeal-success-protocol');
+                    const downloadLink = document.getElementById('appeal-download');
+
+                    if (successProtocol) successProtocol.textContent = protocol;
+                    if (downloadLink) downloadLink.href = `/api/appeals/${encodeURIComponent(protocol)}/pdf`;
+                    if (successBox) successBox.style.display = 'block';
+
+                    alert(`Recurso enviado com sucesso!\nProtocolo: ${protocol}\n\nClique em "Baixar PDF do recurso" para fazer o download.`);
                     e.target.reset();
                 } else {
                     alert(`Erro ao enviar recurso: ${result.error || 'Erro desconhecido'}`);

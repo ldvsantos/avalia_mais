@@ -36,6 +36,12 @@ class JsonAppealRepository {
   findAll() {
       return this.appeals;
   }
+
+  findByProtocol(protocol) {
+    const needle = String(protocol || '').trim();
+    if (!needle) return null;
+    return this.appeals.find((a) => String(a?.protocol || '').trim() === needle) || null;
+  }
 }
 
 module.exports = JsonAppealRepository;

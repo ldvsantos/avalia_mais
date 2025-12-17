@@ -411,6 +411,27 @@ app.post('/api/submissions', (req, res) => submissionController.register(req, re
 
 app.post('/api/appeals', (req, res) => appealController.register(req, res));
 
+// Download do comprovante (PDF) do recurso
+app.get('/api/appeals/:protocol/pdf', async (req, res) => {
+  try {
+    const protocol = String(req.params.protocol || '').trim();
+    if (!protocol) return res.status(400).json({ error: 'Protocolo inválido' });
+
+    const appeal = appealRepo.findByProtocol(protocol);
+    if (!appeal) return res.status(404).json({ error: 'Recurso não encontrado' });
+
+    const pdfBuffer = await pdfService.generateAppealPdf(appeal);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="recurso-${protocol}.pdf"`);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Falha ao gerar PDF do recurso', err);
+    return res.status(500).json({ error: 'Falha ao gerar PDF do recurso' });
+  }
+});
+
 app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => adminController.exportCsv(req, res));
 
 app.get('/api/verify/:protocol', (req, res) => {
