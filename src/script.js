@@ -279,6 +279,26 @@ function showSubmissionSuccess(serverReceipt, formData) {
     setText('success-summary-titulo', formData?.titulo_pt || '');
     setText('success-summary-area', formData?.area || '');
 
+    // Aviso de anexos obrigatórios para validação (condicional)
+    const anexosPanel = document.getElementById('success-anexos-panel');
+    const anexosItens = document.getElementById('success-anexos-itens');
+
+    if (anexosPanel && anexosItens) {
+        const cotasStr = String(formData?.cotas || '').trim();
+        const show = (String(formData?.vaga_reservada || '') === 'Sim') || (cotasStr.length > 0) || (String(formData?.vinculo_empregaticio || '') === 'Sim');
+
+        if (!show) {
+            anexosPanel.style.display = 'none';
+            anexosItens.innerHTML = '';
+        } else {
+            const anexos = getAnexosCondicionantesFromDom();
+            anexosPanel.style.display = anexos.length ? 'block' : 'none';
+            anexosItens.innerHTML = anexos.length
+                ? ('<ul style="margin:0; padding-left:18px;">' + anexos.map(a => `<li>${escapeHtml(a)}</li>`).join('') + '</ul>')
+                : '';
+        }
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
