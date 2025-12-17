@@ -99,7 +99,8 @@ const emailService = new EmailService();
 const emailTemplateService = new EmailTemplateService();
 const pdfService = new PdfService();
 
-const ADMIN_NOTIFY_TO = process.env.ADMIN_NOTIFY_TO || '';
+// Se não configurado, usa SMTP_USER como fallback (útil para receber notificações administrativas sem configuração extra)
+const ADMIN_NOTIFY_TO = process.env.ADMIN_NOTIFY_TO || process.env.SMTP_USER || '';
 
 const registerSubmissionUseCase = new RegisterSubmission(
   submissionRepo,
@@ -109,7 +110,7 @@ const registerSubmissionUseCase = new RegisterSubmission(
   pdfService,
   ADMIN_NOTIFY_TO
 );
-const registerAppealUseCase = new RegisterAppeal(appealRepo, emailService, emailTemplateService, pdfService);
+const registerAppealUseCase = new RegisterAppeal(appealRepo, emailService, emailTemplateService, pdfService, ADMIN_NOTIFY_TO);
 const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
 const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);
 const listSubmissionsUseCase = new ListSubmissions(submissionRepo);

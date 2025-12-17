@@ -1487,7 +1487,9 @@ function fillExample() {
         // Detectar se é página de recurso
         if (document.getElementById('recurso-form')) {
             console.log('Preenchendo formulário de recurso...');
+            setVal('nome', 'Maria da Silva');
             setVal('cpf', '390.533.447-05');
+            setVal('email', 'maria.silva@example.com');
             setVal('titulo_projeto', 'Desenvolvimento de Sistema PlanTerr para Gestão de Projetos');
             setVal('linha_pesquisa', 'Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social');
             setVal('etapa_processo', 'Avaliação do Projeto');

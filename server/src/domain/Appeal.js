@@ -8,6 +8,7 @@ class Appeal {
     tituloProjeto,
     linhaPesquisa,
     etapa,
+    decisaoContestacao,
     argumentacao,
     status = 'Recebido'
   }) {
@@ -19,6 +20,7 @@ class Appeal {
     this.tituloProjeto = tituloProjeto;
     this.linhaPesquisa = linhaPesquisa;
     this.etapa = etapa;
+    this.decisaoContestacao = decisaoContestacao;
     this.argumentacao = argumentacao;
     this.status = status;
   }

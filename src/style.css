@@ -105,6 +105,9 @@ textarea {
 }
 
 .btn-primary {
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
     background-color: #003366;
     color: white;
     border: 1px solid #002244;
@@ -143,6 +146,9 @@ textarea {
 }
 
 .btn-secondary {
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
     background-color: #e9ecef;
     color: #212529;
     border: 1px solid #ced4da;
@@ -151,6 +157,14 @@ textarea {
     cursor: pointer;
     font-weight: bold;
     font-family: Verdana, Arial, sans-serif;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .pdf-header-info {

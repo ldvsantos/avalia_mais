@@ -6,7 +6,7 @@
     <title>Interposição de Recurso - AVALIA+</title>
     <link rel="stylesheet" href="style.css?v=20251216-2">
     <link rel="stylesheet" href="theme.css?v=20251216-2">
-    <script src="script.js?v=12"></script>
+    <script src="script.js?v=13"></script>
 </head>
 <body>
     <div class="container">
@@ -23,8 +23,18 @@
             <div class="panel-body">
                 <form id="recurso-form">
                     <div class="form-group">
+                        <label for="nome">Nome Completo: *</label>
+                        <input type="text" id="nome" name="nome" required maxlength="200">
+                    </div>
+
+                    <div class="form-group">
                         <label for="cpf">Nº do CPF: *</label>
                         <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" required maxlength="14">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">E-mail: *</label>
+                        <input type="email" id="email" name="email" required maxlength="200">
                     </div>
 
                     <div class="form-group">
@@ -63,7 +73,7 @@
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" id="btn-fill-example" class="btn-secondary" style="background-color: #FFEB3B; color: #333; border: 1px solid #FBC02D; margin-right: 10px;">Preencher Exemplo</button>
+                        <button type="button" id="btn-fill-example" class="btn-secondary" style="background-color: #FFEB3B; color: #333; border: 1px solid #FBC02D;">Preencher Exemplo</button>
                         <button type="submit" class="btn-primary">Enviar Recurso</button>
                     </div>
                 </form>

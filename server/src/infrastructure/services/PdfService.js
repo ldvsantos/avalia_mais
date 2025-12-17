@@ -131,20 +131,21 @@ class PdfService {
     });
   }
 
-  async generateAppealPdf(data, protocol) {
+  async generateAppealPdfLegacy(data, protocol) {
+    // Assinatura antiga (mantida por compatibilidade)
+    return this.generateAppealPdfFromData(data, protocol);
+  }
+
+  async generateAppealPdfFromData(data, protocol) {
     return new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50 });
       const buffers = [];
 
       doc.on('data', buffers.push.bind(buffers));
-      doc.on('end', () => {
-        const pdfData = Buffer.concat(buffers);
-        resolve(pdfData);
-      });
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+      doc.on('error', reject);
 
-      doc.on('error', (err) => {
-        reject(err);
-      });
+      const createdAt = data?.createdAt ? new Date(data.createdAt) : new Date();
 
       // Header
       if (fs.existsSync(this.logoPath)) {
@@ -156,47 +157,60 @@ class PdfService {
       doc.moveDown(4);
 
       // Title
-      doc.fontSize(18).font('Helvetica-Bold').text('Comprovante de Registro de Recurso', { align: 'center' });
+      doc.fontSize(18).font('Helvetica-Bold').text('Comprovante de Recurso', { align: 'center' });
       doc.moveDown();
 
       // Protocol Info
-      doc.fontSize(12).font('Helvetica').text(`Protocolo: ${protocol}`, { align: 'right' });
-      doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, { align: 'right' });
+      doc.fontSize(12).font('Helvetica').text(`Protocolo: ${protocol || 'N/A'}`, { align: 'right' });
+      doc.text(
+        `Data: ${createdAt.toLocaleDateString('pt-BR')} ${createdAt.toLocaleTimeString('pt-BR')}`,
+        { align: 'right' }
+      );
       doc.moveDown(2);
+
+      const writeField = (label, value) => {
+        doc.font('Helvetica-Bold').text(`${label}: `, { continued: true });
+        doc.font('Helvetica').text(String(value || 'N/A'));
+      };
+
+      const writeSection = (title, value) => {
+        const text = String(value || '').trim();
+        if (!text) return;
+        doc.moveDown(0.8);
+        doc.font('Helvetica-Bold').text(title);
+        doc.moveDown(0.3);
+        doc.font('Helvetica').text(text, { align: 'justify' });
+      };
 
       // Applicant Details
-      doc.font('Helvetica-Bold').text('Dados do Solicitante');
+      doc.fontSize(12).font('Helvetica-Bold').text('Dados do Candidato');
       doc.moveDown(0.5);
-      doc.font('Helvetica').fontSize(10);
-      
-      const fields = [
-        { label: 'Nome', value: data.nome },
-        { label: 'CPF', value: data.cpf },
-        { label: 'Email', value: data.email },
-        { label: 'Projeto', value: data.titulo_projeto },
-        { label: 'Linha de Pesquisa', value: data.linha_pesquisa }
-      ];
+      doc.fontSize(10).font('Helvetica');
 
-      fields.forEach(field => {
-        doc.font('Helvetica-Bold').text(`${field.label}: `, { continued: true });
-        doc.font('Helvetica').text(field.value || 'N/A');
-      });
+      writeField('Nome', data?.nome);
+      writeField('CPF', data?.cpf);
+      writeField('Email', data?.email);
 
-      doc.moveDown(2);
+      doc.moveDown(1.5);
 
-      // Appeal Details
-      doc.fontSize(12).font('Helvetica-Bold').text('Detalhes do Recurso');
+      // Project
+      doc.fontSize(12).font('Helvetica-Bold').text('Dados do Projeto');
       doc.moveDown(0.5);
-      
-      doc.fontSize(10).font('Helvetica-Bold').text('Etapa Questionada: ', { continued: true });
-      doc.font('Helvetica').text(data.etapa_processo);
-      doc.moveDown();
+      doc.fontSize(10).font('Helvetica');
 
-      doc.font('Helvetica-Bold').text('Argumentação:');
+      writeField('Título do projeto', data?.titulo_projeto);
+      writeField('Linha de pesquisa', data?.linha_pesquisa);
+
+      doc.moveDown(1.5);
+
+      // Appeal details
+      doc.fontSize(12).font('Helvetica-Bold').text('Dados do Recurso');
       doc.moveDown(0.5);
-      doc.font('Helvetica').text(data.argumentacao, {
-        align: 'justify'
-      });
+      doc.fontSize(10).font('Helvetica');
+
+      writeField('Etapa do processo', data?.etapa_processo);
+      writeSection('Decisão objeto da contestação', data?.decisao_contestacao);
+      writeSection('Argumentação', data?.argumentacao);
 
       // Footer
       const bottom = doc.page.margins.bottom;
@@ -207,6 +221,23 @@ class PdfService {
 
       doc.end();
     });
+  }
+
+  async generateAppealPdf(appeal) {
+    // Nova assinatura: recebe a entidade persistida do recurso
+    const protocol = appeal?.protocol || 'N/A';
+    const data = {
+      createdAt: appeal?.createdAt,
+      nome: appeal?.nome,
+      cpf: appeal?.cpf,
+      email: appeal?.email,
+      titulo_projeto: appeal?.tituloProjeto,
+      linha_pesquisa: appeal?.linhaPesquisa,
+      etapa_processo: appeal?.etapa,
+      decisao_contestacao: appeal?.decisaoContestacao,
+      argumentacao: appeal?.argumentacao,
+    };
+    return this.generateAppealPdfFromData(data, protocol);
   }
 }
 

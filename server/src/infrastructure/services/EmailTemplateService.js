@@ -62,6 +62,26 @@ class EmailTemplateService {
     return this._getLayout(content);
   }
 
+  getAdminNewAppealNotificationEmail(data, protocol) {
+    const content = `
+      <h2>Novo Recurso Recebido</h2>
+      <p>Um novo recurso foi registrado no sistema <strong>Avalia Mais</strong>.</p>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid ${this.primaryColor}; margin: 20px 0;">
+        <p><strong>Protocolo do Recurso:</strong> ${protocol}</p>
+        <p><strong>Candidato:</strong> ${data.nome || 'Não informado'}</p>
+        <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
+        <p><strong>Projeto:</strong> ${data.titulo_projeto || 'Não informado'}</p>
+        <p><strong>Linha de pesquisa:</strong> ${data.linha_pesquisa || 'Não informado'}</p>
+        <p><strong>Etapa:</strong> ${data.etapa_processo || 'Não informado'}</p>
+        <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+      </div>
+
+      <p>Em anexo, segue o PDF do recurso para conferência.</p>
+    `;
+    return this._getLayout(content);
+  }
+
   _getLayout(content) {
     return `
       <!DOCTYPE html>
