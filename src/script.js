@@ -1472,7 +1472,24 @@ function fillExample() {
         const checkRadio = (name, val) => { const el = document.querySelector(`input[name="${name}"][value="${val}"]`); if (el) el.checked = true; };
         const checkBoxes = (name, values) => { values.forEach(v => { const el = document.querySelector(`input[name="${name}"][value="${v}"]`); if (el) el.checked = true; }); };
 
-        // Ficha
+        // Detectar se é página de recurso
+        if (document.getElementById('recurso-form')) {
+            setVal('cpf', '390.533.447-05');
+            setVal('titulo_projeto', 'Desenvolvimento de Sistema PlanTerr para Gestão de Projetos');
+            setVal('linha_pesquisa', 'Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social');
+            setVal('etapa_processo', 'Avaliação do Projeto');
+            setVal('decisao_contestacao', 'A nota atribuída ao critério de metodologia não condiz com o detalhamento apresentado na seção 4 do projeto.');
+            setVal('argumentacao', 'Prezados avaliadores, solicito revisão da nota pois a metodologia foi descrita detalhadamente, incluindo as etapas de levantamento de requisitos, desenvolvimento incremental e validação com usuários. Acredito que houve um equívoco na interpretação dos prazos apresentados no cronograma.');
+            
+            if (typeof updateCounter === 'function') {
+                const arg = document.getElementById('argumentacao');
+                if (arg) updateCounter(arg, 2500);
+            }
+            alert('Exemplo de Recurso preenchido!');
+            return;
+        }
+
+        // Ficha de Inscrição
         setVal('nome', 'Maria da Silva');
         setVal('nome_social', 'Maria Silva');
         setVal('data_nascimento', '1990-05-10');
