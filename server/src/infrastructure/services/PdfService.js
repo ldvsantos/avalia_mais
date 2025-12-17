@@ -217,6 +217,7 @@ class PdfService {
       doc.moveDown(0.5);
       doc.fontSize(10).font('Helvetica');
 
+      writeField('Protocolo de inscrição', data?.protocolo_inscricao);
       writeField('Título do projeto', data?.titulo_projeto);
       writeField('Linha de pesquisa', data?.linha_pesquisa);
 
@@ -247,6 +248,7 @@ class PdfService {
     const protocol = appeal?.protocol || 'N/A';
     const data = {
       createdAt: appeal?.createdAt,
+      protocolo_inscricao: appeal?.submissionProtocol,
       nome: appeal?.nome,
       cpf: appeal?.cpf,
       email: appeal?.email,

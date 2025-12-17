@@ -111,7 +111,7 @@ const registerSubmissionUseCase = new RegisterSubmission(
   pdfService,
   ADMIN_NOTIFY_TO
 );
-const registerAppealUseCase = new RegisterAppeal(appealRepo, emailService, emailTemplateService, pdfService, ADMIN_NOTIFY_TO);
+const registerAppealUseCase = new RegisterAppeal(appealRepo, submissionRepo, emailService, emailTemplateService, pdfService, ADMIN_NOTIFY_TO);
 const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
 const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);
 const listSubmissionsUseCase = new ListSubmissions(submissionRepo);
@@ -431,6 +431,30 @@ app.get('/api/appeals/:protocol/pdf', async (req, res) => {
   } catch (err) {
     console.error('Falha ao gerar PDF do recurso', err);
     return res.status(500).json({ error: 'Falha ao gerar PDF do recurso' });
+  }
+});
+
+// Listar recursos vinculados a uma inscrição (público; depende do protocolo)
+app.get('/api/submissions/:protocol/appeals', (req, res) => {
+  try {
+    const protocol = String(req.params.protocol || '').trim();
+    if (!protocol) return res.status(400).json({ error: 'Protocolo inválido' });
+
+    const record = storage.getByProtocol(protocol);
+    if (!record) return res.status(404).json({ error: 'Não encontrado' });
+
+    const appeals = typeof appealRepo.findBySubmissionProtocol === 'function' ? appealRepo.findBySubmissionProtocol(protocol) : [];
+    const safe = (appeals || []).map((a) => ({
+      protocol: a?.protocol,
+      createdAt: a?.createdAt,
+      etapa: a?.etapa,
+      status: a?.status,
+    }));
+
+    return res.json({ submissionProtocol: protocol, appeals: safe });
+  } catch (err) {
+    console.error('Falha ao listar recursos da inscrição', err);
+    return res.status(500).json({ error: 'Falha ao listar recursos' });
   }
 });
 
@@ -1442,6 +1466,48 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
   const recordStatus = normalizeStatus(record.status);
   const adminNotes = String(record.adminNotes ?? '');
 
+  const appealsForSubmission = typeof appealRepo.findBySubmissionProtocol === 'function' ? appealRepo.findBySubmissionProtocol(protocol) : [];
+  const ETAPAS = ['Avaliação do Projeto', 'Entrevista', 'Prova de Língua Estrangeira'];
+
+  const renderAppealsTableRows = () => {
+    const byEtapa = new Map(ETAPAS.map((e) => [e, []]));
+    (appealsForSubmission || []).forEach((a) => {
+      const etapa = String(a?.etapa || '').trim();
+      if (!byEtapa.has(etapa)) byEtapa.set(etapa, []);
+      byEtapa.get(etapa).push(a);
+    });
+
+    return ETAPAS.map((etapaLabel) => {
+      const list = byEtapa.get(etapaLabel) || [];
+      if (list.length === 0) {
+        return `
+          <tr>
+            <th>${escapeHtml(etapaLabel)}</th>
+            <td><span class="muted">Nenhum recurso registrado</span></td>
+            <td style="text-align:center;"><span class="muted">—</span></td>
+          </tr>
+        `;
+      }
+
+      const sorted = [...list].sort((a, b) => String(b?.createdAt || '').localeCompare(String(a?.createdAt || '')));
+      const latest = sorted[0];
+      const ap = String(latest?.protocol || '').trim();
+      const when = latest?.createdAt ? new Date(latest.createdAt).toLocaleString('pt-BR') : '';
+      const link = ap ? `/api/appeals/${encodeURIComponent(ap)}/pdf` : '#';
+
+      return `
+        <tr>
+          <th>${escapeHtml(etapaLabel)}</th>
+          <td>
+            <div class="mono">${escapeHtml(ap || '-') }</div>
+            <div class="muted" style="font-size: 11px; margin-top: 4px;">${escapeHtml(when)}</div>
+          </td>
+          <td style="text-align:center;">${ap ? `<a class="btn-secondary" href="${link}" target="_blank" rel="noopener">Baixar PDF</a>` : '<span class="muted">—</span>'}</td>
+        </tr>
+      `;
+    }).join('');
+  };
+
   // Lógica de Situação / Nota
   const evaluation = storage.getEvaluation(protocol);
   let situationDisplay = '<span class="muted">Em análise / Aguardando avaliação</span>';
@@ -1581,6 +1647,18 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
                 <button class="btn-secondary" type="button" data-copy="#hash">Copiar hash</button>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section class="panel" style="margin-top: 10px;">
+          <div class="panel-header"><h2>Recursos do candidato (por etapa)</h2></div>
+          <div class="panel-body" style="background-color:#fff; overflow-x:auto;">
+            <table class="kv" role="table">
+              <tbody>
+                ${renderAppealsTableRows()}
+              </tbody>
+            </table>
+            ${(appealsForSubmission || []).length === 0 ? '<div class="muted" style="margin-top: 10px; text-align:center;">Nenhum recurso cadastrado para esta inscrição.</div>' : ''}
           </div>
         </section>
 

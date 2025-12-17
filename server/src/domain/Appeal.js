@@ -1,6 +1,7 @@
 class Appeal {
   constructor({
     protocol,
+    submissionProtocol,
     createdAt,
     cpf,
     nome,
@@ -13,6 +14,7 @@ class Appeal {
     status = 'Recebido'
   }) {
     this.protocol = protocol;
+    this.submissionProtocol = submissionProtocol;
     this.createdAt = createdAt;
     this.cpf = cpf;
     this.nome = nome;

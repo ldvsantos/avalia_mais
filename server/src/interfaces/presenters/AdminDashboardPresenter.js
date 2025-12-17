@@ -25,11 +25,13 @@ class AdminDashboardPresenter {
 
     const rows = (appeals || []).map(a => {
       const protocol = String(a.protocol || '');
+      const submissionProtocol = String(a.submissionProtocol || '');
       const created = a.createdAt ? new Date(a.createdAt).toLocaleString('pt-BR') : '';
       return `
         <tr>
           <td>${escapeHtml(created)}</td>
           <td class="mono">${escapeHtml(protocol)}</td>
+          <td class="mono">${escapeHtml(submissionProtocol)}</td>
           <td>${escapeHtml((a.nome || '').slice(0, 60))}</td>
           <td>${escapeHtml((a.email || '').slice(0, 60))}</td>
           <td>${escapeHtml(maskCpf(a.cpf))}</td>
@@ -105,6 +107,7 @@ class AdminDashboardPresenter {
                   <tr>
                     <th>Data</th>
                     <th>Protocolo</th>
+                    <th>Inscrição</th>
                     <th>Nome</th>
                     <th>Email</th>
                     <th>CPF</th>

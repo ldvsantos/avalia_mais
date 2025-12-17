@@ -21,6 +21,7 @@ class ListAppeals {
 
       const hay = [
         a.protocol,
+        a.submissionProtocol,
         a.nome,
         a.email,
         a.cpf,

@@ -51,6 +51,7 @@ class EmailTemplateService {
       
       <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid ${this.primaryColor}; margin: 20px 0;">
         <p><strong>Protocolo do Recurso:</strong> ${protocol}</p>
+        <p><strong>Protocolo de Inscrição:</strong> ${data.protocolo_inscricao || 'Não informado'}</p>
         <p><strong>Projeto:</strong> ${data.titulo_projeto || 'Não informado'}</p>
         <p><strong>Etapa Questionada:</strong> ${data.etapa_processo}</p>
         <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
@@ -69,6 +70,7 @@ class EmailTemplateService {
 
       <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid ${this.primaryColor}; margin: 20px 0;">
         <p><strong>Protocolo do Recurso:</strong> ${protocol}</p>
+        <p><strong>Protocolo de Inscrição:</strong> ${data.protocolo_inscricao || 'Não informado'}</p>
         <p><strong>Candidato:</strong> ${data.nome || 'Não informado'}</p>
         <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
         <p><strong>Projeto:</strong> ${data.titulo_projeto || 'Não informado'}</p>

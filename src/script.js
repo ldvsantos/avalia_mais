@@ -1456,6 +1456,20 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePDF();
         });
     }
+
+    // Recurso: prefill do protocolo da inscrição via querystring (?protocol=...)
+    if (document.getElementById('recurso-form')) {
+        try {
+            const inputProto = document.getElementById('protocolo_inscricao');
+            if (inputProto) {
+                const qs = new URLSearchParams(window.location.search);
+                const protocol = (qs.get('protocol') || qs.get('protocolo') || qs.get('p') || '').trim();
+                if (protocol) inputProto.value = protocol;
+            }
+        } catch (e) {
+            console.warn('Falha ao ler querystring do recurso:', e);
+        }
+    }
 });
 
 function fillExample() {
@@ -1487,6 +1501,7 @@ function fillExample() {
         // Detectar se é página de recurso
         if (document.getElementById('recurso-form')) {
             console.log('Preenchendo formulário de recurso...');
+            setVal('protocolo_inscricao', 'PLANTERR-2025-AB12');
             setVal('nome', 'Maria da Silva');
             setVal('cpf', '390.533.447-05');
             setVal('email', 'maria.silva@example.com');

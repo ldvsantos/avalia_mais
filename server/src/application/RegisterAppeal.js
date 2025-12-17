@@ -2,29 +2,64 @@ const Appeal = require('../domain/Appeal');
 const crypto = require('crypto');
 
 class RegisterAppeal {
-  constructor(appealRepository, emailService, emailTemplateService, pdfService, adminNotifyTo) {
+  constructor(appealRepository, submissionRepository, emailService, emailTemplateService, pdfService, adminNotifyTo) {
     this.appealRepository = appealRepository;
+    this.submissionRepository = submissionRepository;
     this.emailService = emailService;
     this.emailTemplateService = emailTemplateService;
     this.pdfService = pdfService;
     this.adminNotifyTo = adminNotifyTo;
   }
 
+  normalizeDigits(value) {
+    return String(value || '').replace(/\D/g, '');
+  }
+
   async execute(data) {
+    const submissionProtocol = String(data?.protocolo_inscricao || data?.submissionProtocol || '').trim();
+    if (!submissionProtocol) {
+      throw new Error('Informe o protocolo de inscrição.');
+    }
+
+    if (!this.submissionRepository || typeof this.submissionRepository.findByProtocol !== 'function') {
+      throw new Error('Repositório de inscrições não configurado.');
+    }
+
+    const submission = this.submissionRepository.findByProtocol(submissionProtocol);
+    if (!submission) {
+      throw new Error('Protocolo de inscrição não encontrado.');
+    }
+
+    const cpfForm = this.normalizeDigits(data?.cpf);
+    const cpfSubmission = this.normalizeDigits(submission?.identified?.cpf || submission?.cpf || '');
+    if (cpfForm && cpfSubmission && cpfForm !== cpfSubmission) {
+      throw new Error('CPF não confere com a inscrição informada.');
+    }
+
+    const etapa = String(data?.etapa_processo || '').trim();
+    if (!etapa) {
+      throw new Error('Selecione a etapa do processo.');
+    }
+
     const year = new Date().getFullYear();
     const randomPart = crypto.randomBytes(2).toString('hex').toUpperCase();
     const protocol = `REC-${year}-${randomPart}`;
     const createdAt = new Date().toISOString();
 
+    const submissionProject = submission?.project || submission?.blind || {};
+    const tituloProjeto = String(data?.titulo_projeto || submissionProject?.titulo_pt || submissionProject?.titulo || '').trim();
+    const linhaPesquisa = String(data?.linha_pesquisa || submissionProject?.area || submissionProject?.linha_pesquisa || '').trim();
+
     const appeal = new Appeal({
       protocol,
+      submissionProtocol,
       createdAt,
       cpf: data.cpf,
       nome: data.nome,
       email: data.email,
-      tituloProjeto: data.titulo_projeto,
-      linhaPesquisa: data.linha_pesquisa,
-      etapa: data.etapa_processo,
+      tituloProjeto,
+      linhaPesquisa,
+      etapa,
       decisaoContestacao: data.decisao_contestacao,
       argumentacao: data.argumentacao
     });
@@ -72,14 +107,24 @@ class RegisterAppeal {
               `Olá ${data.nome},\n\n` +
               `Seu recurso foi recebido com sucesso.\n` +
               `Protocolo: ${protocol}\n` +
-              `Etapa: ${data.etapa_processo}\n` +
+              `Protocolo de inscrição: ${submissionProtocol}\n` +
+              `Etapa: ${etapa}\n` +
               `Data: ${createdAt}\n` +
               (pdfBuffer ? `\nUma cópia em PDF segue em anexo.\n` : `\n`) +
               `\nAtenciosamente,\nEquipe AVALIA+`;
 
             let html = null;
             if (this.emailTemplateService) {
-              html = this.emailTemplateService.getAppealEmail(data, protocol);
+              html = this.emailTemplateService.getAppealEmail(
+                {
+                  ...data,
+                  protocolo_inscricao: submissionProtocol,
+                  titulo_projeto: tituloProjeto,
+                  linha_pesquisa: linhaPesquisa,
+                  etapa_processo: etapa,
+                },
+                protocol
+              );
             }
 
             await this.emailService.sendEmail(candidateEmail, subject, text, html, attachments);
@@ -91,21 +136,23 @@ class RegisterAppeal {
             const text =
               `Novo recurso recebido.\n\n` +
               `Protocolo: ${protocol}\n` +
+              `Protocolo de inscrição: ${submissionProtocol}\n` +
               `Data: ${createdAt}\n` +
               `Candidato: ${data.nome || 'N/A'}\n` +
               `Email: ${candidateEmail || 'N/A'}\n` +
-              `Projeto: ${data.titulo_projeto || 'N/A'}\n` +
-              `Linha de pesquisa: ${data.linha_pesquisa || 'N/A'}\n` +
-              `Etapa: ${data.etapa_processo || 'N/A'}\n`;
+              `Projeto: ${tituloProjeto || 'N/A'}\n` +
+              `Linha de pesquisa: ${linhaPesquisa || 'N/A'}\n` +
+              `Etapa: ${etapa || 'N/A'}\n`;
 
             let html = null;
             if (this.emailTemplateService && typeof this.emailTemplateService.getAdminNewAppealNotificationEmail === 'function') {
               const templateData = {
                 nome: data.nome,
                 email: candidateEmail,
-                titulo_projeto: data.titulo_projeto,
-                linha_pesquisa: data.linha_pesquisa,
-                etapa_processo: data.etapa_processo,
+                titulo_projeto: tituloProjeto,
+                linha_pesquisa: linhaPesquisa,
+                etapa_processo: etapa,
+                protocolo_inscricao: submissionProtocol,
               };
               html = this.emailTemplateService.getAdminNewAppealNotificationEmail(templateData, protocol);
             }
@@ -118,7 +165,9 @@ class RegisterAppeal {
 
     return {
       protocol,
-      createdAt
+      createdAt,
+      submissionProtocol,
+      etapa
     };
   }
 }

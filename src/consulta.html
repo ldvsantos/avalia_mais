@@ -129,7 +129,97 @@
                                 <tr><th>Área / Linha de pesquisa</th><td>${area}</td></tr>
                             </tbody>
                         </table>
+                        <div id="appeals-container" style="margin-top:16px;"></div>
                     `;
+
+                    // Recursos do candidato (por etapa)
+                    (async () => {
+                        const container = document.getElementById('appeals-container');
+                        if (!container) return;
+                        container.innerHTML = `
+                            <div style="padding:16px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px;">
+                                <div style="font-weight:bold; margin-bottom:8px;">Recursos cadastrados</div>
+                                <div style="color:#555; font-size:14px;">Carregando recursos...</div>
+                            </div>
+                        `;
+
+                        try {
+                            const r = await fetch(`/api/submissions/${encodeURIComponent(protocol)}/appeals`);
+                            const payload = await r.json();
+                            const appeals = Array.isArray(payload?.appeals) ? payload.appeals : [];
+
+                            const etapas = [
+                                'Avaliação do Projeto',
+                                'Entrevista',
+                                'Prova de Língua Estrangeira'
+                            ];
+
+                            const byEtapa = new Map(etapas.map(e => [e, []]));
+                            appeals.forEach(a => {
+                                const etapa = String(a?.etapa || '').trim();
+                                if (!byEtapa.has(etapa)) byEtapa.set(etapa, []);
+                                byEtapa.get(etapa).push(a);
+                            });
+
+                            const renderEtapa = (etapaLabel) => {
+                                const list = byEtapa.get(etapaLabel) || [];
+                                if (list.length === 0) {
+                                    return `
+                                        <tr>
+                                            <td>${etapaLabel}</td>
+                                            <td style="color:#666;">Nenhum recurso registrado</td>
+                                            <td style="text-align:center;">—</td>
+                                        </tr>
+                                    `;
+                                }
+
+                                // Mostra o mais recente primeiro
+                                const sorted = [...list].sort((a, b) => String(b?.createdAt || '').localeCompare(String(a?.createdAt || '')));
+                                const latest = sorted[0];
+                                const ap = String(latest?.protocol || '').trim();
+                                const when = latest?.createdAt ? new Date(latest.createdAt).toLocaleString('pt-BR') : '';
+                                const link = ap ? `/api/appeals/${encodeURIComponent(ap)}/pdf` : '#';
+
+                                return `
+                                    <tr>
+                                        <td>${etapaLabel}</td>
+                                        <td style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;">${ap || '-'}</td>
+                                        <td style="text-align:center;">
+                                            ${ap ? `<a class="btn-primary" href="${link}" target="_blank" rel="noopener">Baixar PDF</a><div style="font-size:11px; color:#555; margin-top:4px;">${when}</div>` : '—'}
+                                        </td>
+                                    </tr>
+                                `;
+                            };
+
+                            container.innerHTML = `
+                                <div style="padding:16px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px;">
+                                    <div style="font-weight:bold; margin-bottom:8px;">Recursos cadastrados (por etapa)</div>
+                                    <div style="overflow-x:auto;">
+                                        <table class="admin-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Etapa</th>
+                                                    <th>Protocolo do recurso</th>
+                                                    <th style="text-align:center;">PDF</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                ${etapas.map(renderEtapa).join('')}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            `;
+                        } catch (e) {
+                            console.error('Falha ao carregar recursos:', e);
+                            container.innerHTML = `
+                                <div style="padding:16px; background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px;">
+                                    <div style="color:#721c24; font-weight:bold; margin-bottom:8px;">Erro ao carregar recursos</div>
+                                    <div style="color:#721c24; font-size:14px;">Não foi possível listar os recursos vinculados a esta inscrição.</div>
+                                </div>
+                            `;
+                        }
+                    })();
                 } else {
                     resultContent.innerHTML = `
                         <div style="padding:16px; background:#f8d7da; border:1px solid #f5c6cb; border-radius:4px;">

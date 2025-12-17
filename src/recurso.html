@@ -23,6 +23,12 @@
             <div class="panel-body">
                 <form id="recurso-form">
                     <div class="form-group">
+                        <label for="protocolo_inscricao">Protocolo de Inscrição: *</label>
+                        <input type="text" id="protocolo_inscricao" name="protocolo_inscricao" required maxlength="60" placeholder="Ex.: PLANTERR-2025-AB12">
+                        <div class="hint" style="font-size:12px; color:#555; margin-top:6px;">Informe o protocolo gerado na sua inscrição para validar o cadastro.</div>
+                    </div>
+
+                    <div class="form-group">
                         <label for="nome">Nome Completo: *</label>
                         <input type="text" id="nome" name="nome" required maxlength="200">
                     </div>
@@ -83,6 +89,10 @@
                         Recurso enviado com sucesso. Protocolo:
                         <strong id="appeal-success-protocol" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></strong>
                     </div>
+                    <div style="margin-bottom:10px; font-size:12px;">
+                        Etapa do recurso:
+                        <strong id="appeal-success-etapa"></strong>
+                    </div>
                     <a id="appeal-download" class="btn-primary" href="#" target="_blank" rel="noopener">Baixar PDF do recurso</a>
                 </div>
             </div>
@@ -119,12 +129,15 @@
 
                 if (response.ok) {
                     const protocol = result && result.protocol ? String(result.protocol) : '';
+                    const etapa = String(data.etapa_processo || '').trim();
 
                     const successBox = document.getElementById('appeal-success');
                     const successProtocol = document.getElementById('appeal-success-protocol');
+                    const successEtapa = document.getElementById('appeal-success-etapa');
                     const downloadLink = document.getElementById('appeal-download');
 
                     if (successProtocol) successProtocol.textContent = protocol;
+                    if (successEtapa) successEtapa.textContent = etapa || '—';
                     if (downloadLink) downloadLink.href = `/api/appeals/${encodeURIComponent(protocol)}/pdf`;
                     if (successBox) successBox.style.display = 'block';
 

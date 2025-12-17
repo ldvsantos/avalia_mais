@@ -3,16 +3,31 @@ const path = require('path');
 
 class JsonAppealRepository {
   constructor(dataDir) {
+    this.dataDir = dataDir;
     this.filePath = path.join(dataDir, 'appeals.json');
     this.appeals = [];
+    this.ensureFile();
     this.load();
   }
 
+  ensureFile() {
+    try {
+      if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+      if (!fs.existsSync(this.filePath)) {
+        fs.writeFileSync(this.filePath, JSON.stringify([], null, 2), 'utf8');
+      }
+    } catch (err) {
+      console.error('Error ensuring appeals file:', err);
+    }
+  }
+
   load() {
+    this.ensureFile();
     if (fs.existsSync(this.filePath)) {
       try {
         const data = fs.readFileSync(this.filePath, 'utf8');
-        this.appeals = JSON.parse(data);
+        const parsed = JSON.parse(data);
+        this.appeals = Array.isArray(parsed) ? parsed : (parsed?.appeals || []);
       } catch (err) {
         console.error('Error loading appeals:', err);
         this.appeals = [];
@@ -27,7 +42,8 @@ class JsonAppealRepository {
 
   persist() {
     try {
-      fs.writeFileSync(this.filePath, JSON.stringify(this.appeals, null, 2));
+      this.ensureFile();
+      fs.writeFileSync(this.filePath, JSON.stringify(this.appeals, null, 2), 'utf8');
     } catch (err) {
       console.error('Error saving appeals:', err);
     }
@@ -41,6 +57,14 @@ class JsonAppealRepository {
     const needle = String(protocol || '').trim();
     if (!needle) return null;
     return this.appeals.find((a) => String(a?.protocol || '').trim() === needle) || null;
+  }
+
+  findBySubmissionProtocol(submissionProtocol) {
+    const needle = String(submissionProtocol || '').trim();
+    if (!needle) return [];
+    return this.appeals
+      .filter((a) => String(a?.submissionProtocol || '').trim() === needle)
+      .sort((a, b) => String(b?.createdAt || '').localeCompare(String(a?.createdAt || '')));
   }
 }
 
