@@ -13,13 +13,17 @@ const QRCode = require('qrcode');
 const JsonSubmissionRepository = require('./src/infrastructure/repositories/JsonSubmissionRepository');
 const JsonEvaluatorRepository = require('./src/infrastructure/repositories/JsonEvaluatorRepository');
 const JsonEvaluationRepository = require('./src/infrastructure/repositories/JsonEvaluationRepository');
+const JsonAppealRepository = require('./src/infrastructure/repositories/JsonAppealRepository');
 const JwtService = require('./src/infrastructure/security/JwtService');
+const EmailService = require('./src/infrastructure/services/EmailService');
 
 const RegisterSubmission = require('./src/application/RegisterSubmission');
+const RegisterAppeal = require('./src/application/RegisterAppeal');
 const AuthenticateUser = require('./src/application/AuthenticateUser');
 const SubmitEvaluation = require('./src/application/SubmitEvaluation');
 
 const SubmissionController = require('./src/interfaces/http/controllers/SubmissionController');
+const AppealController = require('./src/interfaces/http/controllers/AppealController');
 const AuthController = require('./src/interfaces/http/controllers/AuthController');
 const EvaluationController = require('./src/interfaces/http/controllers/EvaluationController');
 const AdminController = require('./src/interfaces/controllers/AdminController');
@@ -86,9 +90,12 @@ const dataDir = path.join(__dirname, 'data');
 const submissionRepo = new JsonSubmissionRepository(dataDir);
 const evaluatorRepo = new JsonEvaluatorRepository(dataDir);
 const evaluationRepo = new JsonEvaluationRepository(dataDir);
+const appealRepo = new JsonAppealRepository(dataDir);
 const jwtService = new JwtService(JWT_SECRET);
+const emailService = new EmailService();
 
-const registerSubmissionUseCase = new RegisterSubmission(submissionRepo, HMAC_SECRET);
+const registerSubmissionUseCase = new RegisterSubmission(submissionRepo, HMAC_SECRET, emailService);
+const registerAppealUseCase = new RegisterAppeal(appealRepo, emailService);
 const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
 const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);
 const listSubmissionsUseCase = new ListSubmissions(submissionRepo);
@@ -97,6 +104,7 @@ const listEvaluationsUseCase = new ListEvaluations(evaluationRepo);
 const adminDashboardPresenter = new AdminDashboardPresenter(ADMIN_SECRET);
 
 const submissionController = new SubmissionController(registerSubmissionUseCase);
+const appealController = new AppealController(registerAppealUseCase);
 const authController = new AuthController(authenticateUserUseCase, ADMIN_SECRET);
 const evaluationController = new EvaluationController(submitEvaluationUseCase);
 const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, adminDashboardPresenter);
@@ -385,6 +393,8 @@ function formatPtBrDateTime(iso) {
 }
 
 app.post('/api/submissions', (req, res) => submissionController.register(req, res));
+
+app.post('/api/appeals', (req, res) => appealController.register(req, res));
 
 app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => adminController.exportCsv(req, res));
 

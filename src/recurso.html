@@ -76,10 +76,41 @@
 
     <script>
         // Simple script to handle form submission (placeholder)
-        document.getElementById('recurso-form').addEventListener('submit', function(e) {
+        document.getElementById('recurso-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            alert('Recurso enviado com sucesso! (Simulação - Funcionalidade em desenvolvimento)');
-            // Here you would typically send the data to the server
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Enviando...';
+
+            try {
+                const response = await fetch('/api/appeals', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(`Recurso enviado com sucesso!\nProtocolo: ${result.protocol}`);
+                    e.target.reset();
+                } else {
+                    alert(`Erro ao enviar recurso: ${result.error || 'Erro desconhecido'}`);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro de conexão ao enviar recurso.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalText;
+            }
         });
 
         // CPF Formatting

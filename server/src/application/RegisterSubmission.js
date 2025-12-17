@@ -4,12 +4,13 @@ const crypto = require('crypto');
 const { stableStringify, sha256Hex } = require('../../util');
 
 class RegisterSubmission {
-  constructor(submissionRepository, hmacSecret) {
+  constructor(submissionRepository, hmacSecret, emailService) {
     this.submissionRepository = submissionRepository;
     this.hmacSecret = hmacSecret;
+    this.emailService = emailService;
   }
 
-  execute(data) {
+  async execute(data) {
     // 1. Generate Protocol
     const year = new Date().getFullYear();
     const randomPart = crypto.randomBytes(2).toString('hex').toUpperCase();
@@ -107,6 +108,14 @@ class RegisterSubmission {
 
     // 6. Save
     this.submissionRepository.save(submission);
+
+    // 7. Send Email
+    if (this.emailService && identified.email) {
+      const subject = `Confirmação de Inscrição - Protocolo ${protocol}`;
+      const text = `Olá ${identified.nome},\n\nSua inscrição foi recebida com sucesso.\nProtocolo: ${protocol}\nData: ${createdAt}\n\nAtenciosamente,\nEquipe AVALIA+`;
+      // Fire and forget email to not block response too much, or await if critical
+      this.emailService.sendEmail(identified.email, subject, text).catch(err => console.error('Failed to send email', err));
+    }
 
     return {
       protocol,
