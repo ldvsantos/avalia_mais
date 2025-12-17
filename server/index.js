@@ -99,7 +99,16 @@ const emailService = new EmailService();
 const emailTemplateService = new EmailTemplateService();
 const pdfService = new PdfService();
 
-const registerSubmissionUseCase = new RegisterSubmission(submissionRepo, HMAC_SECRET, emailService, emailTemplateService);
+const ADMIN_NOTIFY_TO = process.env.ADMIN_NOTIFY_TO || '';
+
+const registerSubmissionUseCase = new RegisterSubmission(
+  submissionRepo,
+  HMAC_SECRET,
+  emailService,
+  emailTemplateService,
+  pdfService,
+  ADMIN_NOTIFY_TO
+);
 const registerAppealUseCase = new RegisterAppeal(appealRepo, emailService, emailTemplateService, pdfService);
 const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
 const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);

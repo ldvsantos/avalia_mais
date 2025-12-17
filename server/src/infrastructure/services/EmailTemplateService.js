@@ -19,7 +19,26 @@ class EmailTemplateService {
         <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
       </div>
 
+      <p>Em anexo, você encontrará uma cópia da sua inscrição em formato PDF para seus registros.</p>
       <p>Agradecemos sua participação. Fique atento ao seu email para futuras atualizações sobre o processo de avaliação.</p>
+    `;
+    return this._getLayout(content);
+  }
+
+  getAdminNewSubmissionNotificationEmail(data, protocol) {
+    const content = `
+      <h2>Nova Inscrição Recebida</h2>
+      <p>Uma nova inscrição foi registrada no sistema <strong>Avalia Mais</strong>.</p>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid ${this.primaryColor}; margin: 20px 0;">
+        <p><strong>Protocolo:</strong> ${protocol}</p>
+        <p><strong>Candidato:</strong> ${data.nome || 'Não informado'}</p>
+        <p><strong>Email:</strong> ${data.email || 'Não informado'}</p>
+        <p><strong>Projeto:</strong> ${data.titulo_projeto || 'Não informado'}</p>
+        <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+      </div>
+
+      <p>Em anexo, segue o PDF da inscrição para conferência.</p>
     `;
     return this._getLayout(content);
   }

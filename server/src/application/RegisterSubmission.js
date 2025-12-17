@@ -4,11 +4,13 @@ const crypto = require('crypto');
 const { stableStringify, sha256Hex } = require('../../util');
 
 class RegisterSubmission {
-  constructor(submissionRepository, hmacSecret, emailService, emailTemplateService) {
+  constructor(submissionRepository, hmacSecret, emailService, emailTemplateService, pdfService, adminNotifyTo) {
     this.submissionRepository = submissionRepository;
     this.hmacSecret = hmacSecret;
     this.emailService = emailService;
     this.emailTemplateService = emailTemplateService;
+    this.pdfService = pdfService;
+    this.adminNotifyTo = adminNotifyTo;
   }
 
   async execute(data) {
@@ -110,22 +112,88 @@ class RegisterSubmission {
     // 6. Save
     this.submissionRepository.save(submission);
 
-    // 7. Send Email
-    if (this.emailService && identified.email) {
-      const subject = `Confirmação de Inscrição - Protocolo ${protocol}`;
-      const text = `Olá ${identified.nome},\n\nSua inscrição foi recebida com sucesso.\nProtocolo: ${protocol}\nData: ${createdAt}\n\nAtenciosamente,\nEquipe AVALIA+`;
-      
-      let html = null;
-      if (this.emailTemplateService) {
-        const templateData = {
-          nome: identified.nome,
-          titulo_projeto: project.titulo_pt || project.titulo_en
-        };
-        html = this.emailTemplateService.getRegistrationEmail(templateData, protocol);
-      }
+    // 7. Emails (candidato + notificação admin) + PDF (assíncrono)
+    const candidateEmail = String(identified.email || '').trim();
+    const adminNotifyTo = String(this.adminNotifyTo || '').trim();
 
-      // Fire and forget email to not block response too much, or await if critical
-      this.emailService.sendEmail(identified.email, subject, text, html).catch(err => console.error('Failed to send email', err));
+    const parseRecipients = (value) =>
+      String(value || '')
+        .split(/[;,\n]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+    const adminRecipients = parseRecipients(adminNotifyTo);
+
+    if (this.emailService && (candidateEmail || adminRecipients.length > 0)) {
+      Promise.resolve()
+        .then(async () => {
+          let pdfBuffer = null;
+          if (this.pdfService && typeof this.pdfService.generateSubmissionPdf === 'function') {
+            try {
+              pdfBuffer = await this.pdfService.generateSubmissionPdf(submission);
+            } catch (err) {
+              console.error('Failed to generate submission PDF', err);
+            }
+          }
+
+          const attachments = pdfBuffer
+            ? [
+                {
+                  filename: `inscricao-${protocol}.pdf`,
+                  content: pdfBuffer,
+                  contentType: 'application/pdf',
+                },
+              ]
+            : [];
+
+          // Candidato
+          if (candidateEmail) {
+            const subject = `Confirmação de Inscrição - Protocolo ${protocol}`;
+            const text =
+              `Olá ${identified.nome},\n\n` +
+              `Sua inscrição foi recebida com sucesso.\n` +
+              `Protocolo: ${protocol}\n` +
+              `Data: ${createdAt}\n` +
+              (pdfBuffer ? `\nO comprovante em PDF segue em anexo.\n` : `\n`) +
+              `\nAtenciosamente,\nEquipe AVALIA+`;
+
+            let html = null;
+            if (this.emailTemplateService) {
+              const templateData = {
+                nome: identified.nome,
+                titulo_projeto: project.titulo_pt || project.titulo_en,
+              };
+              html = this.emailTemplateService.getRegistrationEmail(templateData, protocol);
+            }
+
+            await this.emailService.sendEmail(candidateEmail, subject, text, html, attachments);
+          }
+
+          // Admins
+          if (adminRecipients.length > 0) {
+            const subject = `Nova inscrição recebida - ${protocol}`;
+            const text =
+              `Nova inscrição recebida.\n\n` +
+              `Protocolo: ${protocol}\n` +
+              `Data: ${createdAt}\n` +
+              `Candidato: ${identified.nome || 'N/A'}\n` +
+              `Email: ${candidateEmail || 'N/A'}\n` +
+              `Projeto: ${project.titulo_pt || project.titulo_en || 'N/A'}\n`;
+
+            let html = null;
+            if (this.emailTemplateService && typeof this.emailTemplateService.getAdminNewSubmissionNotificationEmail === 'function') {
+              const templateData = {
+                nome: identified.nome,
+                email: candidateEmail,
+                titulo_projeto: project.titulo_pt || project.titulo_en,
+              };
+              html = this.emailTemplateService.getAdminNewSubmissionNotificationEmail(templateData, protocol);
+            }
+
+            await this.emailService.sendEmail(adminRecipients.join(','), subject, text, html, attachments);
+          }
+        })
+        .catch((err) => console.error('Failed to send submission emails', err));
     }
 
     return {
