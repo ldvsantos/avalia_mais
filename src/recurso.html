@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interposição de Recurso - AVALIA+</title>
+    <link rel="stylesheet" href="style.css?v=20251216-2">
+    <link rel="stylesheet" href="theme.css?v=20251216-2">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                <h1>Formulário para Interposição de Recurso</h1>
+                <img src="img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-header"><h2>Dados do Recurso</h2></div>
+            <div class="panel-body">
+                <form id="recurso-form">
+                    <div class="form-group">
+                        <label for="cpf">Nº do CPF: *</label>
+                        <input type="text" id="cpf" name="cpf" placeholder="000.000.000-00" required maxlength="14">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="titulo_projeto">Título do Projeto de Pesquisa ou Intervenção: *</label>
+                        <input type="text" id="titulo_projeto" name="titulo_projeto" required maxlength="200">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="linha_pesquisa">Linha de Pesquisa: *</label>
+                        <select id="linha_pesquisa" name="linha_pesquisa" required>
+                            <option value="">Selecione uma linha de pesquisa...</option>
+                            <option value="Linha de Pesquisa 1 – Planejamento Urbano-regional, Ambiental e de Comunidades Tradicionais">Linha de Pesquisa 1 – Planejamento Urbano-regional, Ambiental e de Comunidades Tradicionais</option>
+                            <option value="Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social">Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="etapa_processo">Etapa do Processo Objeto do Recurso: *</label>
+                        <input type="text" id="etapa_processo" name="etapa_processo" required maxlength="100" placeholder="Ex: Homologação das Inscrições, Resultado da Fase 1, etc.">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="decisao_contestacao">Decisão Objeto da Contestação (Descrever de forma objetiva o que solicita revisão): *</label>
+                        <textarea id="decisao_contestacao" name="decisao_contestacao" required rows="4" maxlength="1000"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="argumentacao">Argumentação: *</label>
+                        <textarea id="argumentacao" name="argumentacao" required rows="10" maxlength="4000"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Enviar Recurso</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <div style="text-align:center; margin-top:24px;">
+            <a href="index.html" class="btn-secondary">Voltar para página inicial</a>
+        </div>
+    </div>
+
+    <script>
+        // Simple script to handle form submission (placeholder)
+        document.getElementById('recurso-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Recurso enviado com sucesso! (Simulação - Funcionalidade em desenvolvimento)');
+            // Here you would typically send the data to the server
+        });
+
+        // CPF Formatting
+        document.getElementById('cpf').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.slice(0, 11);
+            
+            if (value.length > 9) {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+            } else if (value.length > 6) {
+                value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3');
+            } else if (value.length > 3) {
+                value = value.replace(/(\d{3})(\d{3})/, '$1.$2');
+            }
+            
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>
