@@ -228,6 +228,8 @@ mkdir -p "$STAGING/server"
 
 if [ -f "$REMOTE_DIR/server/.env" ]; then
   cp -f "$REMOTE_DIR/server/.env" "$STAGING/server/.env"
+  chown "$APP_USER:$APP_USER" "$STAGING/server/.env" || true
+  chmod 600 "$STAGING/server/.env" || true
 fi
 
 if [ -f "$REMOTE_DIR/server/.admin-secret" ]; then
