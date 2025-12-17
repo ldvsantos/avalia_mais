@@ -4,10 +4,11 @@ const crypto = require('crypto');
 const { stableStringify, sha256Hex } = require('../../util');
 
 class RegisterSubmission {
-  constructor(submissionRepository, hmacSecret, emailService) {
+  constructor(submissionRepository, hmacSecret, emailService, emailTemplateService) {
     this.submissionRepository = submissionRepository;
     this.hmacSecret = hmacSecret;
     this.emailService = emailService;
+    this.emailTemplateService = emailTemplateService;
   }
 
   async execute(data) {
@@ -113,8 +114,18 @@ class RegisterSubmission {
     if (this.emailService && identified.email) {
       const subject = `Confirmação de Inscrição - Protocolo ${protocol}`;
       const text = `Olá ${identified.nome},\n\nSua inscrição foi recebida com sucesso.\nProtocolo: ${protocol}\nData: ${createdAt}\n\nAtenciosamente,\nEquipe AVALIA+`;
+      
+      let html = null;
+      if (this.emailTemplateService) {
+        const templateData = {
+          nome: identified.nome,
+          titulo_projeto: project.titulo_pt || project.titulo_en
+        };
+        html = this.emailTemplateService.getRegistrationEmail(templateData, protocol);
+      }
+
       // Fire and forget email to not block response too much, or await if critical
-      this.emailService.sendEmail(identified.email, subject, text).catch(err => console.error('Failed to send email', err));
+      this.emailService.sendEmail(identified.email, subject, text, html).catch(err => console.error('Failed to send email', err));
     }
 
     return {

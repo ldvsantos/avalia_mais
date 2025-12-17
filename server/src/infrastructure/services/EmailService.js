@@ -18,15 +18,16 @@ class EmailService {
     }
   }
 
-  async sendEmail(to, subject, text, html) {
+  async sendEmail(to, subject, text, html, attachments = []) {
     if (this.transporter) {
       try {
         const info = await this.transporter.sendMail({
-          from: process.env.SMTP_FROM || '"Sistema AVALIA+" <noreply@avalia.com>',
+          from: process.env.SMTP_FROM || '"Avalia Mais" <noreply@avalia.com>',
           to,
           subject,
           text,
           html,
+          attachments,
         });
         console.log('Email sent: %s', info.messageId);
         return true;

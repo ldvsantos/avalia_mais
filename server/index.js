@@ -17,6 +17,8 @@ const JsonEvaluationRepository = require('./src/infrastructure/repositories/Json
 const JsonAppealRepository = require('./src/infrastructure/repositories/JsonAppealRepository');
 const JwtService = require('./src/infrastructure/security/JwtService');
 const EmailService = require('./src/infrastructure/services/EmailService');
+const EmailTemplateService = require('./src/infrastructure/services/EmailTemplateService');
+const PdfService = require('./src/infrastructure/services/PdfService');
 
 const RegisterSubmission = require('./src/application/RegisterSubmission');
 const RegisterAppeal = require('./src/application/RegisterAppeal');
@@ -94,9 +96,11 @@ const evaluationRepo = new JsonEvaluationRepository(dataDir);
 const appealRepo = new JsonAppealRepository(dataDir);
 const jwtService = new JwtService(JWT_SECRET);
 const emailService = new EmailService();
+const emailTemplateService = new EmailTemplateService();
+const pdfService = new PdfService();
 
-const registerSubmissionUseCase = new RegisterSubmission(submissionRepo, HMAC_SECRET, emailService);
-const registerAppealUseCase = new RegisterAppeal(appealRepo, emailService);
+const registerSubmissionUseCase = new RegisterSubmission(submissionRepo, HMAC_SECRET, emailService, emailTemplateService);
+const registerAppealUseCase = new RegisterAppeal(appealRepo, emailService, emailTemplateService, pdfService);
 const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
 const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);
 const listSubmissionsUseCase = new ListSubmissions(submissionRepo);
