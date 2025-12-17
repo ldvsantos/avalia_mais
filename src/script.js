@@ -1456,16 +1456,6 @@ document.addEventListener('DOMContentLoaded', () => {
             generatePDF();
         });
     }
-
-    // Botão Preencher Exemplo
-    const btnFillExample = document.getElementById('btn-fill-example');
-    if (btnFillExample) {
-        btnFillExample.addEventListener('click', (e) => {
-            e.preventDefault();
-            console.log('Botão Preencher Exemplo clicado via listener');
-            fillExample();
-        });
-    }
 });
 
 function fillExample() {
