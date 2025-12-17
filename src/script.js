@@ -167,12 +167,51 @@ function updateVagaReservadaAviso() {
         anexos.push('ANEXO XI – DECLARAÇÃO DE ANUÊNCIA EXPEDIDA POR CONSELHO ESTADUAL DOS DIREITOS DA POPULAÇÃO LGBT');
     }
     if (isChecked('cotas_pcd')) {
-        anexos.push('Documentação comprobatória de Pessoa com Deficiência (ver edital)');
+        anexos.push('ANEXO XII – LAUDO CARACTERIZADOR DE DEFICIÊNCIA');
     }
 
     // Remove duplicados e renderiza
     const unique = Array.from(new Set(anexos));
     itensEl.innerHTML = '<ul style="margin:0; padding-left:18px;">' + unique.map(a => `<li>${escapeHtml(a)}</li>`).join('') + '</ul>';
+}
+
+function getAnexosCondicionantesFromDom() {
+    const vinculo = document.querySelector('input[name="vinculo_empregaticio"]:checked')?.value || '';
+    const isChecked = (id) => Boolean(document.getElementById(id)?.checked);
+
+    const anexos = [];
+
+    // Anexo IV: anteprojeto sem identificação (sempre exigido)
+    anexos.push('ANEXO IV – ANTEPROJETO DE TRABALHO DE CONCLUSÃO DE CURSO (TCC) SEM IDENTIFICAÇÃO');
+
+    // Anexo III: quando houver vínculo empregatício
+    if (vinculo === 'Sim') {
+        anexos.push('ANEXO III – DECLARAÇÃO DE LIBERAÇÃO PELO EMPREGADOR');
+    }
+
+    // Cotas específicas
+    if (isChecked('cotas_negro')) {
+        anexos.push('ANEXO V – AUTODECLARAÇÃO PARA HETEREOIDENTIFICAÇÃO');
+        anexos.push('ANEXO VI – AUTODECLARAÇÃO DE PERTENCIMENTO SOCIAL');
+    }
+    if (isChecked('cotas_indigena')) {
+        anexos.push('ANEXO VII – DOCUMENTO COMPROBATÓRIO DE PERTENCIMENTO A INDÍGENA');
+    }
+    if (isChecked('cotas_quilombola')) {
+        anexos.push('ANEXO VIII – DOCUMENTO COMPROBATÓRIO DE PERTENCIMENTO À COMUNIDADE QUILOMBOLA');
+    }
+    if (isChecked('cotas_cigano')) {
+        anexos.push('ANEXO IX – DOCUMENTO COMPROBATÓRIO DE PERTENCIMENTO A COMUNIDADE CIGANA');
+    }
+    if (isChecked('cotas_trans')) {
+        anexos.push('ANEXO X – AUTODECLARAÇÃO DE IDENTIDADE TRANS: TRAVESTI, TRANSEXUAL OU TRANSGÊNERO');
+        anexos.push('ANEXO XI – DECLARAÇÃO DE ANUÊNCIA EXPEDIDA POR CONSELHO ESTADUAL DOS DIREITOS DA POPULAÇÃO LGBT');
+    }
+    if (isChecked('cotas_pcd')) {
+        anexos.push('ANEXO XII – LAUDO CARACTERIZADOR DE DEFICIÊNCIA');
+    }
+
+    return Array.from(new Set(anexos));
 }
 
 function detectPersonalInfoInProject(text) {
@@ -598,6 +637,20 @@ async function generatePDF() {
     const getRadio = (name) => document.querySelector(`input[name="${name}"]:checked`)?.value || '';
     const getCheckboxes = (name) => Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(cb => cb.value).join(', ');
 
+    const anexosCondicionantes = getAnexosCondicionantesFromDom();
+    const algumaCotaMarcada = document.querySelectorAll('input[name="cotas"]:checked').length > 0;
+    const showAnexosCondicionantes = (getRadio('vaga_reservada') === 'Sim') || algumaCotaMarcada || (getRadio('vinculo_empregaticio') === 'Sim');
+    const anexosCondicionantesHtml = showAnexosCondicionantes
+        ? (
+            '<div class="qr-conditional">'
+            + '<div class="qr-conditional-title">A validação desta inscrição está condicionada ao envio dos anexos (conforme seleção):</div>'
+            + '<ul class="qr-conditional-list">'
+            + anexosCondicionantes.map(a => `<li>${escapeHtml(a)}</li>`).join('')
+            + '</ul>'
+            + '</div>'
+        )
+        : '';
+
     // Feedback visual imediato
     const btn = document.getElementById('btn-generate-pdf');
     const originalText = btn ? btn.innerText : 'Enviar Inscrição e Gerar PDF';
@@ -822,6 +875,9 @@ async function generatePDF() {
                     text-align: left;
                     line-height: 1.25;
                 }
+                .qr-conditional { margin-top: 6px; font-weight: normal; color: #000; }
+                .qr-conditional-title { font-size: 10px; font-weight: bold; margin-bottom: 2px; }
+                .qr-conditional-list { margin: 0; padding-left: 16px; font-size: 10px; line-height: 1.25; }
                 svg { max-width: 100% !important; }
                 #barcode, #barcode2 { height: 30px; width: 100% !important; max-width: 100% !important; }
 
@@ -1111,8 +1167,9 @@ async function generatePDF() {
                     </div>
                     <div class="qr-side-text">
                         Escaneie o QR Code ao lado para verificar a autenticidade desta inscrição.<br>
-                        Inscrição registrada no sistema AVALIA+ do PLANTERR, mas condicionada à aprovação após o envio à secretaria.<br>
+                        Inscrição registrada no sistema AVALIA+ do PLANTERR, mas condicionada à validação após o envio dos documentos à secretaria.<br>
                         Inscrição nº: <strong>${registrationNumber}</strong><br>
+                        ${anexosCondicionantesHtml}
                     </div>
                 </div>
             </div>
