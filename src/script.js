@@ -1467,13 +1467,26 @@ function fillExample() {
                 el.value = val;
                 el.dispatchEvent(new Event('input')); // Atualiza contadores
                 el.dispatchEvent(new Event('change')); // Atualiza validações
+            } else {
+                console.warn('Elemento não encontrado para preencher:', id);
             }
         };
-        const checkRadio = (name, val) => { const el = document.querySelector(`input[name="${name}"][value="${val}"]`); if (el) el.checked = true; };
-        const checkBoxes = (name, values) => { values.forEach(v => { const el = document.querySelector(`input[name="${name}"][value="${v}"]`); if (el) el.checked = true; }); };
+        const checkRadio = (name, val) => { 
+            const el = document.querySelector(`input[name="${name}"][value="${val}"]`); 
+            if (el) el.checked = true; 
+            else console.warn('Radio não encontrado:', name, val);
+        };
+        const checkBoxes = (name, values) => { 
+            values.forEach(v => { 
+                const el = document.querySelector(`input[name="${name}"][value="${v}"]`); 
+                if (el) el.checked = true; 
+                else console.warn('Checkbox não encontrado:', name, v);
+            }); 
+        };
 
         // Detectar se é página de recurso
         if (document.getElementById('recurso-form')) {
+            console.log('Preenchendo formulário de recurso...');
             setVal('cpf', '390.533.447-05');
             setVal('titulo_projeto', 'Desenvolvimento de Sistema PlanTerr para Gestão de Projetos');
             setVal('linha_pesquisa', 'Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social');
@@ -1489,6 +1502,7 @@ function fillExample() {
             return;
         }
 
+        console.log('Preenchendo formulário de inscrição...');
         // Ficha de Inscrição
         setVal('nome', 'Maria da Silva');
         setVal('nome_social', 'Maria Silva');
