@@ -6,6 +6,7 @@
     <title>Interposição de Recurso - AVALIA+</title>
     <link rel="stylesheet" href="style.css?v=20251216-2">
     <link rel="stylesheet" href="theme.css?v=20251216-2">
+    <script src="script.js"></script>
 </head>
 <body>
     <div class="container">
@@ -57,7 +58,8 @@
 
                     <div class="form-group">
                         <label for="argumentacao">Argumentação: *</label>
-                        <textarea id="argumentacao" name="argumentacao" required rows="10" maxlength="4000"></textarea>
+                        <textarea id="argumentacao" name="argumentacao" required rows="10" maxlength="2500" oninput="updateCounter(this, 2500)"></textarea>
+                        <div class="counter">Caracteres restantes: <span id="argumentacao-counter">2500</span></div>
                     </div>
 
                     <div class="form-actions">
