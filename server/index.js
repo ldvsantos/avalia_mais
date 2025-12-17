@@ -33,6 +33,7 @@ const AdminController = require('./src/interfaces/controllers/AdminController');
 const AdminDashboardPresenter = require('./src/interfaces/presenters/AdminDashboardPresenter');
 const ListSubmissions = require('./src/application/ListSubmissions');
 const ListEvaluations = require('./src/application/ListEvaluations');
+const ListAppeals = require('./src/application/ListAppeals');
 // ----------------------------------
 
 // Módulos de segurança
@@ -115,6 +116,7 @@ const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, 
 const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);
 const listSubmissionsUseCase = new ListSubmissions(submissionRepo);
 const listEvaluationsUseCase = new ListEvaluations(evaluationRepo);
+const listAppealsUseCase = new ListAppeals(appealRepo);
 
 const adminDashboardPresenter = new AdminDashboardPresenter(ADMIN_SECRET);
 
@@ -122,7 +124,7 @@ const submissionController = new SubmissionController(registerSubmissionUseCase)
 const appealController = new AppealController(registerAppealUseCase);
 const authController = new AuthController(authenticateUserUseCase, ADMIN_SECRET);
 const evaluationController = new EvaluationController(submitEvaluationUseCase);
-const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, adminDashboardPresenter);
+const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter);
 // -----------------------------------------
 
 // 1. Headers de Segurança (Helmet + Custom)
@@ -605,6 +607,8 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
 });
 
 app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, (req, res) => adminController.dashboard(req, res));
+
+app.get(`/secret/${ADMIN_SECRET}/admin/appeals`, checkAdminIP, adminAuth, (req, res) => adminController.appeals(req, res));
 
 // Atualizar calendário de inscrições (admin)
 app.post(`/secret/${ADMIN_SECRET}/admin/registration-window`, checkAdminIP, adminAuth, (req, res) => {

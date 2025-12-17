@@ -4,9 +4,10 @@ const { getRequestContext } = require('../../../request-context');
 const { logDataExport } = require('../../../security-logger');
 
 class AdminController {
-  constructor(listSubmissionsUseCase, listEvaluationsUseCase, adminDashboardPresenter) {
+  constructor(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter) {
     this.listSubmissionsUseCase = listSubmissionsUseCase;
     this.listEvaluationsUseCase = listEvaluationsUseCase;
+    this.listAppealsUseCase = listAppealsUseCase;
     this.adminDashboardPresenter = adminDashboardPresenter;
   }
 
@@ -139,6 +140,23 @@ class AdminController {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     return res.send(csv);
+  }
+
+  appeals(req, res) {
+    const q = String(req.query.q ?? '');
+    const fromStr = String(req.query.from ?? '');
+    const toStr = String(req.query.to ?? '');
+    const { from, to } = parseDateRange(fromStr, toStr);
+
+    const appeals = this.listAppealsUseCase.execute({ q, from, to });
+
+    const html = this.adminDashboardPresenter.renderAppeals(appeals, {
+      q,
+      fromStr,
+      toStr,
+    });
+
+    res.type('html').send(html);
   }
 }
 

@@ -108,6 +108,8 @@ textarea {
     display: inline-block;
     text-decoration: none;
     text-align: center;
+    box-sizing: border-box;
+    max-width: 100%;
     background-color: #003366;
     color: white;
     border: 1px solid #002244;
@@ -149,6 +151,8 @@ textarea {
     display: inline-block;
     text-decoration: none;
     text-align: center;
+    box-sizing: border-box;
+    max-width: 100%;
     background-color: #e9ecef;
     color: #212529;
     border: 1px solid #ced4da;

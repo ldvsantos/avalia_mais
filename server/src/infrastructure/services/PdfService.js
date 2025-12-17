@@ -4,8 +4,39 @@ const fs = require('fs');
 
 class PdfService {
   constructor() {
-    // Adjust path to point to src/img/logo_avalia_horizontal.png from server/src/infrastructure/services/
-    this.logoPath = path.join(__dirname, '../../../../src/img/logo_avalia_horizontal.png');
+    // Assets em /src/img (a partir de server/src/infrastructure/services/)
+    this.avaliaLogoPath = path.join(__dirname, '../../../../src/img/logo_avalia_horizontal.png');
+    this.planterLogoPath = path.join(__dirname, '../../../../src/img/logo_planter.png');
+  }
+
+  drawHeader(doc) {
+    const leftX = 50;
+    const topY = 45;
+    const rightX = doc.page.width - 50;
+
+    const hasPlanter = fs.existsSync(this.planterLogoPath);
+    const hasAvalia = fs.existsSync(this.avaliaLogoPath);
+
+    if (hasPlanter) {
+      doc.image(this.planterLogoPath, leftX, topY, { width: 120 });
+    }
+
+    if (hasAvalia) {
+      const avaliaWidth = 150;
+      doc.image(this.avaliaLogoPath, rightX - avaliaWidth, topY, { width: avaliaWidth });
+    }
+
+    if (!hasPlanter && hasAvalia) {
+      // fallback compatível com o layout antigo
+      doc.image(this.avaliaLogoPath, leftX, topY, { width: 150 });
+    }
+
+    if (!hasPlanter && !hasAvalia) {
+      doc.fontSize(20).text('Avalia Mais', leftX, topY);
+    }
+
+    // posiciona o cursor após o cabeçalho
+    doc.y = 140;
   }
 
   async generateSubmissionPdf(submission) {
@@ -24,13 +55,7 @@ class PdfService {
       const project = submission?.project || {};
 
       // Header
-      if (fs.existsSync(this.logoPath)) {
-        doc.image(this.logoPath, 50, 45, { width: 150 });
-      } else {
-        doc.fontSize(20).text('Avalia Mais', 50, 50);
-      }
-
-      doc.moveDown(4);
+      this.drawHeader(doc);
 
       // Title
       doc.fontSize(18).font('Helvetica-Bold').text('Comprovante de Inscrição', { align: 'center' });
@@ -148,13 +173,7 @@ class PdfService {
       const createdAt = data?.createdAt ? new Date(data.createdAt) : new Date();
 
       // Header
-      if (fs.existsSync(this.logoPath)) {
-        doc.image(this.logoPath, 50, 45, { width: 150 });
-      } else {
-        doc.fontSize(20).text('Avalia Mais', 50, 50);
-      }
-
-      doc.moveDown(4);
+      this.drawHeader(doc);
 
       // Title
       doc.fontSize(18).font('Helvetica-Bold').text('Comprovante de Recurso', { align: 'center' });

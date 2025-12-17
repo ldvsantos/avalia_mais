@@ -12,6 +12,120 @@ class AdminDashboardPresenter {
     this.adminSecret = adminSecret;
   }
 
+  renderAppeals(appeals, filters) {
+    const { q, fromStr, toStr } = filters;
+
+    const toLower = (s) => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    const maskCpf = (cpf) => {
+      const digits = String(cpf || '').replace(/\D/g, '');
+      if (digits.length < 4) return String(cpf || '');
+      return `***.***.***-${digits.slice(-2)} (final ${digits.slice(-4)})`;
+    };
+
+    const rows = (appeals || []).map(a => {
+      const protocol = String(a.protocol || '');
+      const created = a.createdAt ? new Date(a.createdAt).toLocaleString('pt-BR') : '';
+      return `
+        <tr>
+          <td>${escapeHtml(created)}</td>
+          <td class="mono">${escapeHtml(protocol)}</td>
+          <td>${escapeHtml((a.nome || '').slice(0, 60))}</td>
+          <td>${escapeHtml((a.email || '').slice(0, 60))}</td>
+          <td>${escapeHtml(maskCpf(a.cpf))}</td>
+          <td>${escapeHtml((a.tituloProjeto || '').slice(0, 80))}</td>
+          <td>${escapeHtml((a.etapa || '').slice(0, 40))}</td>
+          <td><a class="btn-secondary" href="/api/appeals/${encodeURIComponent(protocol)}/pdf">Baixar PDF</a></td>
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Admin - Recursos AVALIA+</title>
+        <link rel="stylesheet" href="/theme.css" />
+        <style>
+          .hint { color: #003366; font-size: 11px; }
+          .filters-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; align-items: end; }
+          .filters-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 8px; }
+          .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+          @media (max-width: 900px) { .filters-grid { grid-template-columns: 1fr; } }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <h1>Administração de Recursos - AVALIA+</h1>
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+            </div>
+          </header>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Busca e filtros</h2></div>
+            <div class="panel-body">
+              <div class="hint">Dica: use a busca por protocolo, nome, email, CPF ou título.</div>
+              <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Voltar ao Admin</a>
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/logout" style="background-color: #d9534f; border-color: #d43f3a;">Sair</a>
+              </div>
+              <form method="GET" action="/secret/${this.adminSecret}/admin/appeals">
+                <div class="filters-grid" style="margin-top: 8px;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="q">Busca</label>
+                    <input id="q" name="q" type="text" value="${escapeHtml(q)}" placeholder="Ex.: REC-2025-..." />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="from">De</label>
+                    <input id="from" name="from" type="date" value="${escapeHtml(fromStr)}" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="to">Até</label>
+                    <input id="to" name="to" type="date" value="${escapeHtml(toStr)}" />
+                  </div>
+                </div>
+                <div class="filters-actions">
+                  <button class="btn-primary" type="submit">Filtrar</button>
+                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/appeals">Limpar Filtros</a>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Recursos Recebidos (${(appeals || []).length})</h2></div>
+            <div class="panel-body" style="overflow-x: auto;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Protocolo</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>CPF</th>
+                    <th>Título</th>
+                    <th>Etapa</th>
+                    <th>PDF</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows}
+                </tbody>
+              </table>
+              ${(appeals || []).length === 0 ? '<p style="text-align:center; color:#666; margin-top:10px;">Nenhum recurso encontrado.</p>' : ''}
+            </div>
+          </section>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
   render(submissions, evaluations, filters) {
     const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen } = filters;
     const evalMap = new Map(evaluations.map(e => [e.protocol, e]));
@@ -122,6 +236,7 @@ class AdminDashboardPresenter {
             <div class="panel-body">
               <div class="hint">Dica: clique no protocolo para ver detalhes, status e verificação.</div>
               <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/appeals">Recursos</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/committee">Área da Comissão</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/committee/results">Ranking / Resultados</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/evaluator-links">Credenciais Avaliadores</a>
