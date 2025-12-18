@@ -790,6 +790,14 @@ async function generatePDF() {
     // Termo de Compromisso
     formData.termo_compromisso = document.getElementById('termo_compromisso')?.checked ? 'Concordo' : 'Não concordo';
 
+    const auditFooterHtml = `
+        <div class="audit-footer">
+            Documento assinado digitalmente e auditado pelo sistema Planterr.<br>
+            Gerado por: Sistema Automático | IP: ${serverReceipt.ip || 'N/A'} | Data: ${new Date(serverReceipt.createdAt).toLocaleString('pt-BR')}<br>
+            Código de Verificação (Hash): ${serverReceipt.hash}
+        </div>
+    `;
+
     // Criar HTML para o PDF
     const htmlContent = `
         <!DOCTYPE html>
@@ -978,6 +986,16 @@ async function generatePDF() {
                     white-space: nowrap;
                 }
                 
+                .audit-footer {
+                    margin-top: 20px;
+                    border-top: 1px solid #ccc;
+                    padding-top: 5px;
+                    font-size: 8px;
+                    text-align: center;
+                    color: #555;
+                    page-break-inside: avoid;
+                }
+
                 .page-break { 
                     display: block;
                     height: 0; 
@@ -1192,6 +1210,7 @@ async function generatePDF() {
                         ${anexosCondicionantesHtml}
                     </div>
                 </div>
+                ${auditFooterHtml}
             </div>
 
             <div class="page-break"></div>
@@ -1264,6 +1283,7 @@ async function generatePDF() {
                     <div class="section-title">8 – Referências (ABNT)</div>
                     <div class="field"><div class="field-value">${escapeHtml(formData.referencias)}</div></div>
                 </div>
+                ${auditFooterHtml}
             </div>
 
             <script>

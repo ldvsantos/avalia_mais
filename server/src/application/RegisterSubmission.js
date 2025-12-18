@@ -212,6 +212,8 @@ class RegisterSubmission {
       protocol,
       hash,
       createdAt: submission.createdAt,
+      ip: ctx?.ip,
+      user: ctx?.user
     };
   }
 }
