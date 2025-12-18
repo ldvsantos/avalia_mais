@@ -130,7 +130,7 @@ class AdminDashboardPresenter {
   }
 
   render(submissions, evaluations, filters) {
-    const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen, editalYear } = filters;
+    const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen, editalYear, publicFiles } = filters;
     const evalMap = new Map(evaluations.map(e => [e.protocol, e]));
 
     const WEIGHTS = { project: 4, interview: 5, language: 1 };
@@ -172,6 +172,18 @@ class AdminDashboardPresenter {
         </tr>
       `;
     }).join('');
+
+    const publicFilesRows = (publicFiles || []).map(f => `
+      <tr>
+        <td>${escapeHtml(new Date(f.date).toLocaleString('pt-BR'))}</td>
+        <td><a href="/results/${escapeHtml(f.filename)}" target="_blank">${escapeHtml(f.title)}</a></td>
+        <td>
+          <form method="POST" action="/secret/${this.adminSecret}/admin/public-files/delete/${f.id}" onsubmit="return confirm('Tem certeza?');" style="display:inline;">
+            <button type="submit" class="btn-secondary" style="background-color:#d9534f; border-color:#d43f3a; padding: 2px 6px; font-size: 0.8em;">Excluir</button>
+          </form>
+        </td>
+      </tr>
+    `).join('');
 
     const toDateInput = (iso) => {
       if (!iso) return '';
@@ -217,6 +229,38 @@ class AdminDashboardPresenter {
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/edital/${encodeURIComponent(String(editalYear || new Date().getFullYear()))}/calendar/edit">Calendário do Edital (todas as fases)</a>
               </div>
               <p class="hint" style="text-align:center; margin-top: 6px;">Use esta tela para configurar também as janelas de recursos e etapas (projeto/entrevista/língua).</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Gerenciar Publicações e Resultados</h2></div>
+            <div class="panel-body">
+              <form method="POST" action="/secret/${this.adminSecret}/admin/public-files" enctype="multipart/form-data" style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                <div class="grid" style="grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end;">
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label for="pub_title">Título da Publicação</label>
+                    <input type="text" id="pub_title" name="title" placeholder="Ex: Resultado Preliminar..." required />
+                  </div>
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label for="pub_file">Arquivo (PDF)</label>
+                    <input type="file" id="pub_file" name="file" accept=".pdf" required />
+                  </div>
+                  <button type="submit" class="btn-primary">Publicar</button>
+                </div>
+              </form>
+
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Título / Arquivo</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${publicFilesRows.length > 0 ? publicFilesRows : '<tr><td colspan="3" style="text-align:center; color:#666;">Nenhuma publicação encontrada.</td></tr>'}
+                </tbody>
+              </table>
             </div>
           </section>
 

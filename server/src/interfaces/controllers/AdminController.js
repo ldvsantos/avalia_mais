@@ -4,12 +4,13 @@ const { getRequestContext } = require('../../../request-context');
 const { logDataExport } = require('../../../security-logger');
 
 class AdminController {
-  constructor(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo) {
+  constructor(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo, publicFileRepo) {
     this.listSubmissionsUseCase = listSubmissionsUseCase;
     this.listEvaluationsUseCase = listEvaluationsUseCase;
     this.listAppealsUseCase = listAppealsUseCase;
     this.adminDashboardPresenter = adminDashboardPresenter;
     this.calendarRepo = calendarRepo;
+    this.publicFileRepo = publicFileRepo;
   }
 
   dashboard(req, res) {
@@ -21,6 +22,7 @@ class AdminController {
 
     const submissions = this.listSubmissionsUseCase.execute({ q, status, from, to });
     const evaluations = this.listEvaluationsUseCase.execute();
+    const publicFiles = this.publicFileRepo ? this.publicFileRepo.getAll() : [];
 
     const editalYear = new Date().getFullYear();
     const cal = this.calendarRepo.getOrCreateYear(editalYear, { seedRegistrationWindow: storage.getRegistrationWindow() });
@@ -37,10 +39,11 @@ class AdminController {
       status,
       fromStr,
       toStr,
-      adminStatusOptions: ['Recebida', 'Em Análise', 'Aprovado', 'Reprovado', 'Indeferido'],
+      adminStatusOptions: ['Recebida', 'Em Análise', 'Em recurso', 'Aprovada', 'Indeferida'],
       registrationWindow: window,
       registrationOpen: open,
       editalYear,
+      publicFiles,
     });
 
     res.type('html').send(html);

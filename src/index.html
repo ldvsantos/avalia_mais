@@ -143,12 +143,56 @@
 
         <h2 class="section-title">Resultados e Comunicados</h2>
         <section class="panel">
-            <div class="panel-body">
+            <div class="panel-body" id="public-results-container" style="padding: 0;">
                 <p style="color: #666; font-style: italic; text-align: center; padding: 20px;">
-                    Nenhum resultado divulgado até o momento. Acompanhe o cronograma no Edital.
+                    Carregando resultados...
                 </p>
             </div>
         </section>
+
+        <script>
+            fetch('/api/public-files')
+                .then(response => response.json())
+                .then(files => {
+                    const container = document.getElementById('public-results-container');
+                    if (files.length === 0) {
+                        container.innerHTML = `
+                            <p style="color: #666; font-style: italic; text-align: center; padding: 20px;">
+                                Nenhum resultado divulgado até o momento. Acompanhe o cronograma no Edital.
+                            </p>
+                        `;
+                        return;
+                    }
+                    
+                    const list = document.createElement('ul');
+                    list.className = 'doc-list';
+                    
+                    files.forEach(file => {
+                        const li = document.createElement('li');
+                        const date = new Date(file.date).toLocaleDateString('pt-BR');
+                        li.innerHTML = `
+                            <div>
+                                <span style="font-size: 1.2em;">📄</span>
+                                <a href="/results/${file.filename}" target="_blank">${file.title}</a>
+                                <span style="color: #666; font-size: 0.8em; margin-left: 10px;">(${date})</span>
+                            </div>
+                            <span style="color: #888; font-size: 0.9em;">PDF</span>
+                        `;
+                        list.appendChild(li);
+                    });
+                    
+                    container.innerHTML = '';
+                    container.appendChild(list);
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('public-results-container').innerHTML = `
+                        <p style="color: red; text-align: center; padding: 20px;">
+                            Erro ao carregar resultados.
+                        </p>
+                    `;
+                });
+        </script>
 
         <footer style="text-align: center; margin-top: 40px; color: #777; font-size: 0.9em;">
             <p>&copy; 2025 PLANTERR - UEFS. Todos os direitos reservados.</p>

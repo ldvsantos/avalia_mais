@@ -13,7 +13,7 @@ class RegisterSubmission {
     this.adminNotifyTo = adminNotifyTo;
   }
 
-  async execute(data) {
+  async execute(data, ctx) {
     // 1. Generate Protocol
     const year = new Date().getFullYear();
     const randomPart = crypto.randomBytes(2).toString('hex').toUpperCase();
@@ -130,7 +130,7 @@ class RegisterSubmission {
           let pdfBuffer = null;
           if (this.pdfService && typeof this.pdfService.generateSubmissionPdf === 'function') {
             try {
-              pdfBuffer = await this.pdfService.generateSubmissionPdf(submission);
+              pdfBuffer = await this.pdfService.generateSubmissionPdf(submission, ctx);
             } catch (err) {
               console.error('Failed to generate submission PDF', err);
             }

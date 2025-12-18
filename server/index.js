@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const dotenv = require('dotenv');
 // Suporta `.env` na raiz do projeto e também em `server/.env`
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
@@ -12,6 +13,7 @@ const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const QRCode = require('qrcode');
+const multer = require('multer');
 
 // --- CLEAN ARCHITECTURE IMPORTS ---
 const JsonSubmissionRepository = require('./src/infrastructure/repositories/JsonSubmissionRepository');
@@ -20,6 +22,7 @@ const JsonEvaluationRepository = require('./src/infrastructure/repositories/Json
 const JsonAppealRepository = require('./src/infrastructure/repositories/JsonAppealRepository');
 const JsonProcessCalendarRepository = require('./src/infrastructure/repositories/JsonProcessCalendarRepository');
 const JsonCandidatePhaseStatusRepository = require('./src/infrastructure/repositories/JsonCandidatePhaseStatusRepository');
+const JsonPublicFileRepository = require('./src/infrastructure/repositories/JsonPublicFileRepository');
 const JwtService = require('./src/infrastructure/security/JwtService');
 const EmailService = require('./src/infrastructure/services/EmailService');
 const EmailTemplateService = require('./src/infrastructure/services/EmailTemplateService');
@@ -103,6 +106,7 @@ const evaluationRepo = new JsonEvaluationRepository(dataDir);
 const appealRepo = new JsonAppealRepository(dataDir);
 const calendarRepo = new JsonProcessCalendarRepository(dataDir);
 const phaseStatusRepo = new JsonCandidatePhaseStatusRepository(dataDir);
+const publicFileRepo = new JsonPublicFileRepository(dataDir);
 const jwtService = new JwtService(JWT_SECRET);
 const emailService = new EmailService();
 const emailTemplateService = new EmailTemplateService();
@@ -256,7 +260,7 @@ const submissionController = new SubmissionController(registerSubmissionUseCase,
 const appealController = new AppealController(registerAppealUseCase, workflowService);
 const authController = new AuthController(authenticateUserUseCase, ADMIN_SECRET);
 const evaluationController = new EvaluationController(submitEvaluationUseCase);
-const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo);
+const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo, publicFileRepo);
 // -----------------------------------------
 
 // Job de consolidação automática: reprovação definitiva após prazo de recurso
@@ -823,7 +827,7 @@ function pickSubmissionPayload(body) {
   return { identified, project };
 }
 
-const ADMIN_STATUS_OPTIONS = ['Recebida', 'Em análise', 'Aprovada', 'Indeferida'];
+const ADMIN_STATUS_OPTIONS = ['Recebida', 'Em análise', 'Em recurso', 'Aprovada', 'Indeferida'];
 
 function normalizeStatus(input) {
   const raw = String(input ?? '').trim();
@@ -934,6 +938,64 @@ app.get('/api/submissions/:protocol/appeals', (req, res) => {
     return res.status(500).json({ error: 'Falha ao listar recursos' });
   }
 });
+
+// --- PUBLIC FILES / RESULTS ---
+const publicStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(__dirname, '..', 'src', 'results');
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const safeName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
+    cb(null, Date.now() + '-' + safeName);
+  }
+});
+const uploadPublic = multer({ storage: publicStorage });
+
+app.get('/api/public-files', (req, res) => {
+  const files = publicFileRepo.getAll();
+  files.sort((a, b) => new Date(b.date) - new Date(a.date));
+  res.json(files);
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, uploadPublic.single('file'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).send('Nenhum arquivo enviado');
+    const title = req.body.title || req.file.originalname;
+    const fileData = {
+      id: Date.now().toString(),
+      title,
+      filename: req.file.filename,
+      date: new Date().toISOString()
+    };
+    publicFileRepo.add(fileData);
+    res.redirect(`/secret/${ADMIN_SECRET}/admin`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Erro ao fazer upload');
+  }
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/public-files/delete/:id`, checkAdminIP, adminAuth, (req, res) => {
+  try {
+    const id = req.params.id;
+    const removed = publicFileRepo.remove(id);
+    if (removed) {
+      const filePath = path.join(__dirname, '..', 'src', 'results', removed.filename);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    }
+    res.redirect(`/secret/${ADMIN_SECRET}/admin`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Erro ao deletar');
+  }
+});
+// ------------------------------
 
 app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => adminController.exportCsv(req, res));
 
@@ -1433,16 +1495,42 @@ app.get('/candidato/status', (req, res) => {
           .timeline-item.inactive .timeline-date {
             color: #999;
           }
-          .timeline-dot.active {
-            border-color: ${statusBgColor};
-            background: ${statusBgColor};
+          
+          /* Status Colors */
+          .timeline-dot.completed {
+            border-color: #4caf50;
+            background: #4caf50;
           }
-          .timeline-dot.active::after {
+          .timeline-dot.completed::after {
             content: '✓';
             color: white;
             font-weight: bold;
             font-size: 10px;
           }
+          
+          .timeline-dot.in-progress {
+            border-color: #ff9800;
+            background: #ff9800;
+          }
+          .timeline-dot.in-progress::after {
+            content: '⋯'; /* Ellipsis for in progress */
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            margin-top: -4px;
+          }
+
+          .timeline-dot.rejected {
+            border-color: #f44336;
+            background: #f44336;
+          }
+          .timeline-dot.rejected::after {
+            content: '✕';
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+          }
+
           .timeline-title {
             font-weight: bold;
             color: #003366;
@@ -1557,17 +1645,24 @@ app.get('/candidato/status', (req, res) => {
             <div class="panel-body">
               <div class="timeline">
                 <div class="timeline-item">
-                  <div class="timeline-dot active"></div>
+                  <div class="timeline-dot completed"></div>
                   <div class="timeline-title">Inscrição Realizada</div>
                   <div class="timeline-date">${formatDate(submission.createdAt)}</div>
                 </div>
                 <div class="timeline-item ${currentStatus === 'Recebido' ? 'inactive' : ''}">
-                  <div class="timeline-dot ${currentStatus === 'Recebido' ? '' : 'active'}"></div>
+                  <div class="timeline-dot ${
+                    currentStatus === 'Recebido' ? '' : 
+                    (currentStatus === 'Em análise' || currentStatus === 'Em recurso') ? 'in-progress' :
+                    (currentStatus === 'Aprovada' || currentStatus === 'Aprovado') ? 'completed' :
+                    (currentStatus === 'Reprovada' || currentStatus === 'Reprovado' || currentStatus === 'Indeferido') ? 'rejected' :
+                    'in-progress'
+                  }"></div>
                   <div class="timeline-title">Em Análise</div>
                   <div class="timeline-date">${
                     currentStatus === 'Recebido' ? 'Aguardando' :
                     (currentStatus === 'Aprovada' || currentStatus === 'Aprovado') ? 'Aprovada' :
                     (currentStatus === 'Reprovada' || currentStatus === 'Reprovado') ? 'Reprovada' :
+                    (currentStatus === 'Indeferido') ? 'Indeferida' :
                     'Em andamento'
                   }</div>
                 </div>
@@ -2868,10 +2963,14 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
   const evaluation = storage.getEvaluation(protocol);
   let situationDisplay = '<span class="muted">Em análise / Aguardando avaliação</span>';
   
-  if (recordStatus.toLowerCase() === 'indeferido') {
-    situationDisplay = '<span style="color:red; font-weight:bold;">INDEFERIDO</span>';
-  } else if (recordStatus.toLowerCase() === 'aprovada' || recordStatus.toLowerCase() === 'aprovado') {
+  const st = recordStatus.toLowerCase();
+
+  if (st === 'indeferida' || st === 'indeferido') {
+    situationDisplay = '<span style="color:red; font-weight:bold;">INDEFERIDA</span>';
+  } else if (st === 'aprovada' || st === 'aprovado') {
     situationDisplay = '<span style="color:green; font-weight:bold;">APROVADA</span>';
+  } else if (st === 'em recurso') {
+    situationDisplay = '<span style="color:orange; font-weight:bold;">EM RECURSO</span>';
   } else if (evaluation) {
     const proj = Number(evaluation.proj_total || 0);
     const intr = Number(evaluation.int_total || 0);
@@ -2888,6 +2987,10 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
         const weighted = (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
         situationDisplay = `<span style="color:green; font-weight:bold;">DEFERIDA (Nota: ${weighted.toFixed(2)})</span>`;
     }
+  } else if (st === 'em análise' || st === 'em analise') {
+    situationDisplay = '<span style="color:blue; font-weight:bold;">EM ANÁLISE</span>';
+  } else if (st === 'recebida' || st === 'recebido') {
+    situationDisplay = '<span style="font-weight:bold;">RECEBIDA</span>';
   }
 
   function safeValue(value) {
@@ -2964,7 +3067,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
           <div class="panel-body">
             <div class="summary">
               <div><strong>Data/Hora:</strong> ${escapeHtml(new Date(record.createdAt).toLocaleString('pt-BR'))}</div>
-              <div><strong>CPF (últimos 4):</strong> ${safeValue(record.cpfLast4)}</div>
+              <div><strong>CPF:</strong> ${safeValue(record.identified?.cpf || record.cpfLast4)}</div>
               <div><strong>Nome:</strong> ${safeValue(record.identified?.nome)}</div>
               <div><strong>Email:</strong> ${safeValue(record.identified?.email)}</div>
               <div><strong>Versão do formulário:</strong> ${safeValue(record.formVersion)}</div>
