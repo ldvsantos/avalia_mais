@@ -25,7 +25,7 @@ class RegisterAppeal {
       throw new Error('Repositório de inscrições não configurado.');
     }
 
-    const submission = this.submissionRepository.findByProtocol(submissionProtocol);
+    const submission = await Promise.resolve(this.submissionRepository.findByProtocol(submissionProtocol));
     if (!submission) {
       throw new Error('Protocolo de inscrição não encontrado.');
     }
@@ -64,7 +64,7 @@ class RegisterAppeal {
       argumentacao: data.argumentacao
     });
 
-    this.appealRepository.save(appeal);
+    await Promise.resolve(this.appealRepository.save(appeal));
 
     // Emails (candidato + notificação admin) + PDF (assíncrono)
     const candidateEmail = String(data?.email || '').trim();

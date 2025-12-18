@@ -12,6 +12,9 @@ class Submission {
     this.blind = data.blind || data.project || {}; // Project data (blind)
     this.adminUpdatedAt = data.adminUpdatedAt;
 
+    // Observações internas (admin) - não faz parte do hash
+    this.adminNotes = data.adminNotes;
+
     // Governança/auditoria (metadados + histórico de alterações)
     this.audit = data.audit || null;
   }

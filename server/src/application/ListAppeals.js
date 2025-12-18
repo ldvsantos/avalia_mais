@@ -3,8 +3,10 @@ class ListAppeals {
     this.appealRepository = appealRepository;
   }
 
-  execute({ q, from, to } = {}) {
-    const appeals = typeof this.appealRepository.findAll === 'function' ? this.appealRepository.findAll() : [];
+  async execute({ q, from, to } = {}) {
+    const appeals = typeof this.appealRepository.findAll === 'function'
+      ? await Promise.resolve(this.appealRepository.findAll())
+      : [];
     const filtered = this.filterAppeals(appeals, { q, from, to });
     return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }

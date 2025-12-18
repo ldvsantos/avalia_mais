@@ -92,7 +92,8 @@ class RegisterSubmission {
     const cpfHash = crypto.createHash('sha256').update(cpfDigits).digest('hex');
 
     // 4. Check Uniqueness
-    if (this.submissionRepository.existsCpfHash(cpfHash)) {
+    const cpfExists = await Promise.resolve(this.submissionRepository.existsCpfHash(cpfHash));
+    if (cpfExists) {
       throw new Error('CPF já possui inscrição registrada.');
     }
 
@@ -111,7 +112,7 @@ class RegisterSubmission {
     });
 
     // 6. Save
-    this.submissionRepository.save(submission);
+    await Promise.resolve(this.submissionRepository.save(submission));
 
     // 7. Emails (candidato + notificação admin) + PDF (assíncrono)
     const candidateEmail = String(identified.email || '').trim();

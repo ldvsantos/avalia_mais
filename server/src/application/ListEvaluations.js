@@ -3,8 +3,8 @@ class ListEvaluations {
     this.evaluationRepository = evaluationRepository;
   }
 
-  execute() {
-    return this.evaluationRepository.getAll();
+  async execute() {
+    return await Promise.resolve(this.evaluationRepository.getAll());
   }
 }
 

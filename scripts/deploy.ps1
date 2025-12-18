@@ -176,20 +176,35 @@ try {
     '--exclude=*.key',
     '--exclude=*.crt',
     '--exclude=tmp',
-    '--exclude=temp'
+    '--exclude=temp',
+    '--exclude=*.zip',
+    '--exclude=*.tgz',
+    '--exclude=*.tar.gz',
+    '--exclude=documentacao',
+    '--exclude=prints',
+    '--exclude=templates',
+    '--exclude=server.log',
+    '--exclude=src/results'
   )
 
   Write-Host "Gerando pacote: $archiveLocal" -ForegroundColor Cyan
-  & tar -czf $archiveLocal @excludes .
+  $tarTime = Measure-Command {
+    & tar -czf $archiveLocal @excludes .
+  }
   if ($LASTEXITCODE -ne 0) { Fail 'Falha ao gerar o .tgz' }
+
+  Write-Host ("Empacotamento concluído em {0:N2}s" -f $tarTime.TotalSeconds) -ForegroundColor DarkGray
 
   $pkgSize = (Get-Item $archiveLocal).Length
   $pkgSizeMB = "{0:N2}" -f ($pkgSize / 1MB)
   Write-Host "Tamanho do pacote: $pkgSizeMB MB" -ForegroundColor Yellow
-  Write-Host "Iniciando upload para $Server... (Aguarde, isso pode levar alguns minutos)" -ForegroundColor Cyan
-
-  & scp -o StrictHostKeyChecking=no -i $KeyPath $archiveLocal "${User}@${Server}:$remoteArchive"
+  Write-Host "Iniciando upload para $Server..." -ForegroundColor Cyan
+  $scpTime = Measure-Command {
+    & scp -o StrictHostKeyChecking=no -i $KeyPath $archiveLocal "${User}@${Server}:$remoteArchive"
+  }
   if ($LASTEXITCODE -ne 0) { Fail 'Falha no SCP' }
+
+  Write-Host ("Upload concluído em {0:N2}s" -f $scpTime.TotalSeconds) -ForegroundColor DarkGray
 
   Write-Host "Upload concluído!" -ForegroundColor Green
 
@@ -289,8 +304,12 @@ echo "DEPLOY_OK: $TS"
   Write-Host 'Aplicando update no servidor (backup + swap + pm2 restart)...' -ForegroundColor Cyan
   # Normaliza quebras de linha para LF (evita \r quebrando bash options como 'pipefail')
   $remoteScriptContent = ($remoteScript -replace "`r`n", "`n") -replace "`r", ""
-  $remoteScriptContent | & ssh -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" "sudo bash -s"
+  $remoteTime = Measure-Command {
+    $remoteScriptContent | & ssh -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" "sudo bash -s"
+  }
   if ($LASTEXITCODE -ne 0) { Fail 'Deploy remoto falhou' }
+
+  Write-Host ("Etapa remota concluída em {0:N2}s" -f $remoteTime.TotalSeconds) -ForegroundColor DarkGray
 
   Write-Host 'Validando resposta pública...' -ForegroundColor Cyan
   & curl.exe -I "http://$Server/" | Select-Object -First 1

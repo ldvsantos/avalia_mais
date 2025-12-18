@@ -3,8 +3,8 @@ class ListSubmissions {
     this.submissionRepository = submissionRepository;
   }
 
-  execute({ q, status, from, to } = {}) {
-    const submissions = this.submissionRepository.getAll();
+  async execute({ q, status, from, to } = {}) {
+    const submissions = await Promise.resolve(this.submissionRepository.getAll());
     return this.filterSubmissions(submissions, { q, status, from, to });
   }
 

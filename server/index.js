@@ -17,12 +17,17 @@ const multer = require('multer');
 
 // --- CLEAN ARCHITECTURE IMPORTS ---
 const JsonSubmissionRepository = require('./src/infrastructure/repositories/JsonSubmissionRepository');
+const SqlSubmissionRepository = require('./src/infrastructure/repositories/SqlSubmissionRepository');
 const JsonEvaluatorRepository = require('./src/infrastructure/repositories/JsonEvaluatorRepository');
 const JsonEvaluationRepository = require('./src/infrastructure/repositories/JsonEvaluationRepository');
+const SqlEvaluationRepository = require('./src/infrastructure/repositories/SqlEvaluationRepository');
 const JsonAppealRepository = require('./src/infrastructure/repositories/JsonAppealRepository');
+const SqlAppealRepository = require('./src/infrastructure/repositories/SqlAppealRepository');
 const JsonProcessCalendarRepository = require('./src/infrastructure/repositories/JsonProcessCalendarRepository');
 const JsonCandidatePhaseStatusRepository = require('./src/infrastructure/repositories/JsonCandidatePhaseStatusRepository');
+const SqlCandidatePhaseStatusRepository = require('./src/infrastructure/repositories/SqlCandidatePhaseStatusRepository');
 const JsonPublicFileRepository = require('./src/infrastructure/repositories/JsonPublicFileRepository');
+const { getPgPool } = require('./src/infrastructure/db/postgres');
 const JwtService = require('./src/infrastructure/security/JwtService');
 const EmailService = require('./src/infrastructure/services/EmailService');
 const EmailTemplateService = require('./src/infrastructure/services/EmailTemplateService');
@@ -100,12 +105,33 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Bo
 
 // --- CLEAN ARCHITECTURE INITIALIZATION ---
 const dataDir = path.join(__dirname, 'data');
-const submissionRepo = new JsonSubmissionRepository(dataDir);
+
+const STORAGE_BACKEND = String(process.env.STORAGE_BACKEND || '').trim().toLowerCase();
+const ENABLE_POSTGRES = String(process.env.ENABLE_POSTGRES || '').trim().toLowerCase();
+const USE_POSTGRES = STORAGE_BACKEND === 'postgres' && (ENABLE_POSTGRES === '1' || ENABLE_POSTGRES === 'true' || ENABLE_POSTGRES === 'yes');
+
+if (STORAGE_BACKEND === 'postgres' && !USE_POSTGRES) {
+  console.warn('[storage] STORAGE_BACKEND=postgres definido, mas ENABLE_POSTGRES não está ativo. Mantendo JSON.');
+}
+
+const pgPool = USE_POSTGRES ? getPgPool() : null;
+
+const submissionRepo = USE_POSTGRES
+  ? new SqlSubmissionRepository({ pool: pgPool })
+  : new JsonSubmissionRepository(dataDir);
+
 const evaluatorRepo = new JsonEvaluatorRepository(dataDir);
-const evaluationRepo = new JsonEvaluationRepository(dataDir);
-const appealRepo = new JsonAppealRepository(dataDir);
+const evaluationRepo = USE_POSTGRES
+  ? new SqlEvaluationRepository({ pool: pgPool })
+  : new JsonEvaluationRepository(dataDir);
+
+const appealRepo = USE_POSTGRES
+  ? new SqlAppealRepository({ pool: pgPool })
+  : new JsonAppealRepository(dataDir);
 const calendarRepo = new JsonProcessCalendarRepository(dataDir);
-const phaseStatusRepo = new JsonCandidatePhaseStatusRepository(dataDir);
+const phaseStatusRepo = USE_POSTGRES
+  ? new SqlCandidatePhaseStatusRepository({ pool: pgPool })
+  : new JsonCandidatePhaseStatusRepository(dataDir);
 const publicFileRepo = new JsonPublicFileRepository(dataDir);
 const jwtService = new JwtService(JWT_SECRET);
 const emailService = new EmailService();
@@ -900,7 +926,7 @@ app.get('/api/appeals/:protocol/pdf', async (req, res) => {
     const protocol = String(req.params.protocol || '').trim();
     if (!protocol) return res.status(400).json({ error: 'Protocolo inválido' });
 
-    const appeal = appealRepo.findByProtocol(protocol);
+    const appeal = await Promise.resolve(appealRepo.findByProtocol(protocol));
     if (!appeal) return res.status(404).json({ error: 'Recurso não encontrado' });
 
     const pdfBuffer = await pdfService.generateAppealPdf(appeal);
@@ -916,15 +942,17 @@ app.get('/api/appeals/:protocol/pdf', async (req, res) => {
 });
 
 // Listar recursos vinculados a uma inscrição (público; depende do protocolo)
-app.get('/api/submissions/:protocol/appeals', (req, res) => {
+app.get('/api/submissions/:protocol/appeals', async (req, res) => {
   try {
     const protocol = String(req.params.protocol || '').trim();
     if (!protocol) return res.status(400).json({ error: 'Protocolo inválido' });
 
-    const record = storage.getByProtocol(protocol);
+    const record = await Promise.resolve(submissionRepo.findByProtocol(protocol));
     if (!record) return res.status(404).json({ error: 'Não encontrado' });
 
-    const appeals = typeof appealRepo.findBySubmissionProtocol === 'function' ? appealRepo.findBySubmissionProtocol(protocol) : [];
+    const appeals = typeof appealRepo.findBySubmissionProtocol === 'function'
+      ? await Promise.resolve(appealRepo.findBySubmissionProtocol(protocol))
+      : [];
     const safe = (appeals || []).map((a) => ({
       protocol: a?.protocol,
       createdAt: a?.createdAt,
@@ -1065,9 +1093,9 @@ app.post(`/secret/${ADMIN_SECRET}/admin/public-files/delete/:id`, checkAdminIP, 
 
 app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => adminController.exportCsv(req, res));
 
-app.get('/api/verify/:protocol', (req, res) => {
+app.get('/api/verify/:protocol', async (req, res) => {
   const protocol = req.params.protocol;
-  const record = storage.getByProtocol(protocol);
+  const record = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!record) return res.status(404).json({ error: 'Não encontrado' });
 
   const formVersion = record.formVersion || record.form_version || '';
@@ -1333,7 +1361,7 @@ app.get('/consulta', (req, res) => {
 });
 
 // Processar consulta de inscrição
-app.post('/consulta', (req, res) => {
+app.post('/consulta', async (req, res) => {
   try {
     const protocol = String(req.body?.protocol || '').trim();
     const cpfInput = String(req.body?.cpf || '').replace(/\D/g, '');
@@ -1343,7 +1371,7 @@ app.post('/consulta', (req, res) => {
     }
 
     // Buscar submissão pelo protocolo
-    const submission = storage.getByProtocol(protocol);
+    const submission = await Promise.resolve(submissionRepo.findByProtocol(protocol));
 
     if (!submission) {
       return res.redirect('/consulta?error=' + encodeURIComponent('Protocolo não encontrado. Verifique se digitou corretamente.'));
@@ -1370,7 +1398,7 @@ app.post('/consulta', (req, res) => {
 });
 
 // Página de status do candidato
-app.get('/candidato/status', (req, res) => {
+app.get('/candidato/status', async (req, res) => {
   // Verificar se o candidato está autenticado
   if (!req.session.candidateProtocol || !req.session.candidateCpf) {
     return res.redirect('/consulta?error=' + encodeURIComponent('Sessão expirada. Por favor, faça a consulta novamente.'));
@@ -1378,7 +1406,7 @@ app.get('/candidato/status', (req, res) => {
 
   try {
     const protocol = req.session.candidateProtocol;
-    const submission = storage.getByProtocol(protocol);
+    const submission = await Promise.resolve(submissionRepo.findByProtocol(protocol));
 
     if (!submission) {
       req.session.candidateProtocol = null;
@@ -1452,7 +1480,7 @@ app.get('/candidato/status', (req, res) => {
 
     const appealOptions = [];
     for (const parentPhaseKey of Object.keys(parentToAppeal)) {
-      const parentStatus = workflowService.getStatus(year, protocol, parentPhaseKey);
+      const parentStatus = await workflowService.getStatus(year, protocol, parentPhaseKey);
       if (parentStatus !== STATUS.REPROVADO_PRELIMINAR) continue;
 
       let within = false;
@@ -1816,7 +1844,7 @@ app.get('/candidato/sair', (req, res) => {
 });
 
 // Download de documentos do candidato
-app.get('/candidato/documento/:tipo', (req, res) => {
+app.get('/candidato/documento/:tipo', async (req, res) => {
   // Verificar autenticação
   if (!req.session.candidateProtocol || !req.session.candidateCpf) {
     return res.status(401).send('Não autorizado. Faça login novamente.');
@@ -1825,7 +1853,7 @@ app.get('/candidato/documento/:tipo', (req, res) => {
   try {
     const protocol = req.session.candidateProtocol;
     const tipo = req.params.tipo;
-    const submission = storage.getByProtocol(protocol);
+    const submission = await Promise.resolve(submissionRepo.findByProtocol(protocol));
 
     if (!submission) {
       return res.status(404).send('Inscrição não encontrada.');
@@ -2124,9 +2152,9 @@ app.post(`/secret/${ADMIN_SECRET}/admin/registration-window`, checkAdminIP, admi
 });
 
 // Committee evaluation pages and API
-app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, (req, res) => {
-  const subs = storage.listSubmissions();
-  const evals = storage.listEvaluations();
+app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, async (req, res) => {
+  const subs = await Promise.resolve(submissionRepo.findAll());
+  const evals = await Promise.resolve(evaluationRepo.getAll());
   const evalMap = new Map(evals.map(e => [e.protocol, e]));
 
   // Pesos provisórios do edital: Projeto=4, Entrevista=5, Língua=1
@@ -2249,9 +2277,9 @@ app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, (req, res)
 });
 
 // Página de resultados com ranking
-app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, (req, res) => {
-  const subs = storage.listSubmissions();
-  const evals = storage.listEvaluations();
+app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, async (req, res) => {
+  const subs = await Promise.resolve(submissionRepo.findAll());
+  const evals = await Promise.resolve(evaluationRepo.getAll());
   const evalMap = new Map(evals.map(e => [e.protocol, e]));
   const WEIGHTS = { project: 4, interview: 5, language: 1 };
   const MAX = { project: 10, interview: 10, language: 10 };
@@ -2393,9 +2421,9 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, (r
 });
 
 // Exportar Ranking CSV
-app.get(`/secret/${ADMIN_SECRET}/committee/results/csv`, checkAdminIP, adminAuth, (req, res) => {
-  const subs = storage.listSubmissions();
-  const evals = storage.listEvaluations();
+app.get(`/secret/${ADMIN_SECRET}/committee/results/csv`, checkAdminIP, adminAuth, async (req, res) => {
+  const subs = await Promise.resolve(submissionRepo.findAll());
+  const evals = await Promise.resolve(evaluationRepo.getAll());
   const evalMap = new Map(evals.map(e => [e.protocol, e]));
   const WEIGHTS = { project: 4, interview: 5, language: 1 };
   const MAX = { project: 10, interview: 10, language: 10 };
@@ -2456,11 +2484,12 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results/csv`, checkAdminIP, adminAuth
   return res.send(csv);
 });
 
-app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, adminAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
   const protocol = req.params.protocol;
-  const s = storage.getByProtocol(protocol);
+  const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!s) return res.status(404).send('Não encontrado');
-  const e = storage.getEvaluation(protocol) || {};
+  const eRaw = await Promise.resolve(evaluationRepo.findByProtocol(protocol));
+  const e = normalizeEvaluationRecord(eRaw || {});
 
   const secretPrefix = `/secret/${ADMIN_SECRET}`;
   let backHref = `${secretPrefix}/committee`;
@@ -2785,9 +2814,9 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
   `);
 });
 
-app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, adminAuth, (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
   const protocol = req.params.protocol;
-  const s = storage.getByProtocol(protocol);
+  const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!s) return res.status(404).send('Não encontrado');
 
   const now = new Date();
@@ -2885,35 +2914,35 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
 
   // Workflow gating: só avalia dentro do prazo e respeitando aprovação na fase anterior
   try {
-    if (projCount > 0) workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.PROJETO, now });
-    if (intCount > 0) workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.ENTREVISTA, now });
-    if (langCount > 0) workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.LINGUA, now });
+    if (projCount > 0) await workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.PROJETO, now });
+    if (intCount > 0) await workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.ENTREVISTA, now });
+    if (langCount > 0) await workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.LINGUA, now });
   } catch (err) {
     return res.status(403).send(err.message || 'Avaliação bloqueada pelo workflow');
   }
 
-  storage.upsertEvaluation({
+  await Promise.resolve(evaluationRepo.save({
     protocol,
-    // Projeto detalhado
-    ...projectScores,
+    projectScores,
     proj_total: projTotal,
     proj_possible_supervisor,
     proj_potential_interview,
     proj_justification,
     proj_interview_points,
-    // Entrevista detalhada
-    ...interviewScores,
+    interviewScores,
     int_total: intTotal,
-    // Língua
-    ...langScores,
+    languageScores: langScores,
     lang_total,
     eliminado,
     observacoes,
-  });
+    updatedAt: new Date().toISOString(),
+  }));
 
   // Se eliminado, a inscrição passa a indeferida e o candidato não segue
   if (eliminado) {
-    storage.updateByProtocol(protocol, { status: 'Indeferido' });
+    s.status = 'Indeferido';
+    s.adminUpdatedAt = new Date().toISOString();
+    await Promise.resolve(submissionRepo.save(s));
   }
 
   // Atualiza status por fase com nota de corte 7.0 + notifica candidato quando houver mudança
@@ -2922,9 +2951,9 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
 
     const maybeNotify = async (phaseKey, score) => {
       const before = phaseStatusRepo && typeof phaseStatusRepo.find === 'function'
-        ? phaseStatusRepo.find(year, protocol, phaseKey)
+        ? await Promise.resolve(phaseStatusRepo.find(year, protocol, phaseKey))
         : null;
-      const applied = workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey, score });
+      const applied = await workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey, score });
       const afterStatus = applied?.status;
       const beforeStatus = before?.status;
 
@@ -2944,26 +2973,26 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
   return res.redirect(`/secret/${ADMIN_SECRET}/committee/evaluate/${encodeURIComponent(protocol)}`);
 });
 
-app.post(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
   const protocol = req.params.protocol;
-  const record = storage.getByProtocol(protocol);
+  const record = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!record) return res.status(404).send('Não encontrado');
 
   const status = normalizeStatus(req.body?.status);
   const notesRaw = String(req.body?.observacoes_internas ?? '');
   const notes = notesRaw.length > 5000 ? notesRaw.slice(0, 5000) : notesRaw;
 
-  storage.updateByProtocol(protocol, {
-    status,
-    adminNotes: notes,
-  });
+  record.status = status;
+  record.adminNotes = notes;
+  record.adminUpdatedAt = new Date().toISOString();
+  await Promise.resolve(submissionRepo.save(record));
 
   return res.redirect(`/secret/${ADMIN_SECRET}/admin/submission/${encodeURIComponent(protocol)}`);
 });
 
-app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
   const protocol = req.params.protocol;
-  const record = storage.getByProtocol(protocol);
+  const record = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!record) return res.status(404).send('Não encontrado');
 
   const verifyUrl = `/api/verify/${encodeURIComponent(protocol)}`;
@@ -2983,7 +3012,9 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
   const recordStatus = normalizeStatus(record.status);
   const adminNotes = String(record.adminNotes ?? '');
 
-  const appealsForSubmission = typeof appealRepo.findBySubmissionProtocol === 'function' ? appealRepo.findBySubmissionProtocol(protocol) : [];
+  const appealsForSubmission = typeof appealRepo.findBySubmissionProtocol === 'function'
+    ? await Promise.resolve(appealRepo.findBySubmissionProtocol(protocol))
+    : [];
   const ETAPAS = ['Avaliação do Projeto', 'Entrevista', 'Prova de Língua Estrangeira'];
 
   const renderAppealsTableRows = () => {
@@ -3026,7 +3057,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
   };
 
   // Lógica de Situação / Nota
-  const evaluation = storage.getEvaluation(protocol);
+  const evaluation = await Promise.resolve(evaluationRepo.findByProtocol(protocol));
   let situationDisplay = '<span class="muted">Em análise / Aguardando avaliação</span>';
   
   const st = recordStatus.toLowerCase();
@@ -3518,7 +3549,7 @@ function computeTotalsFromFlatEvaluation(e) {
 }
 
 // 2. Dashboard do Avaliador
-app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, async (req, res) => {
   const line = req.params.line; // '1' or '2'
   const num = req.params.num;   // '1', '2', or '3'
   
@@ -3526,8 +3557,8 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res
     return res.status(404).send('Link inválido');
   }
 
-  const subs = storage.listSubmissions();
-  const evals = storage.listEvaluations();
+  const subs = await Promise.resolve(submissionRepo.findAll());
+  const evals = await Promise.resolve(evaluationRepo.getAll());
   const evalMap = new Map(evals.map(e => [e.protocol, e]));
 
   // Filter by Line
@@ -3536,7 +3567,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res
 
   // Helper to check if this evaluator has evaluated
   function getStatus(protocol) {
-    const e = normalizeEvaluationRecord(evalMap.get(protocol));
+    const e = normalizeEvaluationRecord(evalMap.get(protocol) || null);
     if (!e) return 'Pendente';
     
     // Check if any field for this evaluator is filled
@@ -3606,9 +3637,9 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, (req, res
 });
 
 // 3. Formulário de Avaliação Individual
-app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, async (req, res) => {
   const { line, num, protocol } = req.params;
-  const s = storage.getByProtocol(protocol);
+  const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!s) return res.status(404).send('Não encontrado');
 
   if (req.user?.role !== 'admin' && !assertSubmissionBelongsToLine(s, line)) {
@@ -3620,16 +3651,17 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
 });
 
 // 3.1 Visualizar/Imprimir Projeto (sem ficha) — Avaliador
-app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evaluatorAuth, (req, res) => {
+app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evaluatorAuth, async (req, res) => {
   const { line, num, protocol } = req.params;
-  const s = storage.getByProtocol(protocol);
+  const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!s) return res.status(404).send('Não encontrado');
 
   if (req.user?.role !== 'admin' && !assertSubmissionBelongsToLine(s, line)) {
     return res.status(403).send('Acesso negado: candidato não pertence à sua linha.');
   }
 
-  const e = normalizeEvaluationRecord(storage.getEvaluation(protocol) || {});
+  const eRaw = await Promise.resolve(evaluationRepo.findByProtocol(protocol));
+  const e = normalizeEvaluationRecord(eRaw || {});
   const who = `avaliador${num}`; // avaliador1, avaliador2, avaliador3
   const project = s.project || {};
 
@@ -3982,16 +4014,17 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
 });
 
 // 4. Processar Avaliação Individual (persistindo no storage para refletir em todas as telas)
-app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, async (req, res) => {
   const { line, protocol } = req.params;
-  const s = storage.getByProtocol(protocol);
+  const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!s) return res.status(404).send('Não encontrado');
 
   if (req.user?.role !== 'admin' && !assertSubmissionBelongsToLine(s, line)) {
     return res.status(403).send('Acesso negado: candidato não pertence à sua linha.');
   }
 
-  const current = normalizeEvaluationRecord(storage.getEvaluation(protocol) || {});
+  const currentRaw = await Promise.resolve(evaluationRepo.findByProtocol(protocol));
+  const current = normalizeEvaluationRecord(currentRaw || {});
   const patch = {};
 
   for (const [key, value] of Object.entries(req.body || {})) {
@@ -4015,10 +4048,40 @@ app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, eval
 
   const totals = computeTotalsFromFlatEvaluation(next);
 
-  storage.upsertEvaluation({
-    ...next,
-    ...totals,
-  });
+  const pickByPrefix = (obj, prefix) => {
+    const out = {};
+    for (const [k, v] of Object.entries(obj || {})) {
+      if (k.startsWith(prefix)) out[k] = v;
+    }
+    return out;
+  };
+
+  const projectScores = {
+    ...(currentRaw && currentRaw.projectScores ? currentRaw.projectScores : {}),
+    ...pickByPrefix(next, 'proj_'),
+  };
+  const interviewScores = {
+    ...(currentRaw && currentRaw.interviewScores ? currentRaw.interviewScores : {}),
+    ...pickByPrefix(next, 'int_'),
+  };
+  const languageScores = {
+    ...(currentRaw && currentRaw.languageScores ? currentRaw.languageScores : {}),
+    ...pickByPrefix(next, 'lang_'),
+  };
+
+  await Promise.resolve(evaluationRepo.save({
+    protocol,
+    projectScores,
+    interviewScores,
+    languageScores,
+    proj_total: totals.proj_total,
+    int_total: totals.int_total,
+    lang_total: totals.lang_total,
+    eliminado: Boolean(next.eliminado),
+    observacoes: String(next.observacoes || ''),
+    updatedAt: new Date().toISOString(),
+    audit: currentRaw && currentRaw.audit ? currentRaw.audit : null,
+  }));
 
   return res.redirect('back');
 });

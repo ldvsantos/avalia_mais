@@ -11,7 +11,7 @@ class AppealController {
         const submissionProtocol = String(req.body?.protocolo_inscricao || req.body?.submissionProtocol || '').trim();
         const etapaLabel = String(req.body?.etapa_processo || '').trim();
         try {
-          this.workflowService.assertCanSubmitAppeal({ submissionProtocol, etapaLabel, now: new Date() });
+          await this.workflowService.assertCanSubmitAppeal({ submissionProtocol, etapaLabel, now: new Date() });
         } catch (err) {
           return res.status(403).json({ error: err.message || 'Recurso bloqueado pelo workflow.' });
         }

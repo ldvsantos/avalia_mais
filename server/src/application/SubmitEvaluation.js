@@ -7,9 +7,9 @@ class SubmitEvaluation {
     this.workflowService = workflowService;
   }
 
-  execute(protocol, evaluationData) {
+  async execute(protocol, evaluationData) {
     // 1. Check if submission exists
-    const submission = this.submissionRepository.findByProtocol(protocol);
+    const submission = await Promise.resolve(this.submissionRepository.findByProtocol(protocol));
     if (!submission) {
       throw new Error('Inscrição não encontrada');
     }
@@ -21,13 +21,13 @@ class SubmitEvaluation {
       const hasAnyInterview = evaluationData?.interviewScores && Object.keys(evaluationData.interviewScores).length > 0;
       const hasAnyLanguage = evaluationData?.languageScores && Object.keys(evaluationData.languageScores).length > 0;
 
-      if (hasAnyProject) this.workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: 'PROJETO', now });
-      if (hasAnyInterview) this.workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: 'ENTREVISTA', now });
-      if (hasAnyLanguage) this.workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: 'LINGUA', now });
+      if (hasAnyProject) await this.workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: 'PROJETO', now });
+      if (hasAnyInterview) await this.workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: 'ENTREVISTA', now });
+      if (hasAnyLanguage) await this.workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: 'LINGUA', now });
     }
 
     // 2. Get existing evaluation or create new
-    let evaluation = this.evaluationRepository.findByProtocol(protocol);
+    let evaluation = await Promise.resolve(this.evaluationRepository.findByProtocol(protocol));
     if (!evaluation) {
       evaluation = new Evaluation({ protocol });
     }
@@ -46,25 +46,25 @@ class SubmitEvaluation {
     evaluation.updatedAt = new Date().toISOString();
 
     // 5. Save
-    this.evaluationRepository.save(evaluation);
+    await Promise.resolve(this.evaluationRepository.save(evaluation));
 
     // 6. Update submission status if needed (e.g. if eliminated)
     if (evaluation.eliminado) {
       submission.updateStatus('Indeferido');
-      this.submissionRepository.save(submission);
+      await Promise.resolve(this.submissionRepository.save(submission));
     }
 
     // 6. Atualiza status por fase (nota de corte 7.0)
     if (this.workflowService && typeof this.workflowService.applyCutoffAndPersist === 'function') {
       const year = this.workflowService.getEditalYearForSubmission(protocol);
       if (evaluation.proj_total != null) {
-        this.workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: 'PROJETO', score: evaluation.proj_total });
+        await this.workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: 'PROJETO', score: evaluation.proj_total });
       }
       if (evaluation.int_total != null) {
-        this.workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: 'ENTREVISTA', score: evaluation.int_total });
+        await this.workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: 'ENTREVISTA', score: evaluation.int_total });
       }
       if (evaluation.lang_total != null) {
-        this.workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: 'LINGUA', score: evaluation.lang_total });
+        await this.workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: 'LINGUA', score: evaluation.lang_total });
       }
     }
 

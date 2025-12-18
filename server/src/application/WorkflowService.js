@@ -117,12 +117,12 @@ class WorkflowService {
     }
   }
 
-  getStatus(year, submissionProtocol, phaseKey) {
+  async getStatus(year, submissionProtocol, phaseKey) {
     const protocol = String(submissionProtocol || '').trim();
     const phase = String(phaseKey || '').trim();
     if (!protocol || !phase) return null;
 
-    const stored = this.statusRepo.find(year, protocol, phase);
+    const stored = await Promise.resolve(this.statusRepo.find(year, protocol, phase));
 
     // INSCRICAO: re-deriva do status atual da inscrição, exceto quando já houver
     // uma consolidação/decisão de recurso persistida.
@@ -134,7 +134,7 @@ class WorkflowService {
       if (stored && stored.status && isAppealDecision) return stored.status;
 
       const s = this.submissionRepo && typeof this.submissionRepo.findByProtocol === 'function'
-        ? this.submissionRepo.findByProtocol(protocol)
+        ? await Promise.resolve(this.submissionRepo.findByProtocol(protocol))
         : null;
       if (!s) return stored?.status || null;
 
@@ -143,7 +143,7 @@ class WorkflowService {
       const derived = rawStatus.includes('indefer') ? STATUS.REPROVADO_PRELIMINAR : STATUS.APROVADO;
 
       if (!stored || stored.status !== derived) {
-        this.setStatus(year, protocol, PHASE.INSCRICAO, derived);
+        await this.setStatus(year, protocol, PHASE.INSCRICAO, derived);
       }
       return derived;
     }
@@ -153,8 +153,10 @@ class WorkflowService {
     // Compat/legado: deriva status a partir dos dados já existentes
 
     const e = this.evaluationRepo && typeof this.evaluationRepo.findByProtocol === 'function'
-      ? this.evaluationRepo.findByProtocol(protocol)
-      : (this.storageCompat && typeof this.storageCompat.getEvaluation === 'function' ? this.storageCompat.getEvaluation(protocol) : null);
+      ? await Promise.resolve(this.evaluationRepo.findByProtocol(protocol))
+      : (this.storageCompat && typeof this.storageCompat.getEvaluation === 'function'
+          ? await Promise.resolve(this.storageCompat.getEvaluation(protocol))
+          : null);
 
     const scoreFromEval = (evalObj, key) => {
       if (!evalObj) return null;
@@ -167,7 +169,7 @@ class WorkflowService {
       const score = scoreFromEval(e, 'proj_total');
       if (score == null || Number.isNaN(score)) return null;
       const derived = score < 7.0 ? STATUS.REPROVADO_PRELIMINAR : STATUS.APROVADO;
-      this.setStatus(year, protocol, PHASE.PROJETO, derived, { score });
+      await this.setStatus(year, protocol, PHASE.PROJETO, derived, { score });
       return derived;
     }
 
@@ -175,7 +177,7 @@ class WorkflowService {
       const score = scoreFromEval(e, 'int_total');
       if (score == null || Number.isNaN(score)) return null;
       const derived = score < 7.0 ? STATUS.REPROVADO_PRELIMINAR : STATUS.APROVADO;
-      this.setStatus(year, protocol, PHASE.ENTREVISTA, derived, { score });
+      await this.setStatus(year, protocol, PHASE.ENTREVISTA, derived, { score });
       return derived;
     }
 
@@ -183,28 +185,28 @@ class WorkflowService {
       const score = scoreFromEval(e, 'lang_total');
       if (score == null || Number.isNaN(score)) return null;
       const derived = score < 7.0 ? STATUS.REPROVADO_PRELIMINAR : STATUS.APROVADO;
-      this.setStatus(year, protocol, PHASE.LINGUA, derived, { score });
+      await this.setStatus(year, protocol, PHASE.LINGUA, derived, { score });
       return derived;
     }
 
     return null;
   }
 
-  setStatus(year, submissionProtocol, phaseKey, status, { score, meta } = {}) {
-    return this.statusRepo.upsert({
+  async setStatus(year, submissionProtocol, phaseKey, status, { score, meta } = {}) {
+    return await Promise.resolve(this.statusRepo.upsert({
       year,
       submissionProtocol,
       phaseKey,
       status,
       score: score != null ? Number(score) : null,
       meta,
-    });
+    }));
   }
 
-  ensureNotDefinitiveFail(year, submissionProtocol) {
+  async ensureNotDefinitiveFail(year, submissionProtocol) {
     const phases = [PHASE.INSCRICAO, PHASE.PROJETO, PHASE.ENTREVISTA, PHASE.LINGUA];
     for (const phaseKey of phases) {
-      const st = this.getStatus(year, submissionProtocol, phaseKey);
+      const st = await this.getStatus(year, submissionProtocol, phaseKey);
       if (st === STATUS.REPROVADO_DEFINITIVO) {
         throw new Error('Candidato reprovado definitivamente, não pode prosseguir.');
       }
@@ -217,11 +219,11 @@ class WorkflowService {
     this.assertWithinPhase(year, PHASE.INSCRICAO, now);
   }
 
-  assertCanSubmitAppeal({ submissionProtocol, etapaLabel, now }) {
+  async assertCanSubmitAppeal({ submissionProtocol, etapaLabel, now }) {
     const year = this.getEditalYearForSubmission(submissionProtocol);
 
     this.assertWithinGlobal(year, now);
-    this.ensureNotDefinitiveFail(year, submissionProtocol);
+    await this.ensureNotDefinitiveFail(year, submissionProtocol);
 
     const parentPhase = normalizeEtapaToParentPhase(etapaLabel);
     if (!parentPhase) {
@@ -236,7 +238,7 @@ class WorkflowService {
     this.assertWithinPhase(year, appealPhase, now);
 
     // Recurso só é permitido se estiver REPROVADO_PRELIMINAR na fase pai.
-    const parentStatus = this.getStatus(year, submissionProtocol, parentPhase);
+    const parentStatus = await this.getStatus(year, submissionProtocol, parentPhase);
     if (parentStatus !== STATUS.REPROVADO_PRELIMINAR) {
       throw new Error('Recurso permitido apenas para reprovação preliminar na etapa informada.');
     }
@@ -244,15 +246,15 @@ class WorkflowService {
     return { year, parentPhase, appealPhase };
   }
 
-  assertCanEvaluatePhase({ submissionProtocol, phaseKey, now }) {
+  async assertCanEvaluatePhase({ submissionProtocol, phaseKey, now }) {
     const year = this.getEditalYearForSubmission(submissionProtocol);
     this.assertWithinGlobal(year, now);
-    this.ensureNotDefinitiveFail(year, submissionProtocol);
+    await this.ensureNotDefinitiveFail(year, submissionProtocol);
     this.assertWithinPhase(year, phaseKey, now);
 
     const prev = previousEvaluativePhase(phaseKey);
     if (prev) {
-      const prevStatus = this.getStatus(year, submissionProtocol, prev);
+      const prevStatus = await this.getStatus(year, submissionProtocol, prev);
       if (prevStatus !== STATUS.APROVADO) {
         throw new Error('Candidato não aprovado na fase anterior, avaliação bloqueada.');
       }
@@ -260,24 +262,24 @@ class WorkflowService {
 
     // Para PROJETO, apenas garante que existe inscrição.
     if (phaseKey === PHASE.PROJETO) {
-      const s = this.submissionRepo.findByProtocol(submissionProtocol);
+      const s = await Promise.resolve(this.submissionRepo.findByProtocol(submissionProtocol));
       if (!s) throw new Error('Inscrição não encontrada.');
     }
 
     return { year };
   }
 
-  applyCutoffAndPersist({ year, submissionProtocol, phaseKey, score }) {
+  async applyCutoffAndPersist({ year, submissionProtocol, phaseKey, score }) {
     const numeric = score != null ? Number(score) : null;
     if (numeric == null || Number.isNaN(numeric)) return null;
 
     if (numeric < 7.0) {
-      return this.setStatus(year, submissionProtocol, phaseKey, STATUS.REPROVADO_PRELIMINAR, { score: numeric });
+      return await this.setStatus(year, submissionProtocol, phaseKey, STATUS.REPROVADO_PRELIMINAR, { score: numeric });
     }
-    return this.setStatus(year, submissionProtocol, phaseKey, STATUS.APROVADO, { score: numeric });
+    return await this.setStatus(year, submissionProtocol, phaseKey, STATUS.APROVADO, { score: numeric });
   }
 
-  reconcileDefinitiveFailures({ year, now }) {
+  async reconcileDefinitiveFailures({ year, now }) {
     // Se estiver preliminar e prazo de recurso expirou:
     // - se não enviou recurso => definitivo
     // - se enviou e indeferido => definitivo
@@ -286,19 +288,20 @@ class WorkflowService {
     // Garante que a fase INSCRICAO existe para os candidatos do ano (derivada do status da inscrição)
     try {
       const submissions = this.submissionRepo && typeof this.submissionRepo.findAll === 'function'
-        ? this.submissionRepo.findAll()
+        ? await Promise.resolve(this.submissionRepo.findAll())
         : [];
       for (const s of submissions) {
         const protocol = String(s?.protocol || '').trim();
         if (!protocol) continue;
         if (this.getEditalYearForSubmission(protocol) !== Number(year)) continue;
-        this.getStatus(year, protocol, PHASE.INSCRICAO);
+        await this.getStatus(year, protocol, PHASE.INSCRICAO);
       }
     } catch {
       // não bloqueia a reconciliação
     }
 
-    const candidates = this.statusRepo.findAll().filter((s) => Number(s?.year) === Number(year));
+    const allStatuses = await Promise.resolve(this.statusRepo.findAll());
+    const candidates = (allStatuses || []).filter((s) => Number(s?.year) === Number(year));
 
     const bySubmission = new Map();
     for (const s of candidates) {
@@ -324,21 +327,21 @@ class WorkflowService {
         if (!appealEnd || now <= appealEnd) continue;
 
         const appeals = typeof this.appealRepo.findBySubmissionProtocol === 'function'
-          ? this.appealRepo.findBySubmissionProtocol(submissionProtocol)
+          ? await Promise.resolve(this.appealRepo.findBySubmissionProtocol(submissionProtocol))
           : [];
 
         const hasPhaseAppeal = (appeals || []).filter((a) => normalizeEtapaToParentPhase(a?.etapa) === phaseKey);
         if (hasPhaseAppeal.length === 0) {
-          this.setStatus(year, submissionProtocol, phaseKey, STATUS.REPROVADO_DEFINITIVO, { meta: { reason: 'recurso_nao_enviado' } });
+          await this.setStatus(year, submissionProtocol, phaseKey, STATUS.REPROVADO_DEFINITIVO, { meta: { reason: 'recurso_nao_enviado' } });
           continue;
         }
 
         const latest = hasPhaseAppeal[0];
         const appealStatus = String(latest?.status || APPEAL_STATUS.RECEBIDO);
         if (appealStatus.toLowerCase().includes('indefer')) {
-          this.setStatus(year, submissionProtocol, phaseKey, STATUS.REPROVADO_DEFINITIVO, { meta: { reason: 'recurso_indeferido', appealProtocol: latest?.protocol } });
+          await this.setStatus(year, submissionProtocol, phaseKey, STATUS.REPROVADO_DEFINITIVO, { meta: { reason: 'recurso_indeferido', appealProtocol: latest?.protocol } });
         } else if (appealStatus.toLowerCase().includes('defer')) {
-          this.setStatus(year, submissionProtocol, phaseKey, STATUS.APROVADO, { meta: { reason: 'recurso_deferido', appealProtocol: latest?.protocol } });
+          await this.setStatus(year, submissionProtocol, phaseKey, STATUS.APROVADO, { meta: { reason: 'recurso_deferido', appealProtocol: latest?.protocol } });
         }
       }
     }

@@ -22,7 +22,7 @@ class EvaluationController {
         if (key.startsWith('lang_')) evaluationData.languageScores[key] = value;
       }
 
-      const result = this.submitEvaluationUseCase.execute(protocol, evaluationData);
+      const result = await this.submitEvaluationUseCase.execute(protocol, evaluationData);
       return res.redirect('back'); // Or return JSON
     } catch (error) {
       return res.status(400).send(error.message);
