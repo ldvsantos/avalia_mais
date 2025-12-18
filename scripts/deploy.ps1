@@ -1,13 +1,19 @@
 param(
   [Parameter(Mandatory = $false)]
   [Alias('Host')]
-  [string]$Server = '13.59.123.67',
+  [string]$Server = '18.222.198.84',
 
   [Parameter(Mandatory = $false)]
   [string]$User = 'ubuntu',
 
   [Parameter(Mandatory = $false)]
   [string]$KeyPath = "$env:USERPROFILE\.ssh\planterr.pem",
+
+  [Parameter(Mandatory = $false)]
+  [int]$SshPort = 22,
+
+  [Parameter(Mandatory = $false)]
+  [int]$SshConnectTimeoutSeconds = 15,
 
   [Parameter(Mandatory = $false)]
   [string]$RemoteDir = '/opt/planterr',
@@ -51,6 +57,8 @@ if (Test-Path $configPath) {
       if ($cfg.Host)      { $Server = [string]$cfg.Host }
       if ($cfg.User)      { $User = [string]$cfg.User }
       if ($cfg.KeyPath)   { $KeyPath = [string]$cfg.KeyPath }
+      if ($cfg.SshPort)   { $SshPort = [int]$cfg.SshPort }
+      if ($cfg.SshConnectTimeoutSeconds) { $SshConnectTimeoutSeconds = [int]$cfg.SshConnectTimeoutSeconds }
       if ($cfg.RemoteDir) { $RemoteDir = [string]$cfg.RemoteDir }
       if ($cfg.Pm2Name)   { $Pm2Name = [string]$cfg.Pm2Name }
       if ($cfg.Branch)    { $Branch = [string]$cfg.Branch }
@@ -63,6 +71,37 @@ if (Test-Path $configPath) {
 function Fail([string]$Message) {
   Write-Host "ERRO: $Message" -ForegroundColor Red
   exit 1
+}
+
+function TestTcpPort {
+  param(
+    [Parameter(Mandatory = $true)][string]$Host,
+    [Parameter(Mandatory = $true)][int]$Port,
+    [Parameter(Mandatory = $false)][int]$TimeoutMs = 1500
+  )
+
+  $tnc = Get-Command Test-NetConnection -ErrorAction SilentlyContinue
+  if ($null -ne $tnc) {
+    try {
+      $r = Test-NetConnection -ComputerName $Host -Port $Port -WarningAction SilentlyContinue
+      return [bool]$r.TcpTestSucceeded
+    } catch {
+      return $false
+    }
+  }
+
+  try {
+    $client = New-Object System.Net.Sockets.TcpClient
+    $async = $client.BeginConnect($Host, $Port, $null, $null)
+    $ok = $async.AsyncWaitHandle.WaitOne($TimeoutMs, $false)
+    if (-not $ok) { return $false }
+    $client.EndConnect($async)
+    return $true
+  } catch {
+    return $false
+  } finally {
+    try { $client.Close() } catch {}
+  }
 }
 
 function EnsureGitCredentialHelper {
@@ -198,9 +237,26 @@ try {
   $pkgSize = (Get-Item $archiveLocal).Length
   $pkgSizeMB = "{0:N2}" -f ($pkgSize / 1MB)
   Write-Host "Tamanho do pacote: $pkgSizeMB MB" -ForegroundColor Yellow
+
+  Write-Host "Testando conectividade SSH: ${Server}:$SshPort ..." -ForegroundColor DarkGray
+  $timeoutMs = [Math]::Max(1000, $SshConnectTimeoutSeconds * 1000)
+  $canConnect = TestTcpPort -Host $Server -Port $SshPort -TimeoutMs $timeoutMs
+  if (-not $canConnect) {
+    Fail (
+      "Não foi possível conectar em ${Server}:$SshPort (TCP). " +
+      "Isso normalmente é Security Group/NACL bloqueando a porta 22, IP público errado, instância desligada, ou rede local bloqueando SSH.\n\n" +
+      "Checklist rápido:\n" +
+      "- Confirme o IP público atual da EC2 (pode ter mudado)\n" +
+      "- AWS Security Group: inbound TCP $SshPort liberado para SEU IP\n" +
+      "- NACL/Firewall da VPC liberando TCP $SshPort\n" +
+      "- Se estiver em rede corporativa, teste via 4G/VPN (algumas redes bloqueiam 22)\n\n" +
+      "Teste manual: Test-NetConnection -ComputerName $Server -Port $SshPort"
+    )
+  }
+
   Write-Host "Iniciando upload para $Server..." -ForegroundColor Cyan
   $scpTime = Measure-Command {
-    & scp -o StrictHostKeyChecking=no -i $KeyPath $archiveLocal "${User}@${Server}:$remoteArchive"
+    & scp -P $SshPort -o ConnectTimeout=$SshConnectTimeoutSeconds -o StrictHostKeyChecking=no -i $KeyPath $archiveLocal "${User}@${Server}:$remoteArchive"
   }
   if ($LASTEXITCODE -ne 0) { Fail 'Falha no SCP' }
 
@@ -334,7 +390,7 @@ echo "DEPLOY_OK: $TS"
   # Normaliza quebras de linha para LF (evita \r quebrando bash options como 'pipefail')
   $remoteScriptContent = ($remoteScript -replace "`r`n", "`n") -replace "`r", ""
   $remoteTime = Measure-Command {
-    $remoteScriptContent | & ssh -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" "sudo bash -s"
+    $remoteScriptContent | & ssh -p $SshPort -o ConnectTimeout=$SshConnectTimeoutSeconds -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" "sudo bash -s"
   }
   if ($LASTEXITCODE -ne 0) { Fail 'Deploy remoto falhou' }
 
