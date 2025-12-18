@@ -27,7 +27,7 @@ class CertManager {
     cert.serialNumber = '01';
     cert.validity.notBefore = new Date();
     cert.validity.notAfter = new Date();
-    cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 10); // 10 years
+    cert.validity.notAfter.setFullYear(cert.validity.notBefore.getFullYear() + 5); // 5 years
 
     const attrs = [
       { name: 'commonName', value: 'Planterr System' },

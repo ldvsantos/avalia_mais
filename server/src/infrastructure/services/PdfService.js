@@ -2,7 +2,8 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 const geoip = require('geoip-lite');
-const { sign } = require('node-signpdf');
+const signer = require('node-signpdf').default;
+const { plainAddPlaceholder } = require('node-signpdf');
 const certManager = require('../security/CertManager');
 
 class PdfService {
@@ -51,10 +52,16 @@ class PdfService {
     const dateStr = createdAt ? new Date(createdAt).toLocaleString('pt-BR') : new Date().toLocaleString('pt-BR');
     const userName = user ? (user.name || user.username || 'Usuário Sistema') : 'Sistema Automático';
 
+    // Se o conteúdo estiver muito próximo do rodapé, adiciona nova página
+    const footerHeight = 80;
+    if (doc.y > doc.page.height - footerHeight - 20) {
+      doc.addPage();
+    }
+
     const bottom = doc.page.margins.bottom;
     doc.page.margins.bottom = 0;
     
-    const startY = doc.page.height - 80;
+    const startY = doc.page.height - footerHeight;
     const startX = 50;
     const width = doc.page.width - 100;
 
@@ -77,13 +84,17 @@ class PdfService {
   async signPdf(pdfBuffer) {
     try {
       const p12Buffer = certManager.getCertBuffer();
-      // O node-signpdf espera que o buffer do PDF tenha placeholders para a assinatura, 
-      // mas ele também pode adicionar. Vamos usar a função sign simples.
-      // Nota: Para produção real, o PDF precisa ser preparado com placeholder de assinatura visual se desejado,
-      // mas o node-signpdf injeta a assinatura digital invisível (ou visível se configurado, mas complexo).
-      // Aqui faremos a assinatura digital padrão (invisível visualmente, mas validável no Adobe Reader).
       
-      const signedPdfBuffer = sign(pdfBuffer, p12Buffer);
+      // Adiciona placeholder para assinatura
+      const pdfWithPlaceholder = plainAddPlaceholder({
+        pdfBuffer,
+        reason: 'Assinatura Digital Planterr',
+        contactInfo: 'sistema@planterr.com',
+        name: 'Planterr System',
+        location: 'Digital',
+      });
+
+      const signedPdfBuffer = signer.sign(pdfWithPlaceholder, p12Buffer, { passphrase: 'planterr_secret' });
       return signedPdfBuffer;
     } catch (err) {
       console.error('Error signing PDF:', err);
