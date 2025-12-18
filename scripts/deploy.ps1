@@ -224,22 +224,19 @@ BACKUP_TGZ="$BACKUP_DIR/planterr-persist-$TS.tgz"
 
 mkdir -p "$BACKUP_DIR"
 
-# Backup do que não pode ser perdido
-if [ -d "$REMOTE_DIR/server/data" ] || [ -f "$REMOTE_DIR/server/.admin-secret" ] || [ -f "$REMOTE_DIR/server/.env" ]; then
-  tar -czf "$BACKUP_TGZ" \
-    -C "$REMOTE_DIR" \
-    server/data \
-    server/.admin-secret \
-    server/.env \
-    2>/dev/null || true
-fi
+# Backup do que não pode ser perdido (persistência)
+# Obs: tar não consegue "append" de forma confiável em .tgz; por isso gera um único backup com tudo.
+PERSIST_PATHS=""
+if [ -d "$REMOTE_DIR/server/data" ]; then PERSIST_PATHS="$PERSIST_PATHS server/data"; fi
+if [ -d "$REMOTE_DIR/server/logs" ]; then PERSIST_PATHS="$PERSIST_PATHS server/logs"; fi
+if [ -d "$REMOTE_DIR/server/certs" ]; then PERSIST_PATHS="$PERSIST_PATHS server/certs"; fi
+if [ -f "$REMOTE_DIR/server/.admin-secret" ]; then PERSIST_PATHS="$PERSIST_PATHS server/.admin-secret"; fi
+if [ -f "$REMOTE_DIR/server/.env" ]; then PERSIST_PATHS="$PERSIST_PATHS server/.env"; fi
+if [ -d "$REMOTE_DIR/src/results" ]; then PERSIST_PATHS="$PERSIST_PATHS src/results"; fi
 
-# Backup de arquivos públicos (PDFs de resultados) — são persistentes (upload via admin)
-if [ -d "$REMOTE_DIR/src/results" ]; then
-  tar -rzf "$BACKUP_TGZ" \
-    -C "$REMOTE_DIR" \
-    src/results \
-    2>/dev/null || true
+if [ -n "$PERSIST_PATHS" ]; then
+  # shellcheck disable=SC2086
+  tar -czf "$BACKUP_TGZ" -C "$REMOTE_DIR" $PERSIST_PATHS 2>/dev/null || true
 fi
 
 rm -rf "$STAGING"
@@ -272,12 +269,28 @@ if [ -d "$REMOTE_DIR/server/data" ]; then
   cp -a "$REMOTE_DIR/server/data" "$STAGING/server/data"
 fi
 
+# Restaura logs do servidor (auditoria/segurança)
+if [ -d "$REMOTE_DIR/server/logs" ]; then
+  rm -rf "$STAGING/server/logs"
+  cp -a "$REMOTE_DIR/server/logs" "$STAGING/server/logs"
+fi
+
+# Restaura certificados (usado para assinatura de PDFs)
+if [ -d "$REMOTE_DIR/server/certs" ]; then
+  rm -rf "$STAGING/server/certs"
+  cp -a "$REMOTE_DIR/server/certs" "$STAGING/server/certs"
+fi
+
 # Restaura PDFs publicados (tabela “Editais/Resultados”)
 if [ -d "$REMOTE_DIR/src/results" ]; then
   rm -rf "$STAGING/src/results"
   mkdir -p "$STAGING/src"
   cp -a "$REMOTE_DIR/src/results" "$STAGING/src/results"
 fi
+
+# Garante ownership/permissões após copiar persistência
+chown -R "$APP_USER:$APP_USER" "$STAGING/server" "$STAGING/src" || true
+chmod -R u+rwX "$STAGING/server" "$STAGING/src" || true
 
 # Dependências do Node
 sudo -u "$APP_USER" -H bash -lc "cd '$STAGING/server' && if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi"
