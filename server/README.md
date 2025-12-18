@@ -31,6 +31,26 @@ O UUID é persistido em `server/.admin-secret`.
 - Troque `ADMIN_USER/ADMIN_PASS` e principalmente `HMAC_SECRET` em produção.
 - As inscrições ficam em `server/data/submissions.json`.
 
+## Calendário por Edital (Workflow)
+
+O sistema agora suporta um **calendário por edital (ano)** e **controle de fluxo por fase**, com bloqueios por prazo/status e nota de corte.
+
+- Calendário do processo (por ano): `server/data/process_calendar.json`
+- Status do candidato por fase (por ano + protocolo): `server/data/candidate_phase_status.json`
+
+### Endpoints (admin)
+
+- Ver calendário do edital:
+	- `GET /secret/{UUID}/admin/edital/{year}/calendar`
+- Salvar calendário do edital (body JSON com `global` e `phases`):
+	- `POST /secret/{UUID}/admin/edital/{year}/calendar`
+- Atualizar decisão/status de um recurso (para consolidar reprovação definitiva quando indeferido):
+	- `POST /secret/{UUID}/admin/appeals/{protocol}/status` com `status=Recebido|Deferido|Indeferido`
+
+### Compatibilidade
+
+O formulário antigo de janela de inscrições no painel admin continua existindo e sincroniza a fase `INSCRICAO` do calendário do ano corrente.
+
 ## Governança (auditoria)
 
 - Logs estruturados em `server/logs/security.log` (inclui `SUBMISSION_CREATED`, `SUBMISSION_MODIFIED`, `EVALUATION_CREATED`, `EVALUATION_MODIFIED`, `DATA_EXPORT`, `CONFIG_MODIFIED`).

@@ -66,6 +66,19 @@ class JsonAppealRepository {
       .filter((a) => String(a?.submissionProtocol || '').trim() === needle)
       .sort((a, b) => String(b?.createdAt || '').localeCompare(String(a?.createdAt || '')));
   }
+
+  updateStatus(protocol, status) {
+    const needle = String(protocol || '').trim();
+    if (!needle) return null;
+
+    const idx = this.appeals.findIndex((a) => String(a?.protocol || '').trim() === needle);
+    if (idx === -1) return null;
+
+    const next = { ...this.appeals[idx], status: String(status || '').trim(), updatedAt: new Date().toISOString() };
+    this.appeals[idx] = next;
+    this.persist();
+    return next;
+  }
 }
 
 module.exports = JsonAppealRepository;

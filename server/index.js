@@ -15,6 +15,8 @@ const JsonSubmissionRepository = require('./src/infrastructure/repositories/Json
 const JsonEvaluatorRepository = require('./src/infrastructure/repositories/JsonEvaluatorRepository');
 const JsonEvaluationRepository = require('./src/infrastructure/repositories/JsonEvaluationRepository');
 const JsonAppealRepository = require('./src/infrastructure/repositories/JsonAppealRepository');
+const JsonProcessCalendarRepository = require('./src/infrastructure/repositories/JsonProcessCalendarRepository');
+const JsonCandidatePhaseStatusRepository = require('./src/infrastructure/repositories/JsonCandidatePhaseStatusRepository');
 const JwtService = require('./src/infrastructure/security/JwtService');
 const EmailService = require('./src/infrastructure/services/EmailService');
 const EmailTemplateService = require('./src/infrastructure/services/EmailTemplateService');
@@ -34,6 +36,7 @@ const AdminDashboardPresenter = require('./src/interfaces/presenters/AdminDashbo
 const ListSubmissions = require('./src/application/ListSubmissions');
 const ListEvaluations = require('./src/application/ListEvaluations');
 const ListAppeals = require('./src/application/ListAppeals');
+const { WorkflowService, PHASE, APPEAL_STATUS } = require('./src/application/WorkflowService');
 // ----------------------------------
 
 // Módulos de segurança
@@ -95,10 +98,21 @@ const submissionRepo = new JsonSubmissionRepository(dataDir);
 const evaluatorRepo = new JsonEvaluatorRepository(dataDir);
 const evaluationRepo = new JsonEvaluationRepository(dataDir);
 const appealRepo = new JsonAppealRepository(dataDir);
+const calendarRepo = new JsonProcessCalendarRepository(dataDir);
+const phaseStatusRepo = new JsonCandidatePhaseStatusRepository(dataDir);
 const jwtService = new JwtService(JWT_SECRET);
 const emailService = new EmailService();
 const emailTemplateService = new EmailTemplateService();
 const pdfService = new PdfService();
+
+const workflowService = new WorkflowService({
+  calendarRepo,
+  statusRepo: phaseStatusRepo,
+  appealRepo,
+  submissionRepo,
+  evaluationRepo,
+  storageCompat: storage,
+});
 
 // Se não configurado, usa SMTP_USER como fallback (útil para receber notificações administrativas sem configuração extra)
 const ADMIN_NOTIFY_TO = process.env.ADMIN_NOTIFY_TO || process.env.SMTP_USER || '';
@@ -113,19 +127,30 @@ const registerSubmissionUseCase = new RegisterSubmission(
 );
 const registerAppealUseCase = new RegisterAppeal(appealRepo, submissionRepo, emailService, emailTemplateService, pdfService, ADMIN_NOTIFY_TO);
 const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
-const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo);
+const submitEvaluationUseCase = new SubmitEvaluation(evaluationRepo, submissionRepo, workflowService);
 const listSubmissionsUseCase = new ListSubmissions(submissionRepo);
 const listEvaluationsUseCase = new ListEvaluations(evaluationRepo);
 const listAppealsUseCase = new ListAppeals(appealRepo);
 
 const adminDashboardPresenter = new AdminDashboardPresenter(ADMIN_SECRET);
 
-const submissionController = new SubmissionController(registerSubmissionUseCase);
-const appealController = new AppealController(registerAppealUseCase);
+const submissionController = new SubmissionController(registerSubmissionUseCase, workflowService);
+const appealController = new AppealController(registerAppealUseCase, workflowService);
 const authController = new AuthController(authenticateUserUseCase, ADMIN_SECRET);
 const evaluationController = new EvaluationController(submitEvaluationUseCase);
 const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter);
 // -----------------------------------------
+
+// Job de consolidação automática: reprovação definitiva após prazo de recurso
+// (simples e resiliente para storage em JSON)
+setInterval(() => {
+  try {
+    const year = new Date().getFullYear();
+    workflowService.reconcileDefinitiveFailures({ year, now: new Date() });
+  } catch (err) {
+    console.error('Workflow job failed', err);
+  }
+}, 5 * 60 * 1000);
 
 // 1. Headers de Segurança (Helmet + Custom)
 app.use(helmet({
@@ -229,11 +254,70 @@ app.get('/api/qrcode', async (req, res) => {
 // Estado do calendário de inscrições (público)
 app.get('/api/registration-window', (req, res) => {
   try {
-    const window = storage.getRegistrationWindow();
-    const open = storage.isRegistrationOpen(new Date());
-    return res.json({ registrationWindow: window, open, now: new Date().toISOString() });
+    const year = new Date().getFullYear();
+    const cal = calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
+    const window = cal?.phases?.[PHASE.INSCRICAO] || storage.getRegistrationWindow();
+    const now = new Date();
+    const open = (() => {
+      try {
+        workflowService.assertCanRegisterSubmission(now);
+        return true;
+      } catch {
+        return false;
+      }
+    })();
+    return res.json({ editalYear: year, registrationWindow: window, open, now: now.toISOString() });
   } catch (err) {
     return res.status(500).json({ error: 'Falha ao obter calendário' });
+  }
+});
+
+// --- Admin: calendário do edital (ano) ---
+app.get(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar`, checkAdminIP, adminAuth, (req, res) => {
+  try {
+    const year = Number(req.params.year);
+    const cal = calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
+    return res.json(cal);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar`, checkAdminIP, adminAuth, (req, res) => {
+  try {
+    const year = Number(req.params.year);
+    const saved = calendarRepo.setYearCalendar(year, req.body);
+    return res.json({ ok: true, calendar: saved });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
+
+// Admin: decisão/atualização de status do recurso (para workflow)
+app.post(`/secret/${ADMIN_SECRET}/admin/appeals/:protocol/status`, checkAdminIP, adminAuth, (req, res) => {
+  try {
+    const protocol = String(req.params.protocol || '').trim();
+    if (!protocol) return res.status(400).json({ error: 'Protocolo inválido' });
+
+    const status = String(req.body?.status || '').trim();
+    const allowed = [APPEAL_STATUS.RECEBIDO, APPEAL_STATUS.DEFERIDO, APPEAL_STATUS.INDEFERIDO];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ error: 'Status inválido. Use Recebido, Deferido ou Indeferido.' });
+    }
+
+    const updated = typeof appealRepo.updateStatus === 'function'
+      ? appealRepo.updateStatus(protocol, status)
+      : null;
+
+    if (!updated) return res.status(404).json({ error: 'Recurso não encontrado' });
+
+    // tenta reconciliar imediatamente após decisão
+    const year = new Date().getFullYear();
+    workflowService.reconcileDefinitiveFailures({ year, now: new Date() });
+
+    return res.json({ ok: true, appeal: updated });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
   }
 });
 
@@ -640,6 +724,17 @@ app.post(`/secret/${ADMIN_SECRET}/admin/registration-window`, checkAdminIP, admi
     const start = String(req.body?.start || '').trim();
     const end = String(req.body?.end || '').trim();
     const rw = storage.setRegistrationWindow({ startDateStr: start, endDateStr: end });
+
+    // Mantém o novo calendário (edital/ano) em sincronia com o formulário legado
+    try {
+      const year = new Date().getFullYear();
+      if (rw?.startISO && rw?.endISO && typeof calendarRepo.updatePhaseWindow === 'function') {
+        calendarRepo.updatePhaseWindow(year, PHASE.INSCRICAO, { startISO: rw.startISO, endISO: rw.endISO });
+      }
+    } catch (syncErr) {
+      console.error('Falha ao sincronizar calendário do edital', syncErr);
+    }
+
     logAdminAction('SET_REGISTRATION_WINDOW', getClientIP(req), { startISO: rw.startISO, endISO: rw.endISO });
     return res.redirect(`/secret/${ADMIN_SECRET}/admin`);
   } catch (err) {
@@ -1315,6 +1410,8 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
   const s = storage.getByProtocol(protocol);
   if (!s) return res.status(404).send('Não encontrado');
 
+  const now = new Date();
+
   const parseOptionalNumber = (raw) => {
     const text = String(raw ?? '').trim();
     if (!text) return null;
@@ -1406,6 +1503,15 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
   });
   const lang_total = langCount > 0 ? (langTotalSum / langCount) : 0;
 
+  // Workflow gating: só avalia dentro do prazo e respeitando aprovação na fase anterior
+  try {
+    if (projCount > 0) workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.PROJETO, now });
+    if (intCount > 0) workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.ENTREVISTA, now });
+    if (langCount > 0) workflowService.assertCanEvaluatePhase({ submissionProtocol: protocol, phaseKey: PHASE.LINGUA, now });
+  } catch (err) {
+    return res.status(403).send(err.message || 'Avaliação bloqueada pelo workflow');
+  }
+
   storage.upsertEvaluation({
     protocol,
     // Projeto detalhado
@@ -1424,6 +1530,23 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
     eliminado,
     observacoes,
   });
+
+  // Se eliminado, a inscrição passa a indeferida e o candidato não segue
+  if (eliminado) {
+    storage.updateByProtocol(protocol, { status: 'Indeferido' });
+  }
+
+  // Atualiza status por fase com nota de corte 7.0
+  try {
+    const year = workflowService.getEditalYearForSubmission(protocol);
+    if (projCount > 0) workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: PHASE.PROJETO, score: projTotal });
+    if (intCount > 0) workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: PHASE.ENTREVISTA, score: intTotal });
+    if (langCount > 0) workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: PHASE.LINGUA, score: lang_total });
+  } catch (err) {
+    // não bloqueia o salvamento; apenas loga
+    console.error('Falha ao atualizar status do workflow', err);
+  }
+
   return res.redirect(`/secret/${ADMIN_SECRET}/committee/evaluate/${encodeURIComponent(protocol)}`);
 });
 
