@@ -143,14 +143,16 @@ const adminController = new AdminController(listSubmissionsUseCase, listEvaluati
 
 // Job de consolidação automática: reprovação definitiva após prazo de recurso
 // (simples e resiliente para storage em JSON)
-setInterval(() => {
-  try {
-    const year = new Date().getFullYear();
-    workflowService.reconcileDefinitiveFailures({ year, now: new Date() });
-  } catch (err) {
-    console.error('Workflow job failed', err);
-  }
-}, 5 * 60 * 1000);
+if (require.main === module) {
+  setInterval(() => {
+    try {
+      const year = new Date().getFullYear();
+      workflowService.reconcileDefinitiveFailures({ year, now: new Date() });
+    } catch (err) {
+      console.error('Workflow job failed', err);
+    }
+  }, 5 * 60 * 1000);
+}
 
 // 1. Headers de Segurança (Helmet + Custom)
 app.use(helmet({
@@ -290,6 +292,277 @@ app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar`, checkAdminIP, ad
     return res.json({ ok: true, calendar: saved });
   } catch (err) {
     return res.status(400).json({ error: err.message });
+  }
+});
+
+// --- Admin UI: edição do calendário completo (todas as fases) ---
+function toSaoPauloDateInput(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    // sv-SE => YYYY-MM-DD
+    return new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'America/Sao_Paulo',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(d);
+  } catch {
+    return '';
+  }
+}
+
+function saoPauloDateToWindow(startDateStr, endDateStr) {
+  const startRaw = String(startDateStr || '').trim();
+  const endRaw = String(endDateStr || '').trim();
+  if (!startRaw || !endRaw) {
+    throw new Error('Datas inválidas (início e fim são obrigatórios)');
+  }
+
+  const parseYmd = (s) => {
+    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!m) return null;
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null;
+    return { y, mo, d };
+  };
+
+  const s = parseYmd(startRaw);
+  const e = parseYmd(endRaw);
+  if (!s || !e) {
+    throw new Error('Formato de data inválido (use AAAA-MM-DD)');
+  }
+
+  // Brasília (America/Sao_Paulo) = UTC-03 (sem horário de verão). Convertemos:
+  // - início do dia (00:00 BRT) => 03:00Z
+  // - fim do dia (23:59:59.999 BRT) => 02:59:59.999Z do dia seguinte
+  const start = new Date(Date.UTC(s.y, s.mo - 1, s.d, 3, 0, 0, 0));
+  const end = new Date(Date.UTC(e.y, e.mo - 1, e.d, 26, 59, 59, 999));
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    throw new Error('Datas inválidas');
+  }
+  if (start >= end) {
+    throw new Error('Janela inválida (início >= fim)');
+  }
+
+  return { startISO: start.toISOString(), endISO: end.toISOString() };
+}
+
+function renderCalendarEditPage({ year, values, saved, error }) {
+  const phaseLabels = {
+    INSCRICAO: 'Inscrição',
+    RECURSO_INSCRICAO: 'Recurso da Inscrição',
+    PROJETO: 'Avaliação do Projeto',
+    RECURSO_PROJETO: 'Recurso do Projeto',
+    ENTREVISTA: 'Entrevista',
+    RECURSO_ENTREVISTA: 'Recurso da Entrevista',
+    LINGUA: 'Prova de Língua',
+    RECURSO_LINGUA: 'Recurso da Prova de Língua',
+  };
+
+  const phaseOrder = [
+    'INSCRICAO',
+    'RECURSO_INSCRICAO',
+    'PROJETO',
+    'RECURSO_PROJETO',
+    'ENTREVISTA',
+    'RECURSO_ENTREVISTA',
+    'LINGUA',
+    'RECURSO_LINGUA',
+  ];
+
+  const field = (k) => String(values?.[k] || '');
+
+  const rows = phaseOrder.map((phaseKey) => {
+    const label = phaseLabels[phaseKey] || phaseKey;
+    return `
+      <div class="box" style="margin-bottom: 10px;">
+        <div style="font-weight:bold; color:#003366; margin-bottom:6px;">${escapeHtml(label)} (${escapeHtml(phaseKey)})</div>
+        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="${phaseKey}_start">Início</label>
+            <input id="${phaseKey}_start" name="${phaseKey}_start" type="date" required value="${escapeHtml(field(phaseKey + '_start'))}" />
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label for="${phaseKey}_end">Fim</label>
+            <input id="${phaseKey}_end" name="${phaseKey}_end" type="date" required value="${escapeHtml(field(phaseKey + '_end'))}" />
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Admin - Calendário do Edital</title>
+      <link rel="stylesheet" href="/theme.css" />
+      <style>
+        .hint { color: #003366; font-size: 11px; }
+        .success { background:#e6f4ea; border:1px solid #b7e1c1; padding:10px; border-radius:6px; color:#1b5e20; }
+        .error { background:#fdecea; border:1px solid #f5c6cb; padding:10px; border-radius:6px; color:#b71c1c; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header">
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <h1>Calendário do Edital (Workflow)</h1>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+          </div>
+        </header>
+
+        <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
+          <span class="admin-badge">Ano: ${escapeHtml(String(year))}</span>
+        </div>
+
+        ${saved ? '<div class="success" style="margin-bottom:10px; text-align:center;">Calendário salvo com sucesso.</div>' : ''}
+        ${error ? `<div class="error" style="margin-bottom:10px;"><strong>Erro:</strong> ${escapeHtml(error)}</div>` : ''}
+
+        <section class="panel">
+          <div class="panel-header"><h2>Período Global</h2></div>
+          <div class="panel-body">
+            <div class="hint">Todas as fases precisam estar dentro do período global.</div>
+            <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 8px; margin-top:8px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="GLOBAL_start">Início global</label>
+                <input id="GLOBAL_start" name="GLOBAL_start" type="date" required form="calendar-form" value="${escapeHtml(field('GLOBAL_start'))}" />
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="GLOBAL_end">Fim global</label>
+                <input id="GLOBAL_end" name="GLOBAL_end" type="date" required form="calendar-form" value="${escapeHtml(field('GLOBAL_end'))}" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Fases e Recursos</h2></div>
+          <div class="panel-body">
+            <form id="calendar-form" method="POST" action="/secret/${ADMIN_SECRET}/admin/edital/${encodeURIComponent(String(year))}/calendar/edit">
+              ${rows}
+              <div class="admin-actions" style="justify-content:center; margin-top: 10px;">
+                <button class="btn-primary" type="submit">Salvar Calendário</button>
+              </div>
+              <p class="hint" style="text-align:center; margin-top: 6px;">Datas são interpretadas como horário de Brasília (00:00 até 23:59).</p>
+            </form>
+          </div>
+        </section>
+      </div>
+    </body>
+    </html>
+  `;
+}
+
+app.get(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar/edit`, checkAdminIP, adminAuth, (req, res) => {
+  try {
+    const year = Number(req.params.year);
+    const cal = calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
+    const saved = String(req.query.saved || '') === '1';
+
+    const values = {
+      GLOBAL_start: toSaoPauloDateInput(cal?.global?.startISO),
+      GLOBAL_end: toSaoPauloDateInput(cal?.global?.endISO),
+      INSCRICAO_start: toSaoPauloDateInput(cal?.phases?.INSCRICAO?.startISO),
+      INSCRICAO_end: toSaoPauloDateInput(cal?.phases?.INSCRICAO?.endISO),
+      RECURSO_INSCRICAO_start: toSaoPauloDateInput(cal?.phases?.RECURSO_INSCRICAO?.startISO),
+      RECURSO_INSCRICAO_end: toSaoPauloDateInput(cal?.phases?.RECURSO_INSCRICAO?.endISO),
+      PROJETO_start: toSaoPauloDateInput(cal?.phases?.PROJETO?.startISO),
+      PROJETO_end: toSaoPauloDateInput(cal?.phases?.PROJETO?.endISO),
+      RECURSO_PROJETO_start: toSaoPauloDateInput(cal?.phases?.RECURSO_PROJETO?.startISO),
+      RECURSO_PROJETO_end: toSaoPauloDateInput(cal?.phases?.RECURSO_PROJETO?.endISO),
+      ENTREVISTA_start: toSaoPauloDateInput(cal?.phases?.ENTREVISTA?.startISO),
+      ENTREVISTA_end: toSaoPauloDateInput(cal?.phases?.ENTREVISTA?.endISO),
+      RECURSO_ENTREVISTA_start: toSaoPauloDateInput(cal?.phases?.RECURSO_ENTREVISTA?.startISO),
+      RECURSO_ENTREVISTA_end: toSaoPauloDateInput(cal?.phases?.RECURSO_ENTREVISTA?.endISO),
+      LINGUA_start: toSaoPauloDateInput(cal?.phases?.LINGUA?.startISO),
+      LINGUA_end: toSaoPauloDateInput(cal?.phases?.LINGUA?.endISO),
+      RECURSO_LINGUA_start: toSaoPauloDateInput(cal?.phases?.RECURSO_LINGUA?.startISO),
+      RECURSO_LINGUA_end: toSaoPauloDateInput(cal?.phases?.RECURSO_LINGUA?.endISO),
+    };
+
+    res.type('html').send(renderCalendarEditPage({ year, values, saved, error: '' }));
+  } catch (err) {
+    return res.status(400).send('Falha ao abrir página do calendário: ' + String(err && err.message || err));
+  }
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar/edit`, checkAdminIP, adminAuth, (req, res) => {
+  const year = Number(req.params.year);
+  try {
+    const values = {
+      GLOBAL_start: String(req.body?.GLOBAL_start || ''),
+      GLOBAL_end: String(req.body?.GLOBAL_end || ''),
+      INSCRICAO_start: String(req.body?.INSCRICAO_start || ''),
+      INSCRICAO_end: String(req.body?.INSCRICAO_end || ''),
+      RECURSO_INSCRICAO_start: String(req.body?.RECURSO_INSCRICAO_start || ''),
+      RECURSO_INSCRICAO_end: String(req.body?.RECURSO_INSCRICAO_end || ''),
+      PROJETO_start: String(req.body?.PROJETO_start || ''),
+      PROJETO_end: String(req.body?.PROJETO_end || ''),
+      RECURSO_PROJETO_start: String(req.body?.RECURSO_PROJETO_start || ''),
+      RECURSO_PROJETO_end: String(req.body?.RECURSO_PROJETO_end || ''),
+      ENTREVISTA_start: String(req.body?.ENTREVISTA_start || ''),
+      ENTREVISTA_end: String(req.body?.ENTREVISTA_end || ''),
+      RECURSO_ENTREVISTA_start: String(req.body?.RECURSO_ENTREVISTA_start || ''),
+      RECURSO_ENTREVISTA_end: String(req.body?.RECURSO_ENTREVISTA_end || ''),
+      LINGUA_start: String(req.body?.LINGUA_start || ''),
+      LINGUA_end: String(req.body?.LINGUA_end || ''),
+      RECURSO_LINGUA_start: String(req.body?.RECURSO_LINGUA_start || ''),
+      RECURSO_LINGUA_end: String(req.body?.RECURSO_LINGUA_end || ''),
+    };
+
+    const calendar = {
+      global: saoPauloDateToWindow(values.GLOBAL_start, values.GLOBAL_end),
+      phases: {
+        INSCRICAO: saoPauloDateToWindow(values.INSCRICAO_start, values.INSCRICAO_end),
+        RECURSO_INSCRICAO: saoPauloDateToWindow(values.RECURSO_INSCRICAO_start, values.RECURSO_INSCRICAO_end),
+        PROJETO: saoPauloDateToWindow(values.PROJETO_start, values.PROJETO_end),
+        RECURSO_PROJETO: saoPauloDateToWindow(values.RECURSO_PROJETO_start, values.RECURSO_PROJETO_end),
+        ENTREVISTA: saoPauloDateToWindow(values.ENTREVISTA_start, values.ENTREVISTA_end),
+        RECURSO_ENTREVISTA: saoPauloDateToWindow(values.RECURSO_ENTREVISTA_start, values.RECURSO_ENTREVISTA_end),
+        LINGUA: saoPauloDateToWindow(values.LINGUA_start, values.LINGUA_end),
+        RECURSO_LINGUA: saoPauloDateToWindow(values.RECURSO_LINGUA_start, values.RECURSO_LINGUA_end),
+      },
+    };
+
+    calendarRepo.setYearCalendar(year, calendar);
+    return res.redirect(`/secret/${ADMIN_SECRET}/admin/edital/${encodeURIComponent(String(year))}/calendar/edit?saved=1`);
+  } catch (err) {
+    const values = {
+      GLOBAL_start: String(req.body?.GLOBAL_start || ''),
+      GLOBAL_end: String(req.body?.GLOBAL_end || ''),
+      INSCRICAO_start: String(req.body?.INSCRICAO_start || ''),
+      INSCRICAO_end: String(req.body?.INSCRICAO_end || ''),
+      RECURSO_INSCRICAO_start: String(req.body?.RECURSO_INSCRICAO_start || ''),
+      RECURSO_INSCRICAO_end: String(req.body?.RECURSO_INSCRICAO_end || ''),
+      PROJETO_start: String(req.body?.PROJETO_start || ''),
+      PROJETO_end: String(req.body?.PROJETO_end || ''),
+      RECURSO_PROJETO_start: String(req.body?.RECURSO_PROJETO_start || ''),
+      RECURSO_PROJETO_end: String(req.body?.RECURSO_PROJETO_end || ''),
+      ENTREVISTA_start: String(req.body?.ENTREVISTA_start || ''),
+      ENTREVISTA_end: String(req.body?.ENTREVISTA_end || ''),
+      RECURSO_ENTREVISTA_start: String(req.body?.RECURSO_ENTREVISTA_start || ''),
+      RECURSO_ENTREVISTA_end: String(req.body?.RECURSO_ENTREVISTA_end || ''),
+      LINGUA_start: String(req.body?.LINGUA_start || ''),
+      LINGUA_end: String(req.body?.LINGUA_end || ''),
+      RECURSO_LINGUA_start: String(req.body?.RECURSO_LINGUA_start || ''),
+      RECURSO_LINGUA_end: String(req.body?.RECURSO_LINGUA_end || ''),
+    };
+    res.status(400).type('html').send(renderCalendarEditPage({
+      year,
+      values,
+      saved: false,
+      error: String(err && err.message || err),
+    }));
   }
 });
 
@@ -2628,11 +2901,15 @@ app.get(['/admin', '/administrator', '/login', '/wp-admin', '/committee'], (req,
   }, 2000);
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 Servidor rodando em http://localhost:${PORT}`);
-  console.log(`🔒 Segurança ativada:`);
-  console.log(`   - Admin Secret: /secret/${ADMIN_SECRET}/...`);
-  console.log(`   - JWT Auth: Ativo`);
-  console.log(`   - Rate Limiting: Ativo`);
-  console.log(`   - Logs: server/logs/\n`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Servidor rodando em http://localhost:${PORT}`);
+    console.log(`🔒 Segurança ativada:`);
+    console.log(`   - Admin Secret: /secret/${ADMIN_SECRET}/...`);
+    console.log(`   - JWT Auth: Ativo`);
+    console.log(`   - Rate Limiting: Ativo`);
+    console.log(`   - Logs: server/logs/\n`);
+  });
+}
+
+module.exports = app;

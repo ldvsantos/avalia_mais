@@ -130,7 +130,7 @@ class AdminDashboardPresenter {
   }
 
   render(submissions, evaluations, filters) {
-    const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen } = filters;
+    const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen, editalYear } = filters;
     const evalMap = new Map(evaluations.map(e => [e.protocol, e]));
 
     const WEIGHTS = { project: 4, interview: 5, language: 1 };
@@ -211,26 +211,12 @@ class AdminDashboardPresenter {
             <div class="panel-body">
               <div style="margin-bottom:10px;">
                 <span class="admin-badge" style="background:${registrationOpen ? '#2e7d32' : '#b71c1c'}; color:white;">Status: ${registrationOpen ? 'ABERTO' : 'FECHADO'}</span>
-                <span class="admin-badge">Início: ${startVal || '—'}</span>
-                <span class="admin-badge">Fim: ${endVal || '—'}</span>
+                <span class="admin-badge" id="reg-countdown" data-start-iso="${escapeHtml(String(registrationWindow?.startISO || ''))}" data-end-iso="${escapeHtml(String(registrationWindow?.endISO || ''))}">Cronômetro: —</span>
               </div>
-              <form method="POST" action="/secret/${this.adminSecret}/admin/registration-window">
-                <div class="filters-grid" style="margin-top: 8px; grid-template-columns: 1fr 1fr;">
-                  <div class="form-group" style="margin-bottom:0;">
-                    <label for="start">Início das inscrições</label>
-                    <input id="start" name="start" type="date" value="${startVal}" />
-                  </div>
-                  <div class="form-group" style="margin-bottom:0;">
-                    <label for="end">Fim das inscrições</label>
-                    <input id="end" name="end" type="date" value="${endVal}" />
-                  </div>
-                </div>
-                <div class="filters-actions">
-                  <button class="btn-primary" type="submit">Salvar Calendário</button>
-                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Atualizar</a>
-                </div>
-                <p class="hint">Deixe vazio para início/fim sem restrição. Quando definido, o sistema bloqueia novas inscrições fora do período.</p>
-              </form>
+              <div class="admin-actions" style="justify-content:center; margin-top: 10px;">
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/edital/${encodeURIComponent(String(editalYear || new Date().getFullYear()))}/calendar/edit">Calendário do Edital (todas as fases)</a>
+              </div>
+              <p class="hint" style="text-align:center; margin-top: 6px;">Use esta tela para configurar também as janelas de recursos e etapas (projeto/entrevista/língua).</p>
             </div>
           </section>
 
@@ -302,6 +288,55 @@ class AdminDashboardPresenter {
           </section>
         </div>
       </body>
+      <script>
+        (function() {
+          const el = document.getElementById('reg-countdown');
+          if (!el) return;
+
+          const startISO = (el.getAttribute('data-start-iso') || '').trim();
+          const endISO = (el.getAttribute('data-end-iso') || '').trim();
+
+          const parse = (s) => {
+            if (!s) return null;
+            const d = new Date(s);
+            return Number.isNaN(d.getTime()) ? null : d;
+          };
+
+          const start = parse(startISO);
+          const end = parse(endISO);
+
+          const pad2 = (n) => String(n).padStart(2, '0');
+          const fmt = (ms) => {
+            const total = Math.max(0, Math.floor(ms / 1000));
+            const days = Math.floor(total / 86400);
+            const hours = Math.floor((total % 86400) / 3600);
+            const minutes = Math.floor((total % 3600) / 60);
+            const seconds = total % 60;
+            if (days > 0) return days + 'd ' + pad2(hours) + ':' + pad2(minutes) + ':' + pad2(seconds);
+            return pad2(hours) + ':' + pad2(minutes) + ':' + pad2(seconds);
+          };
+
+          const tick = () => {
+            const now = new Date();
+            if (!start || !end) {
+              el.textContent = 'Cronômetro: —';
+              return;
+            }
+            if (now < start) {
+              el.textContent = 'Abre em: ' + fmt(start.getTime() - now.getTime());
+              return;
+            }
+            if (now <= end) {
+              el.textContent = 'Fecha em: ' + fmt(end.getTime() - now.getTime());
+              return;
+            }
+            el.textContent = 'Encerrado há: ' + fmt(now.getTime() - end.getTime());
+          };
+
+          tick();
+          setInterval(tick, 1000);
+        })();
+      </script>
       </html>
     `;
   }

@@ -23,6 +23,7 @@ class AdminController {
 
     const window = storage.getRegistrationWindow();
     const open = storage.isRegistrationOpen(new Date());
+    const editalYear = new Date().getFullYear();
 
     const html = this.adminDashboardPresenter.render(submissions, evaluations, {
       q,
@@ -32,6 +33,7 @@ class AdminController {
       adminStatusOptions: ['Recebida', 'Em Análise', 'Aprovado', 'Reprovado', 'Indeferido'],
       registrationWindow: window,
       registrationOpen: open,
+      editalYear,
     });
 
     res.type('html').send(html);
