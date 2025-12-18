@@ -72,10 +72,10 @@ class PdfService {
     // Linha separadora
     doc.moveTo(startX, startY).lineTo(startX + width, startY).stroke();
     
-    doc.text(`Documento assinado digitalmente e auditado pelo sistema Planterr.`, startX, startY + 10, { align: 'center' });
-    doc.text(`Gerado por: ${userName} | IP: ${ip || 'N/A'} (${location}) | Data: ${dateStr}`, { align: 'center' });
+    doc.text(`Documento assinado digitalmente e auditado pelo sistema Planterr.`, startX, startY + 10, { align: 'center', width: width });
+    doc.text(`Gerado por: ${userName} | IP: ${ip || 'N/A'} (${location}) | Data: ${dateStr}`, startX, startY + 22, { align: 'center', width: width });
     if (hash) {
-      doc.text(`Código de Verificação (Hash): ${hash}`, { align: 'center' });
+      doc.text(`Código de Verificação (Hash): ${hash}`, startX, startY + 34, { align: 'center', width: width });
     }
     
     doc.restore();
