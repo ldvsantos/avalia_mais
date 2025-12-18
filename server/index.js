@@ -961,9 +961,25 @@ app.get('/api/public-files', (req, res) => {
   res.json(files);
 });
 
-app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, uploadPublic.single('file'), (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, uploadPublic.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).send('Nenhum arquivo enviado');
+
+    // Assinar PDF se for PDF
+    if (req.file.mimetype === 'application/pdf' || req.file.originalname.toLowerCase().endsWith('.pdf')) {
+      try {
+        const filePath = req.file.path;
+        const originalBuffer = fs.readFileSync(filePath);
+        // Assina o PDF usando o certificado do sistema (mesmo que seja o auto-assinado por enquanto)
+        const signedBuffer = await pdfService.signPdf(originalBuffer);
+        fs.writeFileSync(filePath, signedBuffer);
+        console.log(`Arquivo público ${req.file.filename} assinado digitalmente com sucesso.`);
+      } catch (signErr) {
+        console.error('Erro ao assinar PDF de upload:', signErr);
+        // Não bloqueia o upload, mas loga o erro
+      }
+    }
+
     const title = req.body.title || req.file.originalname;
     const fileData = {
       id: Date.now().toString(),
