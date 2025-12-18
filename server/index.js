@@ -257,6 +257,29 @@ app.get('/api/qrcode', async (req, res) => {
   }
 });
 
+// Estado do calendário de inscrições (público) — usado também como healthcheck de deploy
+app.get('/api/registration-window', (req, res) => {
+  try {
+    const year = new Date().getFullYear();
+    const cal = calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
+    const window = cal?.phases?.[PHASE.INSCRICAO] || storage.getRegistrationWindow();
+
+    const now = new Date();
+    const open = (() => {
+      try {
+        workflowService.assertCanRegisterSubmission(now);
+        return true;
+      } catch {
+        return false;
+      }
+    })();
+
+    return res.json({ editalYear: year, registrationWindow: window, open, now: now.toISOString() });
+  } catch (err) {
+    return res.status(500).json({ error: 'Falha ao obter calendário' });
+  }
+});
+
 function toSaoPauloDateInput(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
