@@ -15,7 +15,7 @@ class RegisterAppeal {
     return String(value || '').replace(/\D/g, '');
   }
 
-  async execute(data) {
+  async execute(data, ctx) {
     const submissionProtocol = String(data?.protocolo_inscricao || data?.submissionProtocol || '').trim();
     if (!submissionProtocol) {
       throw new Error('Informe o protocolo de inscrição.');
@@ -84,7 +84,7 @@ class RegisterAppeal {
           let pdfBuffer = null;
           if (this.pdfService && typeof this.pdfService.generateAppealPdf === 'function') {
             try {
-              pdfBuffer = await this.pdfService.generateAppealPdf(appeal);
+              pdfBuffer = await this.pdfService.generateAppealPdf(appeal, ctx);
             } catch (err) {
               console.error('Failed to generate appeal PDF', err);
             }

@@ -17,7 +17,11 @@ class AppealController {
         }
       }
 
-      const result = await this.registerAppealUseCase.execute(req.body);
+      const result = await this.registerAppealUseCase.execute(req.body, {
+        ip: req.ip,
+        user: req.user,
+        userAgent: req.get('User-Agent')
+      });
       return res.json(result);
     } catch (error) {
       return res.status(400).json({ error: error.message });

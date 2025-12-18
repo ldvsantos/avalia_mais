@@ -215,8 +215,8 @@ class PdfService {
     return this.generateAppealPdfFromData(data, protocol);
   }
 
-  async generateAppealPdfFromData(data, protocol) {
-    return new Promise((resolve, reject) => {
+  async generateAppealPdfFromData(data, protocol, auditInfo) {
+    const pdfBuffer = await new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50 });
       const buffers = [];
 
@@ -286,18 +286,19 @@ class PdfService {
       writeSection('Decisão objeto da contestação', data?.decisao_contestacao);
       writeSection('Argumentação', data?.argumentacao);
 
-      // Footer
-      const bottom = doc.page.margins.bottom;
-      doc.page.margins.bottom = 0;
-      doc.text('', 50, doc.page.height - 50);
-      doc.fontSize(8).text('Este documento foi gerado automaticamente pelo sistema Avalia Mais.', { align: 'center' });
-      doc.page.margins.bottom = bottom;
+      // Footer Audit
+      this.drawAuditFooter(doc, {
+        ...auditInfo,
+        createdAt: createdAt
+      });
 
       doc.end();
     });
+
+    return this.signPdf(pdfBuffer);
   }
 
-  async generateAppealPdf(appeal) {
+  async generateAppealPdf(appeal, auditInfo) {
     // Nova assinatura: recebe a entidade persistida do recurso
     const protocol = appeal?.protocol || 'N/A';
     const data = {
@@ -312,7 +313,7 @@ class PdfService {
       decisao_contestacao: appeal?.decisaoContestacao,
       argumentacao: appeal?.argumentacao,
     };
-    return this.generateAppealPdfFromData(data, protocol);
+    return this.generateAppealPdfFromData(data, protocol, auditInfo);
   }
 }
 
