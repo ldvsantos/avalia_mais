@@ -858,7 +858,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
       // Token inválido, continua para login
     }
   }
-  // Servir página de login (layout split: login lateral + imagem)
+  // Servir página de login (gradiente azul estilo Sagres/UEFS, centralizado, campos arredondados)
   res.send(`
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -866,88 +866,150 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
       <title>Acesso Restrito</title>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
-      <link rel="stylesheet" href="/theme.css">
       <style>
-        body { padding: 0; }
-        .auth-layout {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           min-height: 100vh;
-          display: flex;
-          flex-direction: column;
-          background: #003366;
-        }
-        .auth-left {
-          flex: 1;
           display: flex;
           align-items: center;
           justify-content: center;
+          background: linear-gradient(135deg, #001f3f 0%, #003d73 50%, #0059a6 100%);
+          background-attachment: fixed;
           padding: 20px;
+          position: relative;
+          overflow: hidden;
         }
-        .auth-right {
-          flex: 1;
-          min-height: 260px;
+        body::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
           background-image: url('/img/back_index.jpg');
           background-size: cover;
           background-position: center;
-          background-repeat: no-repeat;
+          opacity: 0.08;
+          z-index: 0;
         }
-        .auth-card {
+        .auth-container {
+          position: relative;
+          z-index: 1;
           width: 100%;
-          max-width: 520px;
+          max-width: 420px;
+          background: rgba(255, 255, 255, 0.98);
+          border-radius: 16px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          padding: 40px 32px;
         }
         .auth-header {
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          gap:12px;
-          margin-bottom: 8px;
-          color: #fff;
+          text-align: center;
+          margin-bottom: 10px;
         }
-        .auth-header h1 { margin: 0; font-size: 16px; }
-        .auth-subtitle { text-align:center; margin-bottom:12px; color: #fff; }
-        .auth-card .panel { margin-bottom: 0; }
-
-        @media (min-width: 900px) {
-          .auth-layout { flex-direction: row; }
-          .auth-left, .auth-right { flex: 1; }
-          .auth-right { min-height: 100vh; }
+        .auth-header img {
+          max-height: 64px;
+          width: auto;
+          margin: 0 8px;
+        }
+        .auth-title {
+          color: #003366;
+          font-size: 20px;
+          font-weight: 600;
+          margin: 16px 0 8px;
+          text-align: center;
+        }
+        .auth-subtitle {
+          color: #666;
+          font-size: 14px;
+          text-align: center;
+          margin-bottom: 28px;
+        }
+        .form-group {
+          margin-bottom: 20px;
+        }
+        .form-group label {
+          display: block;
+          color: #333;
+          font-size: 14px;
+          font-weight: 500;
+          margin-bottom: 6px;
+        }
+        .form-group input {
+          width: 100%;
+          padding: 12px 16px;
+          font-size: 15px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          background: #fff;
+          transition: all 0.2s;
+          outline: none;
+        }
+        .form-group input:focus {
+          border-color: #003366;
+          box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+        }
+        .btn-submit {
+          width: 100%;
+          padding: 14px;
+          background: linear-gradient(135deg, #003366 0%, #004d99 100%);
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          margin-top: 8px;
+        }
+        .btn-submit:hover:not(:disabled) {
+          background: linear-gradient(135deg, #002244 0%, #003d73 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 51, 102, 0.3);
+        }
+        .btn-submit:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        .error-msg {
+          background: #fee;
+          border-left: 4px solid #c33;
+          color: #c33;
+          padding: 12px 16px;
+          border-radius: 6px;
+          font-size: 14px;
+          margin-bottom: 16px;
+          display: none;
+        }
+        .error-msg.show { display: block; }
+        @media (max-width: 480px) {
+          .auth-container { padding: 32px 24px; }
+          .auth-header img { max-height: 48px; }
         }
       </style>
     </head>
     <body>
-      <div class="auth-layout">
-        <div class="auth-left">
-          <div class="auth-card">
-            <div class="auth-header">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height: 48px; width:auto;">
-              <h1>Acesso Restrito</h1>
-              <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+" style="max-height: 48px; width:auto;">
-            </div>
-            <div class="auth-subtitle">Entre com suas credenciais para continuar.</div>
-
-            <section class="panel">
-              <div class="panel-header"><h2>Administração do Processo Seletivo - AVALIA+</h2></div>
-              <div class="panel-body">
-                <div id="error-msg" class="field-feedback error" style="display:none; margin-bottom: 8px;"></div>
-
-                <form id="login-form">
-                  <div class="form-group">
-                    <label for="username">Usuário</label>
-                    <input id="username" type="text" name="username" required autocomplete="username">
-                  </div>
-                  <div class="form-group">
-                    <label for="password">Senha</label>
-                    <input id="password" type="password" name="password" required autocomplete="current-password">
-                  </div>
-                  <div class="actions-bar" style="margin-top: 10px;">
-                    <button class="btn-primary" type="submit" id="btn-submit">Entrar</button>
-                  </div>
-                </form>
-              </div>
-            </section>
-          </div>
+      <div class="auth-container">
+        <div class="auth-header">
+          <img src="/img/logo_planter.png" alt="Logo PLANTERR">
+          <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+">
         </div>
+        <h1 class="auth-title">Acesso Restrito</h1>
+        <p class="auth-subtitle">Administração do Processo Seletivo - AVALIA+</p>
 
-        <div class="auth-right" aria-hidden="true"></div>
+        <div id="error-msg" class="error-msg"></div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label for="username">Usuário</label>
+            <input id="username" type="text" name="username" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="password">Senha</label>
+            <input id="password" type="password" name="password" required autocomplete="current-password">
+          </div>
+          <button class="btn-submit" type="submit" id="btn-submit">Entrar</button>
+        </form>
       </div>
       <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -956,10 +1018,9 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           const btn = document.getElementById('btn-submit');
           const errDiv = document.getElementById('error-msg');
           
-          // Reset state
           btn.disabled = true;
           btn.textContent = 'Entrando...';
-          errDiv.style.display = 'none';
+          errDiv.classList.remove('show');
           
           const formData = new FormData(e.target);
           const data = {};
@@ -972,7 +1033,6 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
               body: JSON.stringify(data)
             });
 
-            // Verificar se a resposta é JSON
             const contentType = res.headers.get("content-type");
             if (!contentType || !contentType.includes("application/json")) {
               const text = await res.text();
@@ -991,7 +1051,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           } catch (err) {
             console.error(err);
             errDiv.textContent = err.message || 'Erro de conexão. Tente novamente.';
-            errDiv.style.display = 'block';
+            errDiv.classList.add('show');
             btn.disabled = false;
             btn.textContent = 'Entrar';
           }
