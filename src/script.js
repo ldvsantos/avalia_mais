@@ -795,6 +795,7 @@ async function generatePDF() {
             Documento assinado digitalmente e auditado pelo sistema Planterr.<br>
             Gerado por: Sistema Automático | IP: ${serverReceipt.ip || 'N/A'} | Data: ${new Date(serverReceipt.createdAt).toLocaleString('pt-BR')}<br>
             Código de Verificação (Hash): ${serverReceipt.hash}
+            Documento apenas com validade digital para o processo de seleção em curso.<br>
         </div>
     `;
 
