@@ -75,7 +75,7 @@ function Fail([string]$Message) {
 
 function TestTcpPort {
   param(
-    [Parameter(Mandatory = $true)][string]$Host,
+    [Parameter(Mandatory = $true)][string]$ComputerName,
     [Parameter(Mandatory = $true)][int]$Port,
     [Parameter(Mandatory = $false)][int]$TimeoutMs = 1500
   )
@@ -83,7 +83,7 @@ function TestTcpPort {
   $tnc = Get-Command Test-NetConnection -ErrorAction SilentlyContinue
   if ($null -ne $tnc) {
     try {
-      $r = Test-NetConnection -ComputerName $Host -Port $Port -WarningAction SilentlyContinue
+      $r = Test-NetConnection -ComputerName $ComputerName -Port $Port -WarningAction SilentlyContinue
       return [bool]$r.TcpTestSucceeded
     } catch {
       return $false
@@ -92,7 +92,7 @@ function TestTcpPort {
 
   try {
     $client = New-Object System.Net.Sockets.TcpClient
-    $async = $client.BeginConnect($Host, $Port, $null, $null)
+    $async = $client.BeginConnect($ComputerName, $Port, $null, $null)
     $ok = $async.AsyncWaitHandle.WaitOne($TimeoutMs, $false)
     if (-not $ok) { return $false }
     $client.EndConnect($async)
@@ -240,7 +240,7 @@ try {
 
   Write-Host "Testando conectividade SSH: ${Server}:$SshPort ..." -ForegroundColor DarkGray
   $timeoutMs = [Math]::Max(1000, $SshConnectTimeoutSeconds * 1000)
-  $canConnect = TestTcpPort -Host $Server -Port $SshPort -TimeoutMs $timeoutMs
+  $canConnect = TestTcpPort -ComputerName $Server -Port $SshPort -TimeoutMs $timeoutMs
   if (-not $canConnect) {
     Fail (
       "Não foi possível conectar em ${Server}:$SshPort (TCP). " +
