@@ -44,6 +44,7 @@ class PdfService {
   }
 
   drawAuditFooter(doc, auditInfo) {
+    console.log('drawAuditFooter called with:', auditInfo);
     if (!auditInfo) return;
 
     const { ip, user, hash, createdAt } = auditInfo;

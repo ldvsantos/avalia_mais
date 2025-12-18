@@ -14,6 +14,7 @@ class RegisterSubmission {
   }
 
   async execute(data, ctx) {
+    console.log('RegisterSubmission.execute called with ctx:', ctx);
     // 1. Generate Protocol
     const year = new Date().getFullYear();
     const randomPart = crypto.randomBytes(2).toString('hex').toUpperCase();

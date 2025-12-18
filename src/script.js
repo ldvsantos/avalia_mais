@@ -1433,7 +1433,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (btnConsultar) {
         btnConsultar.addEventListener('click', (e) => {
             e.preventDefault();
-            window.location.href = 'consulta.html';
+            window.location.href = '/consulta';
         });
     }
 
