@@ -2,9 +2,34 @@ const PDFDocument = require('pdfkit');
 const path = require('path');
 const fs = require('fs');
 const geoip = require('geoip-lite');
-const signer = require('node-signpdf').default;
-const { plainAddPlaceholder } = require('node-signpdf');
+const nodeSignPdf = require('node-signpdf');
+const { PDFDocument: PDFLibDocument } = require('pdf-lib');
+const { plainAddPlaceholder } = nodeSignPdf;
 const certManager = require('../security/CertManager');
+
+function createNodeSignPdfSigner() {
+  const SignPdfCtor = nodeSignPdf.SignPdf || nodeSignPdf.default;
+  if (typeof SignPdfCtor === 'function') return new SignPdfCtor();
+
+  // fallback defensivo (caso a lib exporte um objeto pronto)
+  if (SignPdfCtor && typeof SignPdfCtor === 'object' && typeof SignPdfCtor.sign === 'function') return SignPdfCtor;
+  if (nodeSignPdf && typeof nodeSignPdf.sign === 'function') return { sign: nodeSignPdf.sign };
+
+  throw new Error('node-signpdf: export inválido (não foi possível criar signer)');
+}
+
+async function normalizePdfForSigning(pdfBuffer) {
+  // Regrava o PDF em formato mais "clássico" para compatibilidade com plainAddPlaceholder.
+  // useObjectStreams=false tende a evitar xref stream.
+  const pdfDoc = await PDFLibDocument.load(pdfBuffer, { ignoreEncryption: true });
+  const bytes = await pdfDoc.save({ useObjectStreams: false });
+  return Buffer.from(bytes);
+}
+
+function isXrefParseError(err) {
+  const msg = String(err?.message || '');
+  return msg.includes('Expected xref') || msg.includes('xref') || msg.includes('readRefTable');
+}
 
 class PdfService {
   constructor() {
@@ -82,24 +107,40 @@ class PdfService {
     doc.page.margins.bottom = bottom;
   }
 
-  async signPdf(pdfBuffer) {
+  async signPdf(pdfBuffer, options = {}) {
+    const requireSignature = Boolean(options.requireSignature);
+
     try {
       const p12Buffer = certManager.getCertBuffer();
-      
-      // Adiciona placeholder para assinatura
-      const pdfWithPlaceholder = plainAddPlaceholder({
-        pdfBuffer,
-        reason: 'Assinatura Digital Planterr',
-        contactInfo: 'sistema@planterr.com',
-        name: 'Planterr System',
-        location: 'Digital',
-      });
+      const signer = createNodeSignPdfSigner();
 
-      const signedPdfBuffer = signer.sign(pdfWithPlaceholder, p12Buffer, { passphrase: 'planterr_secret' });
-      return signedPdfBuffer;
+      const trySign = (bufferToSign) => {
+        const pdfWithPlaceholder = plainAddPlaceholder({
+          pdfBuffer: bufferToSign,
+          reason: 'Assinatura Digital Planterr',
+          contactInfo: 'sistema@planterr.com',
+          name: 'Planterr System',
+          location: 'Digital',
+        });
+
+        return signer.sign(pdfWithPlaceholder, p12Buffer, { passphrase: 'planterr_secret' });
+      };
+
+      try {
+        return trySign(pdfBuffer);
+      } catch (err) {
+        // PDFs externos (exportados por terceiros) frequentemente vêm com xref stream/linearização.
+        // Quando plainAddPlaceholder não consegue ler o xref, tentamos normalizar e assinar de novo.
+        if (isXrefParseError(err)) {
+          const normalized = await normalizePdfForSigning(pdfBuffer);
+          return trySign(normalized);
+        }
+        throw err;
+      }
     } catch (err) {
       console.error('Error signing PDF:', err);
-      return pdfBuffer; // Retorna sem assinar em caso de erro
+      if (requireSignature) throw err;
+      return pdfBuffer; // best-effort para PDFs gerados internamente
     }
   }
 

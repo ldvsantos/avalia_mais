@@ -990,11 +990,11 @@ app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, 
     // Assina o PDF (mesmo se não foi gerado pelo sistema) para garantir proveniência.
     let signedBuffer;
     try {
-      signedBuffer = await pdfService.signPdf(uploadedBuffer);
+      signedBuffer = await pdfService.signPdf(uploadedBuffer, { requireSignature: true });
     } catch (err) {
       console.error('Falha ao assinar PDF enviado pelo admin', err);
       try { fs.unlinkSync(req.file.path); } catch {}
-      return res.status(500).send('Erro ao assinar o PDF. Verifique o certificado do servidor.');
+      return res.status(500).send('Não foi possível assinar este PDF. Tente exportar/"imprimir" novamente (ou envie outro PDF).');
     }
 
     // Escreve de forma segura (arquivo temporário + rename)
