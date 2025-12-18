@@ -13,16 +13,16 @@ class AdminController {
     this.publicFileRepo = publicFileRepo;
   }
 
-  dashboard(req, res) {
+  async dashboard(req, res) {
     const q = String(req.query.q ?? '');
     const status = String(req.query.status ?? '');
     const fromStr = String(req.query.from ?? '');
     const toStr = String(req.query.to ?? '');
     const { from, to } = parseDateRange(fromStr, toStr);
 
-    const submissions = this.listSubmissionsUseCase.execute({ q, status, from, to });
-    const evaluations = this.listEvaluationsUseCase.execute();
-    const publicFiles = this.publicFileRepo ? this.publicFileRepo.getAll() : [];
+    const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ q, status, from, to }));
+    const evaluations = await Promise.resolve(this.listEvaluationsUseCase.execute());
+    const publicFiles = this.publicFileRepo ? await Promise.resolve(this.publicFileRepo.getAll()) : [];
 
     const editalYear = new Date().getFullYear();
     const cal = this.calendarRepo.getOrCreateYear(editalYear, { seedRegistrationWindow: storage.getRegistrationWindow() });
@@ -49,15 +49,15 @@ class AdminController {
     res.type('html').send(html);
   }
 
-  exportCsv(req, res) {
+  async exportCsv(req, res) {
     const q = String(req.query.q ?? '');
     const status = String(req.query.status ?? '');
     const fromStr = String(req.query.from ?? '');
     const toStr = String(req.query.to ?? '');
     const { from, to } = parseDateRange(fromStr, toStr);
 
-    const submissions = this.listSubmissionsUseCase.execute({ q, status, from, to });
-    const evals = this.listEvaluationsUseCase.execute();
+    const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ q, status, from, to }));
+    const evals = await Promise.resolve(this.listEvaluationsUseCase.execute());
     const evalMap = new Map(evals.map(e => [e.protocol, e]));
 
     const WEIGHTS = { project: 4, interview: 5, language: 1 };
@@ -154,13 +154,13 @@ class AdminController {
     return res.send(csv);
   }
 
-  appeals(req, res) {
+  async appeals(req, res) {
     const q = String(req.query.q ?? '');
     const fromStr = String(req.query.from ?? '');
     const toStr = String(req.query.to ?? '');
     const { from, to } = parseDateRange(fromStr, toStr);
 
-    const appeals = this.listAppealsUseCase.execute({ q, from, to });
+    const appeals = await Promise.resolve(this.listAppealsUseCase.execute({ q, from, to }));
 
     const html = this.adminDashboardPresenter.renderAppeals(appeals, {
       q,

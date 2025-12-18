@@ -146,13 +146,21 @@ async function upsertEvaluations(pool, dataDir) {
   return count;
 }
 
-async function upsertAppeals(pool, dataDir) {
+async function upsertAppeals(pool, dataDir, submissionProtocols) {
   const filePath = path.join(dataDir, 'appeals.json');
   const parsed = readJsonSafe(filePath, []);
   const list = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.appeals) ? parsed.appeals : []);
 
   let count = 0;
+  let skipped = 0;
   for (const a of list) {
+    const appealProtocol = String(a?.protocol || '').trim();
+    const submissionProtocol = String(a?.submissionProtocol || '').trim();
+    if (!appealProtocol || !submissionProtocol || !submissionProtocols.has(submissionProtocol)) {
+      skipped++;
+      continue;
+    }
+
     await pool.query(
       `INSERT INTO appeals (
          protocol, submission_protocol, created_at,
@@ -181,8 +189,8 @@ async function upsertAppeals(pool, dataDir) {
          status = EXCLUDED.status,
          updated_at = EXCLUDED.updated_at`,
       [
-        String(a?.protocol || '').trim(),
-        String(a?.submissionProtocol || '').trim(),
+        appealProtocol,
+        submissionProtocol,
         a?.createdAt ? new Date(a.createdAt) : new Date(),
         a?.cpf != null ? String(a.cpf) : null,
         a?.nome != null ? String(a.nome) : null,
@@ -198,16 +206,25 @@ async function upsertAppeals(pool, dataDir) {
     );
     count++;
   }
+  if (skipped > 0) {
+    console.warn('[migrate] appeals ignorados (sem protocolo válido / sem inscrição):', skipped);
+  }
   return count;
 }
 
-async function upsertCandidatePhaseStatus(pool, dataDir) {
+async function upsertCandidatePhaseStatus(pool, dataDir, submissionProtocols) {
   const filePath = path.join(dataDir, 'candidate_phase_status.json');
   const parsed = readJsonSafe(filePath, { statuses: [] });
   const list = Array.isArray(parsed?.statuses) ? parsed.statuses : (Array.isArray(parsed) ? parsed : []);
 
   let count = 0;
+  let skipped = 0;
   for (const s of list) {
+    const submissionProtocol = String(s?.submissionProtocol || '').trim();
+    if (!submissionProtocol || !submissionProtocols.has(submissionProtocol)) {
+      skipped++;
+      continue;
+    }
     const metaJson = s?.meta ? JSON.stringify(s.meta) : null;
     await pool.query(
       `INSERT INTO candidate_phase_status (
@@ -224,7 +241,7 @@ async function upsertCandidatePhaseStatus(pool, dataDir) {
          meta = EXCLUDED.meta`,
       [
         Number(s?.year),
-        String(s?.submissionProtocol || '').trim(),
+        submissionProtocol,
         String(s?.phaseKey || '').trim(),
         String(s?.status || '').trim(),
         s?.score != null ? Number(s.score) : null,
@@ -233,6 +250,9 @@ async function upsertCandidatePhaseStatus(pool, dataDir) {
       ]
     );
     count++;
+  }
+  if (skipped > 0) {
+    console.warn('[migrate] candidate_phase_status ignorados (sem protocolo válido / sem inscrição):', skipped);
   }
   return count;
 }
@@ -248,13 +268,16 @@ async function main() {
   const subCount = await upsertSubmissions(pool, dataDir);
   console.log('[migrate] submissions:', subCount);
 
+  const submissionProtocolsRes = await pool.query('SELECT protocol FROM submissions');
+  const submissionProtocols = new Set(submissionProtocolsRes.rows.map((r) => r.protocol));
+
   const evalCount = await upsertEvaluations(pool, dataDir);
   console.log('[migrate] evaluations:', evalCount);
 
-  const appealCount = await upsertAppeals(pool, dataDir);
+  const appealCount = await upsertAppeals(pool, dataDir, submissionProtocols);
   console.log('[migrate] appeals:', appealCount);
 
-  const stCount = await upsertCandidatePhaseStatus(pool, dataDir);
+  const stCount = await upsertCandidatePhaseStatus(pool, dataDir, submissionProtocols);
   console.log('[migrate] candidate_phase_status:', stCount);
 
   await pool.end();

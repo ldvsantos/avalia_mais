@@ -7,7 +7,7 @@ class AuthController {
   async login(req, res) {
     try {
       const { username, password } = req.body;
-      const result = this.authenticateUserUseCase.execute(username, password);
+      const result = await Promise.resolve(this.authenticateUserUseCase.execute(username, password));
       
       req.session.token = result.token;
       

@@ -93,6 +93,23 @@ if (IS_PRODUCTION) {
 // Governança: requestId + contexto de auditoria por requisição
 app.use(requestContextMiddleware);
 
+// Normaliza paths com múltiplas barras (ex.: "//secret/..."), comum em links copiados.
+// Sem isso, o Express não casa rotas definidas como "/secret/..." e retorna 404.
+app.use((req, res, next) => {
+  const originalUrl = req.url;
+  if (!originalUrl || !originalUrl.includes('//')) return next();
+
+  const qIndex = originalUrl.indexOf('?');
+  const pathPart = qIndex >= 0 ? originalUrl.slice(0, qIndex) : originalUrl;
+  const queryPart = qIndex >= 0 ? originalUrl.slice(qIndex) : '';
+  const normalizedPath = pathPart.replace(/\/{2,}/g, '/');
+
+  if (normalizedPath !== pathPart) {
+    req.url = normalizedPath + queryPart;
+  }
+  return next();
+});
+
 // Configuração de Segurança
 const ADMIN_SECRET = generateOrReadAdminSecret();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
@@ -1091,7 +1108,9 @@ app.post(`/secret/${ADMIN_SECRET}/admin/public-files/delete/:id`, checkAdminIP, 
 });
 // ------------------------------
 
-app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, (req, res) => adminController.exportCsv(req, res));
+app.get(`/secret/${ADMIN_SECRET}/admin/export.csv`, checkAdminIP, adminAuth, async (req, res) => {
+  return adminController.exportCsv(req, res);
+});
 
 app.get('/api/verify/:protocol', async (req, res) => {
   const protocol = req.params.protocol;
@@ -2122,9 +2141,13 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
   `);
 });
 
-app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, (req, res) => adminController.dashboard(req, res));
+app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, async (req, res) => {
+  return adminController.dashboard(req, res);
+});
 
-app.get(`/secret/${ADMIN_SECRET}/admin/appeals`, checkAdminIP, adminAuth, (req, res) => adminController.appeals(req, res));
+app.get(`/secret/${ADMIN_SECRET}/admin/appeals`, checkAdminIP, adminAuth, async (req, res) => {
+  return adminController.appeals(req, res);
+});
 
 // Atualizar calendário de inscrições (admin)
 app.post(`/secret/${ADMIN_SECRET}/admin/registration-window`, checkAdminIP, adminAuth, (req, res) => {

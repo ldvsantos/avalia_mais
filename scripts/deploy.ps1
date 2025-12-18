@@ -234,6 +234,14 @@ if [ -d "$REMOTE_DIR/server/data" ] || [ -f "$REMOTE_DIR/server/.admin-secret" ]
     2>/dev/null || true
 fi
 
+# Backup de arquivos públicos (PDFs de resultados) — são persistentes (upload via admin)
+if [ -d "$REMOTE_DIR/src/results" ]; then
+  tar -rzf "$BACKUP_TGZ" \
+    -C "$REMOTE_DIR" \
+    src/results \
+    2>/dev/null || true
+fi
+
 rm -rf "$STAGING"
 mkdir -p "$STAGING"
 
@@ -247,6 +255,7 @@ chmod -R u+rwX "$STAGING" || true
 
 # Restaura persistência no staging
 mkdir -p "$STAGING/server"
+mkdir -p "$STAGING/src"
 
 if [ -f "$REMOTE_DIR/server/.env" ]; then
   cp -f "$REMOTE_DIR/server/.env" "$STAGING/server/.env"
@@ -261,6 +270,13 @@ fi
 if [ -d "$REMOTE_DIR/server/data" ]; then
   rm -rf "$STAGING/server/data"
   cp -a "$REMOTE_DIR/server/data" "$STAGING/server/data"
+fi
+
+# Restaura PDFs publicados (tabela “Editais/Resultados”)
+if [ -d "$REMOTE_DIR/src/results" ]; then
+  rm -rf "$STAGING/src/results"
+  mkdir -p "$STAGING/src"
+  cp -a "$REMOTE_DIR/src/results" "$STAGING/src/results"
 fi
 
 # Dependências do Node
