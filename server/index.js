@@ -138,7 +138,7 @@ const submissionController = new SubmissionController(registerSubmissionUseCase,
 const appealController = new AppealController(registerAppealUseCase, workflowService);
 const authController = new AuthController(authenticateUserUseCase, ADMIN_SECRET);
 const evaluationController = new EvaluationController(submitEvaluationUseCase);
-const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter);
+const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo);
 // -----------------------------------------
 
 // Job de consolidação automática: reprovação definitiva após prazo de recurso
@@ -486,19 +486,40 @@ app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar/edit`, checkAdminI
       RECURSO_LINGUA_end: String(req.body?.RECURSO_LINGUA_end || ''),
     };
 
-    const calendar = {
-      global: saoPauloDateToWindow(values.GLOBAL_start, values.GLOBAL_end),
-      phases: {
-        INSCRICAO: saoPauloDateToWindow(values.INSCRICAO_start, values.INSCRICAO_end),
-        RECURSO_INSCRICAO: saoPauloDateToWindow(values.RECURSO_INSCRICAO_start, values.RECURSO_INSCRICAO_end),
-        PROJETO: saoPauloDateToWindow(values.PROJETO_start, values.PROJETO_end),
-        RECURSO_PROJETO: saoPauloDateToWindow(values.RECURSO_PROJETO_start, values.RECURSO_PROJETO_end),
-        ENTREVISTA: saoPauloDateToWindow(values.ENTREVISTA_start, values.ENTREVISTA_end),
-        RECURSO_ENTREVISTA: saoPauloDateToWindow(values.RECURSO_ENTREVISTA_start, values.RECURSO_ENTREVISTA_end),
-        LINGUA: saoPauloDateToWindow(values.LINGUA_start, values.LINGUA_end),
-        RECURSO_LINGUA: saoPauloDateToWindow(values.RECURSO_LINGUA_start, values.RECURSO_LINGUA_end),
-      },
-    };
+    // Validar período global primeiro
+    const global = saoPauloDateToWindow(values.GLOBAL_start, values.GLOBAL_end);
+    const globalStart = new Date(global.startISO);
+    const globalEnd = new Date(global.endISO);
+
+    // Construir fases e validar contra o período global
+    const phases = {};
+    const phaseKeys = [
+      'INSCRICAO', 'RECURSO_INSCRICAO', 'PROJETO', 'RECURSO_PROJETO',
+      'ENTREVISTA', 'RECURSO_ENTREVISTA', 'LINGUA', 'RECURSO_LINGUA'
+    ];
+
+    for (const key of phaseKeys) {
+      const startVal = values[`${key}_start`];
+      const endVal = values[`${key}_end`];
+      
+      if (startVal && endVal) {
+        const phaseWindow = saoPauloDateToWindow(startVal, endVal);
+        const phaseStart = new Date(phaseWindow.startISO);
+        const phaseEnd = new Date(phaseWindow.endISO);
+
+        // Validar que a fase está dentro do período global
+        if (phaseStart < globalStart) {
+          throw new Error(`${key}: data de início (${startVal}) é anterior ao início global (${values.GLOBAL_start})`);
+        }
+        if (phaseEnd > globalEnd) {
+          throw new Error(`${key}: data de fim (${endVal}) é posterior ao fim global (${values.GLOBAL_end})`);
+        }
+
+        phases[key] = phaseWindow;
+      }
+    }
+
+    const calendar = { global, phases };
 
     calendarRepo.setYearCalendar(year, calendar);
     return res.redirect(`/secret/${ADMIN_SECRET}/admin/edital/${encodeURIComponent(String(year))}/calendar/edit?saved=1`);
@@ -828,6 +849,649 @@ app.use(`/secret/${ADMIN_SECRET}/logout`, (req, res) => {
   req.session.destroy((err) => {
     res.redirect(`/secret/${ADMIN_SECRET}/`);
   });
+});
+
+// --- ROTAS DO PORTAL DO CANDIDATO ---
+
+// Página de consulta pública de inscrição
+app.get('/consulta', (req, res) => {
+  const error = req.query.error;
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <title>Consultar Inscrição - PLANTERR</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #001f3f 0%, #003d73 50%, #0059a6 100%);
+          background-attachment: fixed;
+          padding: 20px;
+          position: relative;
+          overflow: hidden;
+        }
+        body::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-image: url('/img/back_index.jpg');
+          background-size: cover;
+          background-position: center;
+          opacity: 0.3;
+          z-index: 0;
+        }
+        .auth-container {
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          max-width: 460px;
+          background: rgba(255, 255, 255, 0.98);
+          border-radius: 16px;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+          padding: 40px 32px;
+        }
+        .auth-header {
+          text-align: center;
+          margin-bottom: 10px;
+        }
+        .auth-header img {
+          max-height: 64px;
+          width: auto;
+          margin: 0 8px;
+        }
+        .auth-title {
+          color: #003366;
+          font-size: 22px;
+          font-weight: 600;
+          margin: 16px 0 8px;
+          text-align: center;
+        }
+        .auth-subtitle {
+          color: #666;
+          font-size: 14px;
+          text-align: center;
+          margin-bottom: 28px;
+          line-height: 1.5;
+        }
+        .form-group {
+          margin-bottom: 20px;
+        }
+        .form-group label {
+          display: block;
+          color: #333;
+          font-size: 14px;
+          font-weight: 500;
+          margin-bottom: 6px;
+        }
+        .form-group input {
+          width: 100%;
+          padding: 12px 16px;
+          font-size: 15px;
+          border: 1px solid #ccc;
+          border-radius: 8px;
+          background: #fff;
+          transition: all 0.2s;
+          outline: none;
+        }
+        .form-group input:focus {
+          border-color: #003366;
+          box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+        }
+        .form-hint {
+          font-size: 12px;
+          color: #777;
+          margin-top: 4px;
+        }
+        .btn-submit {
+          width: 100%;
+          padding: 14px;
+          background: linear-gradient(135deg, #003366 0%, #004d99 100%);
+          color: #fff;
+          border: none;
+          border-radius: 8px;
+          font-size: 16px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s;
+          margin-top: 8px;
+        }
+        .btn-submit:hover:not(:disabled) {
+          background: linear-gradient(135deg, #002244 0%, #003d73 100%);
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 51, 102, 0.3);
+        }
+        .btn-submit:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+        .btn-secondary {
+          display: block;
+          width: 100%;
+          padding: 12px;
+          background: #fff;
+          color: #003366;
+          border: 2px solid #003366;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 600;
+          text-align: center;
+          text-decoration: none;
+          cursor: pointer;
+          transition: all 0.3s;
+          margin-top: 12px;
+        }
+        .btn-secondary:hover {
+          background: #f0f5fa;
+        }
+        .error-msg {
+          background: #fee;
+          border-left: 4px solid #c33;
+          color: #c33;
+          padding: 12px 16px;
+          border-radius: 6px;
+          font-size: 14px;
+          margin-bottom: 16px;
+        }
+        .info-box {
+          background: #e3f2fd;
+          border-left: 4px solid #2196f3;
+          color: #1565c0;
+          padding: 12px 16px;
+          border-radius: 6px;
+          font-size: 13px;
+          margin-bottom: 20px;
+          line-height: 1.5;
+        }
+        @media (max-width: 480px) {
+          .auth-container { padding: 32px 24px; }
+          .auth-header img { max-height: 48px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="auth-container">
+        <div class="auth-header">
+          <img src="/img/logo_planter.png" alt="Logo PLANTERR">
+          <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+">
+        </div>
+        <h1 class="auth-title">Consultar Inscrição</h1>
+        <p class="auth-subtitle">Acompanhe o status da sua candidatura no Processo Seletivo PLANTERR - AVALIA+</p>
+
+        ${error ? `<div class="error-msg">${escapeHtml(error)}</div>` : ''}
+
+        <div class="info-box">
+          📋 Para consultar sua inscrição, informe o <strong>número do protocolo</strong> e seu <strong>CPF</strong> cadastrados no momento da inscrição.
+        </div>
+
+        <form method="POST" action="/consulta">
+          <div class="form-group">
+            <label for="protocol">Número do Protocolo</label>
+            <input id="protocol" type="text" name="protocol" placeholder="Ex.: PLANTERR-2025-ABC123" required>
+            <div class="form-hint">Você recebeu este número ao finalizar a inscrição</div>
+          </div>
+          <div class="form-group">
+            <label for="cpf">CPF</label>
+            <input id="cpf" type="text" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
+            <div class="form-hint">Digite apenas números ou com pontuação</div>
+          </div>
+          <button class="btn-submit" type="submit">Consultar</button>
+        </form>
+
+        <a href="/" class="btn-secondary">← Voltar para página inicial</a>
+      </div>
+      <script>
+        // Máscara de CPF
+        document.getElementById('cpf').addEventListener('input', function(e) {
+          let value = e.target.value.replace(/\\D/g, '');
+          if (value.length > 11) value = value.slice(0, 11);
+          
+          if (value.length > 9) {
+            value = value.replace(/(\\d{3})(\\d{3})(\\d{3})(\\d{1,2})/, '$1.$2.$3-$4');
+          } else if (value.length > 6) {
+            value = value.replace(/(\\d{3})(\\d{3})(\\d{1,3})/, '$1.$2.$3');
+          } else if (value.length > 3) {
+            value = value.replace(/(\\d{3})(\\d{1,3})/, '$1.$2');
+          }
+          
+          e.target.value = value;
+        });
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+// Processar consulta de inscrição
+app.post('/consulta', (req, res) => {
+  try {
+    const protocol = String(req.body?.protocol || '').trim();
+    const cpfInput = String(req.body?.cpf || '').replace(/\D/g, '');
+
+    if (!protocol || !cpfInput) {
+      return res.redirect('/consulta?error=' + encodeURIComponent('Por favor, preencha todos os campos.'));
+    }
+
+    // Buscar submissão pelo protocolo
+    const submission = storage.getByProtocol(protocol);
+
+    if (!submission) {
+      return res.redirect('/consulta?error=' + encodeURIComponent('Protocolo não encontrado. Verifique se digitou corretamente.'));
+    }
+
+    // Validar CPF
+    const submissionCpf = String(submission.identified?.cpf || '').replace(/\D/g, '');
+    if (submissionCpf !== cpfInput) {
+      logSecurityEvent('CANDIDATE_PORTAL_AUTH_FAILED', { protocol, reason: 'CPF mismatch' });
+      return res.redirect('/consulta?error=' + encodeURIComponent('CPF não corresponde ao protocolo informado.'));
+    }
+
+    // Criar sessão temporária para o candidato
+    req.session.candidateProtocol = protocol;
+    req.session.candidateCpf = cpfInput;
+    
+    logSecurityEvent('CANDIDATE_PORTAL_AUTH_SUCCESS', { protocol });
+    
+    return res.redirect('/candidato/status');
+  } catch (err) {
+    console.error('Erro na consulta:', err);
+    return res.redirect('/consulta?error=' + encodeURIComponent('Erro ao processar consulta. Tente novamente.'));
+  }
+});
+
+// Página de status do candidato
+app.get('/candidato/status', (req, res) => {
+  // Verificar se o candidato está autenticado
+  if (!req.session.candidateProtocol || !req.session.candidateCpf) {
+    return res.redirect('/consulta?error=' + encodeURIComponent('Sessão expirada. Por favor, faça a consulta novamente.'));
+  }
+
+  try {
+    const protocol = req.session.candidateProtocol;
+    const submission = storage.getByProtocol(protocol);
+
+    if (!submission) {
+      req.session.candidateProtocol = null;
+      req.session.candidateCpf = null;
+      return res.redirect('/consulta?error=' + encodeURIComponent('Inscrição não encontrada.'));
+    }
+
+    // Verificar CPF novamente por segurança
+    const submissionCpf = String(submission.identified?.cpf || '').replace(/\D/g, '');
+    if (submissionCpf !== req.session.candidateCpf) {
+      req.session.candidateProtocol = null;
+      req.session.candidateCpf = null;
+      return res.redirect('/consulta');
+    }
+
+    // Formatar data de submissão
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '—';
+      try {
+        return new Date(dateStr).toLocaleString('pt-BR', { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      } catch {
+        return dateStr;
+      }
+    };
+
+    const normalizeStatus = (status) => {
+      const s = String(status || '').trim().toLowerCase();
+      if (!s) return 'Recebido';
+      if (s === 'recebido' || s === 'recebida') return 'Recebido';
+      if (s === 'em análise' || s === 'em analise') return 'Em Análise';
+      if (s === 'aprovado' || s === 'aprovada') return 'Aprovado';
+      if (s === 'reprovado' || s === 'reprovada') return 'Reprovado';
+      if (s === 'indeferido' || s === 'indeferida') return 'Indeferido';
+      return status;
+    };
+
+    const statusColor = {
+      'Recebido': '#2196f3',
+      'Recebida': '#2196f3',
+      'Em Análise': '#ff9800',
+      'Aprovado': '#4caf50',
+      'Reprovado': '#f44336',
+      'Indeferido': '#9e9e9e'
+    };
+
+    const currentStatus = normalizeStatus(submission.status);
+    const statusBgColor = statusColor[currentStatus] || '#2196f3';
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <title>Minha Inscrição - PLANTERR</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="/theme.css" />
+        <style>
+          .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: ${statusBgColor};
+            color: white;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 10px;
+            margin-left: 10px;
+          }
+          .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+          }
+          .info-item {
+            padding: 8px;
+            background: #fff;
+            border: 1px solid #7F9DB9;
+            font-size: 11px;
+          }
+          .info-label {
+            font-size: 10px;
+            color: #003366;
+            margin-bottom: 2px;
+            font-weight: bold;
+          }
+          .info-value {
+            font-size: 11px;
+            color: #000;
+            word-break: break-word;
+          }
+          .timeline {
+            padding: 10px 0;
+          }
+          .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 15px;
+            font-size: 11px;
+          }
+          .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            bottom: -15px;
+            width: 1px;
+            background: #ccc;
+          }
+          .timeline-item:last-child::before {
+            display: none;
+          }
+          .timeline-dot {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #f4f4f4;
+            border: 2px solid #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .timeline-item.inactive .timeline-title {
+            color: #666;
+            font-weight: normal;
+          }
+          .timeline-item.inactive .timeline-date {
+            color: #999;
+          }
+          .timeline-dot.active {
+            border-color: ${statusBgColor};
+            background: ${statusBgColor};
+          }
+          .timeline-dot.active::after {
+            content: '✓';
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+          }
+          .timeline-title {
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 2px;
+          }
+          .timeline-date {
+            font-size: 10px;
+            color: #666;
+          }
+          .doc-list {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+          }
+          .doc-item {
+            padding: 8px;
+            background: #F4F9FD;
+            border: 1px solid #86A3C2;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 11px;
+          }
+          .doc-name {
+            font-weight: bold;
+            color: #003366;
+          }
+          .doc-link {
+            padding: 3px 8px;
+            background: #003366;
+            color: white;
+            text-decoration: none;
+            border-radius: 2px;
+            font-size: 10px;
+          }
+          .doc-link:hover {
+            background: #002244;
+          }
+          .btn-logout {
+            padding: 5px 10px;
+            background: #d9534f;
+            color: white;
+            text-decoration: none;
+            border-radius: 2px;
+            font-size: 11px;
+            font-weight: bold;
+            display: inline-block;
+          }
+          .btn-logout:hover {
+            background: #c9302c;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <div>
+                <h1 style="margin:0; font-size: 1.5em;">Portal do Candidato</h1>
+                <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Acompanhe sua inscrição no Processo Seletivo PLANTERR</p>
+              </div>
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+            </div>
+          </header>
+
+          <section class="panel">
+            <div class="panel-body" style="text-align:right;">
+              <a href="/candidato/sair" class="btn-logout">Sair</a>
+            </div>
+          </section>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Status da Inscrição<span class="status-badge">${escapeHtml(currentStatus)}</span></h2>
+            </div>
+            <div class="panel-body">
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Protocolo</div>
+                  <div class="info-value">${escapeHtml(submission.protocol || '—')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Nome Completo</div>
+                  <div class="info-value">${escapeHtml(submission.identified?.nome || '—')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">E-mail</div>
+                  <div class="info-value">${escapeHtml(submission.identified?.email || '—')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Data da Inscrição</div>
+                  <div class="info-value">${formatDate(submission.createdAt)}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Título do Projeto</div>
+                  <div class="info-value">${escapeHtml(submission.project?.titulo_pt || '—')}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Linha de Pesquisa</div>
+                  <div class="info-value">${escapeHtml(submission.project?.area || '—')}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Linha do Tempo</h2>
+            </div>
+            <div class="panel-body">
+              <div class="timeline">
+                <div class="timeline-item">
+                  <div class="timeline-dot active"></div>
+                  <div class="timeline-title">Inscrição Realizada</div>
+                  <div class="timeline-date">${formatDate(submission.createdAt)}</div>
+                </div>
+                <div class="timeline-item ${currentStatus === 'Recebido' ? 'inactive' : ''}">
+                  <div class="timeline-dot ${currentStatus === 'Recebido' ? '' : 'active'}"></div>
+                  <div class="timeline-title">Em Análise</div>
+                  <div class="timeline-date">${currentStatus === 'Recebido' ? 'Aguardando' : 'Em andamento'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Documentos Enviados</h2>
+            </div>
+            <div class="panel-body">
+              <ul class="doc-list">
+                ${submission.pdfProjeto ? `
+                <li class="doc-item">
+                  <span class="doc-name">📄 Projeto de Pesquisa</span>
+                  <a href="/candidato/documento/projeto" class="doc-link">Visualizar PDF</a>
+                </li>
+                ` : ''}
+                ${submission.pdfIdioma ? `
+                <li class="doc-item">
+                  <span class="doc-name">📄 Certificado de Idioma</span>
+                  <a href="/candidato/documento/idioma" class="doc-link">Visualizar PDF</a>
+                </li>
+                ` : ''}
+                ${!submission.pdfProjeto && !submission.pdfIdioma ? '<li class="doc-item"><span class="doc-name">Nenhum documento disponível</span></li>' : ''}
+              </ul>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Próximos Passos</h2>
+            </div>
+            <div class="panel-body">
+              <div class="instructions">
+                ${currentStatus === 'Recebido' ? '<strong>⏳ Aguarde</strong> a análise da sua inscrição pela comissão avaliadora.' : ''}
+                ${currentStatus === 'Em Análise' ? '<strong>🔍 Em avaliação</strong> - A comissão está analisando sua inscrição.' : ''}
+                ${currentStatus === 'Aprovado' ? '<strong>✅ Próximo passo:</strong> Aguarde o contato para as etapas seguintes (entrevista, análise de idioma).' : ''}
+                ${currentStatus === 'Reprovado' ? '<strong>📝 Recurso disponível:</strong> Você pode entrar com recurso dentro do prazo estabelecido no edital.' : ''}
+                ${currentStatus === 'Indeferido' ? '<strong>❌ Inscrição indeferida.</strong> Consulte o edital ou entre em contato para mais informações.' : ''}
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (err) {
+    console.error('Erro ao exibir status:', err);
+    return res.redirect('/consulta?error=' + encodeURIComponent('Erro ao carregar informações.'));
+  }
+});
+
+// Logout do candidato
+app.get('/candidato/sair', (req, res) => {
+  req.session.candidateProtocol = null;
+  req.session.candidateCpf = null;
+  res.redirect('/consulta');
+});
+
+// Download de documentos do candidato
+app.get('/candidato/documento/:tipo', (req, res) => {
+  // Verificar autenticação
+  if (!req.session.candidateProtocol || !req.session.candidateCpf) {
+    return res.status(401).send('Não autorizado. Faça login novamente.');
+  }
+
+  try {
+    const protocol = req.session.candidateProtocol;
+    const tipo = req.params.tipo;
+    const submission = storage.getByProtocol(protocol);
+
+    if (!submission) {
+      return res.status(404).send('Inscrição não encontrada.');
+    }
+
+    // Verificar CPF
+    const submissionCpf = String(submission.identified?.cpf || '').replace(/\D/g, '');
+    if (submissionCpf !== req.session.candidateCpf) {
+      return res.status(403).send('Acesso negado.');
+    }
+
+    let pdfData = null;
+    let filename = '';
+
+    if (tipo === 'projeto' && submission.pdfProjeto) {
+      pdfData = submission.pdfProjeto;
+      filename = `projeto_${protocol}.pdf`;
+    } else if (tipo === 'idioma' && submission.pdfIdioma) {
+      pdfData = submission.pdfIdioma;
+      filename = `idioma_${protocol}.pdf`;
+    } else {
+      return res.status(404).send('Documento não encontrado.');
+    }
+
+    // Converter base64 para buffer
+    const buffer = Buffer.from(pdfData, 'base64');
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.send(buffer);
+  } catch (err) {
+    console.error('Erro ao baixar documento:', err);
+    return res.status(500).send('Erro ao processar documento.');
+  }
 });
 
 // Verificar status de autenticação

@@ -4,11 +4,12 @@ const { getRequestContext } = require('../../../request-context');
 const { logDataExport } = require('../../../security-logger');
 
 class AdminController {
-  constructor(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter) {
+  constructor(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo) {
     this.listSubmissionsUseCase = listSubmissionsUseCase;
     this.listEvaluationsUseCase = listEvaluationsUseCase;
     this.listAppealsUseCase = listAppealsUseCase;
     this.adminDashboardPresenter = adminDashboardPresenter;
+    this.calendarRepo = calendarRepo;
   }
 
   dashboard(req, res) {
@@ -21,9 +22,15 @@ class AdminController {
     const submissions = this.listSubmissionsUseCase.execute({ q, status, from, to });
     const evaluations = this.listEvaluationsUseCase.execute();
 
-    const window = storage.getRegistrationWindow();
-    const open = storage.isRegistrationOpen(new Date());
     const editalYear = new Date().getFullYear();
+    const cal = this.calendarRepo.getOrCreateYear(editalYear, { seedRegistrationWindow: storage.getRegistrationWindow() });
+    
+    // Usar período global do calendário em vez da janela de inscrição
+    const window = cal?.global || storage.getRegistrationWindow();
+    const now = new Date();
+    const open = window?.startISO && window?.endISO && 
+                 now >= new Date(window.startISO) && 
+                 now <= new Date(window.endISO);
 
     const html = this.adminDashboardPresenter.render(submissions, evaluations, {
       q,

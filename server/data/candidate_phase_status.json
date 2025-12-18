@@ -1,3 +1,36 @@
 {
-  "statuses": []
+  "statuses": [
+    {
+      "year": 2025,
+      "submissionProtocol": "PLANTERR-2025-3FAE",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-18T11:05:38.253Z"
+    },
+    {
+      "year": 2025,
+      "submissionProtocol": "PLANTERR-2025-ADD7",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-18T11:05:38.257Z"
+    },
+    {
+      "year": 2025,
+      "submissionProtocol": "PLANTERR-2025-E1CC",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-18T11:05:38.259Z"
+    },
+    {
+      "year": 2025,
+      "submissionProtocol": "PLANTERR-2025-6D48",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-18T11:05:38.259Z"
+    }
+  ]
 }
