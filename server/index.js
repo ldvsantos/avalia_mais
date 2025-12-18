@@ -898,7 +898,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           z-index: 1;
           width: 100%;
           max-width: 420px;
-          background: rgba(255, 255, 255, 0.98);
+          background: rgba(255, 255, 255, 0.7);
           border-radius: 16px;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
           padding: 40px 32px;
