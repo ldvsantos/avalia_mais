@@ -63,7 +63,7 @@ const {
   getClientIP 
 } = require('./security-middleware');
 
-const { requestContextMiddleware, refreshActorFromReq } = require('./request-context');
+const { requestContextMiddleware, refreshActorFromReq, getRequestContext } = require('./request-context');
 
 const storage = require('./storage');
 const {
@@ -940,6 +940,15 @@ app.get('/api/submissions/:protocol/appeals', (req, res) => {
 });
 
 // --- PUBLIC FILES / RESULTS ---
+function isLikelyPdf(buffer) {
+  try {
+    if (!buffer || buffer.length < 4) return false;
+    return buffer.slice(0, 4).toString('utf8') === '%PDF';
+  } catch {
+    return false;
+  }
+}
+
 const publicStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     const dir = path.join(__dirname, '..', 'src', 'results');
@@ -965,29 +974,60 @@ app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, 
   try {
     if (!req.file) return res.status(400).send('Nenhum arquivo enviado');
 
-    // Assinar PDF se for PDF
-    if (req.file.mimetype === 'application/pdf' || req.file.originalname.toLowerCase().endsWith('.pdf')) {
-      try {
-        const filePath = req.file.path;
-        const originalBuffer = fs.readFileSync(filePath);
-        // Assina o PDF usando o certificado do sistema (mesmo que seja o auto-assinado por enquanto)
-        const signedBuffer = await pdfService.signPdf(originalBuffer);
-        fs.writeFileSync(filePath, signedBuffer);
-        console.log(`Arquivo público ${req.file.filename} assinado digitalmente com sucesso.`);
-      } catch (signErr) {
-        console.error('Erro ao assinar PDF de upload:', signErr);
-        // Não bloqueia o upload, mas loga o erro
-      }
+    const originalName = String(req.file.originalname || '').trim();
+    const extOk = originalName.toLowerCase().endsWith('.pdf');
+    if (!extOk) {
+      try { fs.unlinkSync(req.file.path); } catch {}
+      return res.status(400).send('Arquivo inválido: envie apenas PDF');
     }
 
+    const uploadedBuffer = fs.readFileSync(req.file.path);
+    if (!isLikelyPdf(uploadedBuffer)) {
+      try { fs.unlinkSync(req.file.path); } catch {}
+      return res.status(400).send('Arquivo inválido: PDF corrompido ou formato não suportado');
+    }
+
+    // Assina o PDF (mesmo se não foi gerado pelo sistema) para garantir proveniência.
+    let signedBuffer;
+    try {
+      signedBuffer = await pdfService.signPdf(uploadedBuffer);
+    } catch (err) {
+      console.error('Falha ao assinar PDF enviado pelo admin', err);
+      try { fs.unlinkSync(req.file.path); } catch {}
+      return res.status(500).send('Erro ao assinar o PDF. Verifique o certificado do servidor.');
+    }
+
+    // Escreve de forma segura (arquivo temporário + rename)
+    const tmpPath = req.file.path + '.tmp';
+    fs.writeFileSync(tmpPath, signedBuffer);
+    fs.renameSync(tmpPath, req.file.path);
+
     const title = req.body.title || req.file.originalname;
+
+    const ctx = getRequestContext();
+    const signedBy = ctx?.actor?.user || (req.user && (req.user.user || req.user.username)) || 'admin';
+    const signedIp = ctx?.ip || getClientIP(req);
+    const signedHash = sha256Hex(signedBuffer);
+
     const fileData = {
       id: Date.now().toString(),
       title,
       filename: req.file.filename,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      hash: signedHash,
+      signedAt: new Date().toISOString(),
+      signedBy,
+      signedIp,
     };
     publicFileRepo.add(fileData);
+
+    logAdminAction('PUBLIC_FILE_UPLOADED_AND_SIGNED', signedBy, {
+      ip: signedIp,
+      filename: req.file.filename,
+      originalName,
+      hash: signedHash,
+    });
+
     res.redirect(`/secret/${ADMIN_SECRET}/admin`);
   } catch (err) {
     console.error(err);
