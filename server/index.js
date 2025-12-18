@@ -1,5 +1,8 @@
 const path = require('path');
-require('dotenv').config();
+const dotenv = require('dotenv');
+// Suporta `.env` na raiz do projeto e também em `server/.env`
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config();
 const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -36,7 +39,7 @@ const AdminDashboardPresenter = require('./src/interfaces/presenters/AdminDashbo
 const ListSubmissions = require('./src/application/ListSubmissions');
 const ListEvaluations = require('./src/application/ListEvaluations');
 const ListAppeals = require('./src/application/ListAppeals');
-const { WorkflowService, PHASE, APPEAL_STATUS } = require('./src/application/WorkflowService');
+const { WorkflowService, PHASE, STATUS, APPEAL_STATUS } = require('./src/application/WorkflowService');
 // ----------------------------------
 
 // Módulos de segurança
@@ -116,6 +119,121 @@ const workflowService = new WorkflowService({
 
 // Se não configurado, usa SMTP_USER como fallback (útil para receber notificações administrativas sem configuração extra)
 const ADMIN_NOTIFY_TO = process.env.ADMIN_NOTIFY_TO || process.env.SMTP_USER || '';
+
+const SITE_URL = String(process.env.SITE_URL || '').trim();
+
+function phaseLabelForEmail(phaseKey) {
+  switch (phaseKey) {
+    case PHASE.INSCRICAO:
+      return 'Inscrição';
+    case PHASE.PROJETO:
+      return 'Avaliação do Projeto';
+    case PHASE.ENTREVISTA:
+      return 'Entrevista';
+    case PHASE.LINGUA:
+      return 'Prova de Língua Estrangeira';
+    default:
+      return String(phaseKey || 'Etapa');
+  }
+}
+
+function workflowStatusLabel(status) {
+  const st = String(status || '').trim();
+  if (st === STATUS.APROVADO) return 'Aprovado(a)';
+  if (st === STATUS.REPROVADO_PRELIMINAR) return 'Reprovado(a) preliminarmente';
+  if (st === STATUS.REPROVADO_DEFINITIVO) return 'Reprovado(a) definitivamente';
+  return st || '—';
+}
+
+async function notifyCandidatePhaseResult({ protocol, phaseKey, status, score }) {
+  try {
+    const submission = submissionRepo && typeof submissionRepo.findByProtocol === 'function'
+      ? submissionRepo.findByProtocol(protocol)
+      : null;
+    const to = String(submission?.identified?.email || '').trim();
+    if (!to) return;
+
+    const nome = submission?.identified?.nome || 'Candidato(a)';
+    const etapaLabel = phaseLabelForEmail(phaseKey);
+    const statusLabel = workflowStatusLabel(status);
+
+    const subject = `Atualização de status (${etapaLabel}) - ${protocol}`;
+    const textLines = [
+      `Olá ${nome},`,
+      '',
+      `Protocolo de Inscrição: ${protocol}`,
+      `Etapa: ${etapaLabel}`,
+      `Status: ${statusLabel}`,
+    ];
+    if (score != null && Number.isFinite(Number(score))) {
+      textLines.push(`Nota: ${Number(score).toFixed(2)}`);
+    }
+    if (SITE_URL) {
+      textLines.push('', `Portal do Candidato: ${SITE_URL.replace(/\/$/, '')}/consulta`);
+    }
+    const text = textLines.join('\n');
+
+    const html = emailTemplateService && typeof emailTemplateService.getCandidatePhaseResultEmail === 'function'
+      ? emailTemplateService.getCandidatePhaseResultEmail({
+          nome,
+          protocoloInscricao: protocol,
+          etapaLabel,
+          statusLabel,
+          score,
+          siteUrl: SITE_URL,
+        })
+      : undefined;
+
+    await emailService.sendEmail(to, subject, text, html);
+  } catch (err) {
+    console.error('Falha ao notificar candidato (status de etapa)', err);
+  }
+}
+
+async function notifyCandidateAppealDecision({ appeal, submission }) {
+  try {
+    const decision = String(appeal?.status || '').trim();
+    if (!decision || decision === APPEAL_STATUS.RECEBIDO) return;
+
+    const to = String(submission?.identified?.email || '').trim();
+    if (!to) return;
+
+    const nome = submission?.identified?.nome || 'Candidato(a)';
+    const etapaLabel = String(appeal?.etapa || '').trim() || '—';
+    const decisionLabel = decision;
+    const protocolRecurso = String(appeal?.protocol || '').trim();
+    const protocolInscricao = String(appeal?.submissionProtocol || '').trim();
+
+    const subject = `Decisão do recurso (${decisionLabel}) - ${protocolInscricao}`;
+    const textLines = [
+      `Olá ${nome},`,
+      '',
+      `Protocolo do Recurso: ${protocolRecurso}`,
+      `Protocolo de Inscrição: ${protocolInscricao}`,
+      `Etapa: ${etapaLabel}`,
+      `Decisão: ${decisionLabel}`,
+    ];
+    if (SITE_URL) {
+      textLines.push('', `Portal do Candidato: ${SITE_URL.replace(/\/$/, '')}/consulta`);
+    }
+    const text = textLines.join('\n');
+
+    const html = emailTemplateService && typeof emailTemplateService.getCandidateAppealDecisionEmail === 'function'
+      ? emailTemplateService.getCandidateAppealDecisionEmail({
+          nome,
+          protocoloRecurso: protocolRecurso,
+          protocoloInscricao: protocolInscricao,
+          etapaLabel,
+          decisionLabel,
+          siteUrl: SITE_URL,
+        })
+      : undefined;
+
+    await emailService.sendEmail(to, subject, text, html);
+  } catch (err) {
+    console.error('Falha ao notificar candidato (decisão de recurso)', err);
+  }
+}
 
 const registerSubmissionUseCase = new RegisterSubmission(
   submissionRepo,
@@ -570,6 +688,21 @@ app.post(`/secret/${ADMIN_SECRET}/admin/appeals/:protocol/status`, checkAdminIP,
       : null;
 
     if (!updated) return res.status(404).json({ error: 'Recurso não encontrado' });
+
+    // Notifica candidato (se aplicável)
+    try {
+      if (updated && updated.submissionProtocol) {
+        const submission = submissionRepo && typeof submissionRepo.findByProtocol === 'function'
+          ? submissionRepo.findByProtocol(updated.submissionProtocol)
+          : null;
+        if (submission) {
+          // Decisão Deferido/Indeferido
+          notifyCandidateAppealDecision({ appeal: updated, submission });
+        }
+      }
+    } catch {
+      // não bloqueia
+    }
 
     // tenta reconciliar imediatamente após decisão
     const year = new Date().getFullYear();
@@ -1172,6 +1305,50 @@ app.get('/candidato/status', (req, res) => {
     const currentStatus = normalizeStatus(submission.status);
     const statusBgColor = statusColor[currentStatus] || '#2196f3';
 
+    // Elegibilidade de recurso (workflow): mostra botão somente quando há reprovação preliminar
+    // e o prazo da fase de recurso correspondente está aberto.
+    const now = new Date();
+    const year = workflowService.getEditalYearForSubmission(protocol);
+    const parentToAppeal = {
+      [PHASE.INSCRICAO]: PHASE.RECURSO_INSCRICAO,
+      [PHASE.PROJETO]: PHASE.RECURSO_PROJETO,
+      [PHASE.ENTREVISTA]: PHASE.RECURSO_ENTREVISTA,
+      [PHASE.LINGUA]: PHASE.RECURSO_LINGUA,
+    };
+    const parentLabels = {
+      [PHASE.INSCRICAO]: { label: 'Inscrição', etapaValue: 'Inscrição' },
+      [PHASE.PROJETO]: { label: 'Avaliação do Projeto', etapaValue: 'Avaliação do Projeto' },
+      [PHASE.ENTREVISTA]: { label: 'Entrevista', etapaValue: 'Entrevista' },
+      [PHASE.LINGUA]: { label: 'Prova de Língua Estrangeira', etapaValue: 'Prova de Língua Estrangeira' },
+    };
+
+    const appealOptions = [];
+    for (const parentPhaseKey of Object.keys(parentToAppeal)) {
+      const parentStatus = workflowService.getStatus(year, protocol, parentPhaseKey);
+      if (parentStatus !== STATUS.REPROVADO_PRELIMINAR) continue;
+
+      let within = false;
+      try {
+        workflowService.assertWithinPhase(year, parentToAppeal[parentPhaseKey], now);
+        within = true;
+      } catch {
+        within = false;
+      }
+
+      if (within) {
+        appealOptions.push(parentLabels[parentPhaseKey]);
+      }
+    }
+
+    const qsBase = new URLSearchParams({
+      protocolo_inscricao: submission.protocol || '',
+      nome: submission.identified?.nome || '',
+      cpf: submission.identified?.cpf || '',
+      email: submission.identified?.email || '',
+      titulo_projeto: submission.project?.titulo_pt || '',
+      linha_pesquisa: submission.project?.area || '',
+    });
+
     res.send(`
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -1387,7 +1564,12 @@ app.get('/candidato/status', (req, res) => {
                 <div class="timeline-item ${currentStatus === 'Recebido' ? 'inactive' : ''}">
                   <div class="timeline-dot ${currentStatus === 'Recebido' ? '' : 'active'}"></div>
                   <div class="timeline-title">Em Análise</div>
-                  <div class="timeline-date">${currentStatus === 'Recebido' ? 'Aguardando' : 'Em andamento'}</div>
+                  <div class="timeline-date">${
+                    currentStatus === 'Recebido' ? 'Aguardando' :
+                    (currentStatus === 'Aprovada' || currentStatus === 'Aprovado') ? 'Aprovada' :
+                    (currentStatus === 'Reprovada' || currentStatus === 'Reprovado') ? 'Reprovada' :
+                    'Em andamento'
+                  }</div>
                 </div>
               </div>
             </div>
@@ -1413,6 +1595,31 @@ app.get('/candidato/status', (req, res) => {
                 ` : ''}
                 ${!submission.pdfProjeto && !submission.pdfIdioma ? '<li class="doc-item"><span class="doc-name">Nenhum documento disponível</span></li>' : ''}
               </ul>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Recurso</h2>
+            </div>
+            <div class="panel-body">
+              <div class="instructions">
+                O recurso é liberado somente quando você estiver <strong>reprovado(a) preliminarmente</strong> em alguma etapa e o <strong>prazo de recurso</strong> estiver aberto.
+              </div>
+
+              ${appealOptions.length > 0
+                ? `<div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+                    ${appealOptions
+                      .map((opt) => {
+                        const qs = new URLSearchParams(qsBase);
+                        qs.set('etapa_processo', opt.etapaValue);
+                        return `<a class="btn-primary" href="/recurso.html?${qs.toString()}">Interpor recurso: ${escapeHtml(opt.label)}</a>`;
+                      })
+                      .join('')}
+                  </div>`
+                : `<div class="instructions" style="margin-top:10px;">
+                    Nenhum recurso disponível no momento.
+                  </div>`}
             </div>
           </div>
 
@@ -2548,12 +2755,26 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
     storage.updateByProtocol(protocol, { status: 'Indeferido' });
   }
 
-  // Atualiza status por fase com nota de corte 7.0
+  // Atualiza status por fase com nota de corte 7.0 + notifica candidato quando houver mudança
   try {
     const year = workflowService.getEditalYearForSubmission(protocol);
-    if (projCount > 0) workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: PHASE.PROJETO, score: projTotal });
-    if (intCount > 0) workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: PHASE.ENTREVISTA, score: intTotal });
-    if (langCount > 0) workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey: PHASE.LINGUA, score: lang_total });
+
+    const maybeNotify = async (phaseKey, score) => {
+      const before = phaseStatusRepo && typeof phaseStatusRepo.find === 'function'
+        ? phaseStatusRepo.find(year, protocol, phaseKey)
+        : null;
+      const applied = workflowService.applyCutoffAndPersist({ year, submissionProtocol: protocol, phaseKey, score });
+      const afterStatus = applied?.status;
+      const beforeStatus = before?.status;
+
+      if (afterStatus && (beforeStatus == null || String(beforeStatus) !== String(afterStatus))) {
+        await notifyCandidatePhaseResult({ protocol, phaseKey, status: afterStatus, score });
+      }
+    };
+
+    if (projCount > 0) void maybeNotify(PHASE.PROJETO, projTotal);
+    if (intCount > 0) void maybeNotify(PHASE.ENTREVISTA, intTotal);
+    if (langCount > 0) void maybeNotify(PHASE.LINGUA, lang_total);
   } catch (err) {
     // não bloqueia o salvamento; apenas loga
     console.error('Falha ao atualizar status do workflow', err);
@@ -2649,6 +2870,8 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
   
   if (recordStatus.toLowerCase() === 'indeferido') {
     situationDisplay = '<span style="color:red; font-weight:bold;">INDEFERIDO</span>';
+  } else if (recordStatus.toLowerCase() === 'aprovada' || recordStatus.toLowerCase() === 'aprovado') {
+    situationDisplay = '<span style="color:green; font-weight:bold;">APROVADA</span>';
   } else if (evaluation) {
     const proj = Number(evaluation.proj_total || 0);
     const intr = Number(evaluation.int_total || 0);

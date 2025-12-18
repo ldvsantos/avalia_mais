@@ -166,7 +166,12 @@ class RegisterSubmission {
               html = this.emailTemplateService.getRegistrationEmail(templateData, protocol);
             }
 
-            await this.emailService.sendEmail(candidateEmail, subject, text, html, attachments);
+            const ok = await this.emailService.sendEmail(candidateEmail, subject, text, html, attachments);
+            if (!ok) {
+              console.error(`[EMAIL] Falha ao enviar confirmação de inscrição para candidato. protocol=${protocol} to=${candidateEmail}`);
+            } else {
+              console.log(`[EMAIL] Confirmação de inscrição enviada para candidato. protocol=${protocol} to=${candidateEmail}`);
+            }
           }
 
           // Admins
@@ -190,7 +195,13 @@ class RegisterSubmission {
               html = this.emailTemplateService.getAdminNewSubmissionNotificationEmail(templateData, protocol);
             }
 
-            await this.emailService.sendEmail(adminRecipients.join(','), subject, text, html, attachments);
+            const toAdmins = adminRecipients.join(',');
+            const ok = await this.emailService.sendEmail(toAdmins, subject, text, html, attachments);
+            if (!ok) {
+              console.error(`[EMAIL] Falha ao enviar notificação de nova inscrição para admin. protocol=${protocol} to=${toAdmins}`);
+            } else {
+              console.log(`[EMAIL] Notificação de nova inscrição enviada para admin. protocol=${protocol} to=${toAdmins}`);
+            }
           }
         })
         .catch((err) => console.error('Failed to send submission emails', err));

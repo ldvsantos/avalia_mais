@@ -127,7 +127,12 @@ class RegisterAppeal {
               );
             }
 
-            await this.emailService.sendEmail(candidateEmail, subject, text, html, attachments);
+            const ok = await this.emailService.sendEmail(candidateEmail, subject, text, html, attachments);
+            if (!ok) {
+              console.error(`[EMAIL] Falha ao enviar confirmação de recurso para candidato. appeal=${protocol} submission=${submissionProtocol} to=${candidateEmail}`);
+            } else {
+              console.log(`[EMAIL] Confirmação de recurso enviada para candidato. appeal=${protocol} submission=${submissionProtocol} to=${candidateEmail}`);
+            }
           }
 
           // Admins
@@ -157,7 +162,13 @@ class RegisterAppeal {
               html = this.emailTemplateService.getAdminNewAppealNotificationEmail(templateData, protocol);
             }
 
-            await this.emailService.sendEmail(adminRecipients.join(','), subject, text, html, attachments);
+            const toAdmins = adminRecipients.join(',');
+            const ok = await this.emailService.sendEmail(toAdmins, subject, text, html, attachments);
+            if (!ok) {
+              console.error(`[EMAIL] Falha ao enviar notificação de novo recurso para admin. appeal=${protocol} submission=${submissionProtocol} to=${toAdmins}`);
+            } else {
+              console.log(`[EMAIL] Notificação de novo recurso enviada para admin. appeal=${protocol} submission=${submissionProtocol} to=${toAdmins}`);
+            }
           }
         })
         .catch((err) => console.error('Failed to send appeal emails', err));

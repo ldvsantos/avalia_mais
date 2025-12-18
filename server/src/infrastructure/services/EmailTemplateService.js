@@ -7,6 +7,55 @@ class EmailTemplateService {
     this.primaryColor = '#4CAF50'; // Green from the site theme
   }
 
+  getCandidatePhaseResultEmail({ nome, protocoloInscricao, etapaLabel, statusLabel, score, siteUrl }) {
+    const scoreLine = (score != null && Number.isFinite(Number(score)))
+      ? `<p><strong>Nota:</strong> ${Number(score).toFixed(2)}</p>`
+      : '';
+
+    const portalUrl = siteUrl ? `${String(siteUrl).replace(/\/$/, '')}/consulta` : null;
+
+    const content = `
+      <h2>Atualização de Status - ${etapaLabel}</h2>
+      <p>Olá <strong>${nome}</strong>,</p>
+      <p>Há uma atualização no seu processo de avaliação.</p>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid ${this.primaryColor}; margin: 20px 0;">
+        <p><strong>Protocolo de Inscrição:</strong> ${protocoloInscricao}</p>
+        <p><strong>Etapa:</strong> ${etapaLabel}</p>
+        <p><strong>Status:</strong> ${statusLabel}</p>
+        ${scoreLine}
+        <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+      </div>
+
+      <p>Para consultar detalhes, acesse o Portal do Candidato.</p>
+      ${portalUrl ? `<p><a href="${portalUrl}">${portalUrl}</a></p>` : ''}
+    `;
+
+    return this._getLayout(content);
+  }
+
+  getCandidateAppealDecisionEmail({ nome, protocoloRecurso, protocoloInscricao, etapaLabel, decisionLabel, siteUrl }) {
+    const portalUrl = siteUrl ? `${String(siteUrl).replace(/\/$/, '')}/consulta` : null;
+    const content = `
+      <h2>Decisão do Recurso</h2>
+      <p>Olá <strong>${nome}</strong>,</p>
+      <p>Há uma atualização na análise do seu recurso.</p>
+
+      <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid ${this.primaryColor}; margin: 20px 0;">
+        <p><strong>Protocolo do Recurso:</strong> ${protocoloRecurso}</p>
+        <p><strong>Protocolo de Inscrição:</strong> ${protocoloInscricao}</p>
+        <p><strong>Etapa:</strong> ${etapaLabel}</p>
+        <p><strong>Decisão:</strong> ${decisionLabel}</p>
+        <p><strong>Data:</strong> ${new Date().toLocaleDateString('pt-BR')}</p>
+      </div>
+
+      <p>Para acompanhar o seu processo, acesse o Portal do Candidato.</p>
+      ${portalUrl ? `<p><a href="${portalUrl}">${portalUrl}</a></p>` : ''}
+    `;
+
+    return this._getLayout(content);
+  }
+
   getRegistrationEmail(data, protocol) {
     const content = `
       <h2>Confirmação de Inscrição</h2>

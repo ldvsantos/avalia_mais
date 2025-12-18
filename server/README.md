@@ -31,6 +31,28 @@ O UUID é persistido em `server/.admin-secret`.
 - Troque `ADMIN_USER/ADMIN_PASS` e principalmente `HMAC_SECRET` em produção.
 - As inscrições ficam em `server/data/submissions.json`.
 
+## E-mails (SMTP)
+
+O servidor envia e-mails de:
+- confirmação de inscrição (candidato + notificação admin)
+- confirmação de recurso (candidato + notificação admin)
+- notificação de **resultado preliminar** por etapa (quando a comissão salva avaliação)
+- notificação de **decisão do recurso** (quando o admin marca Deferido/Indeferido)
+
+Variáveis de ambiente (ver `.env.example` na raiz do projeto):
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+- `ADMIN_NOTIFY_TO` (lista separada por vírgulas; se vazio, usa `SMTP_USER` como fallback)
+- `SITE_URL` (usado para montar link do Portal do Candidato)
+
+### Testar envio
+
+Com o servidor parado (ou em outro terminal), rode:
+
+```bash
+cd server
+node test-email.js
+```
+
 ## Calendário por Edital (Workflow)
 
 O sistema agora suporta um **calendário por edital (ano)** e **controle de fluxo por fase**, com bloqueios por prazo/status e nota de corte.
