@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const geoip = require('geoip-lite');
 const nodeSignPdf = require('node-signpdf');
-const { PDFDocument: PDFLibDocument } = require('pdf-lib');
+const { PDFDocument: PDFLibDocument, StandardFonts, rgb } = require('pdf-lib');
 const { plainAddPlaceholder } = nodeSignPdf;
 const certManager = require('../security/CertManager');
 
@@ -35,7 +35,100 @@ class PdfService {
   constructor() {
     // Assets em /src/img (a partir de server/src/infrastructure/services/)
     this.avaliaLogoPath = path.join(__dirname, '../../../../src/img/logo_avalia_horizontal.png');
+    this.avaliaLogoSquarePath = path.join(__dirname, '../../../../src/img/logo_avalia_quadrado.png');
     this.planterLogoPath = path.join(__dirname, '../../../../src/img/logo_planter.png');
+  }
+
+  async stampUploadedPdf(pdfBuffer, stampInfo) {
+    // Carimbo VISUAL (para aparecer no navegador). Deve ser aplicado ANTES de assinar.
+    const createdAt = stampInfo?.createdAt ? new Date(stampInfo.createdAt) : new Date();
+    const createdStr = createdAt.toLocaleString('pt-BR');
+    const hash = String(stampInfo?.hash || '').trim();
+
+    const pdfDoc = await PDFLibDocument.load(pdfBuffer, { ignoreEncryption: true });
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    let avaliaSquareImage = null;
+    try {
+      if (fs.existsSync(this.avaliaLogoSquarePath)) {
+        const imgBytes = fs.readFileSync(this.avaliaLogoSquarePath);
+        // O asset do repo é PNG; se no futuro trocar, apenas ajuste para embedJpg.
+        avaliaSquareImage = await pdfDoc.embedPng(imgBytes);
+      }
+    } catch {
+      avaliaSquareImage = null;
+    }
+
+    const pages = pdfDoc.getPages();
+    for (const page of pages) {
+      const { width, height } = page.getSize();
+
+      const fontSize = 9;
+      const lineGap = 11;
+      const marginX = 36;
+      const bottomPadding = 14; // sobe um pouco para evitar cortes no rodapé
+
+      const logoSize = 22;
+      const logoMargin = 10;
+
+      const y2 = Math.min(Math.max(0, bottomPadding), Math.max(0, height - 1));
+      const y1 = Math.min(y2 + lineGap, Math.max(0, height - 1));
+
+      const line1 = 'ASSINADO DIGITALMENTE PELO SISTEMA PLANTERR';
+      const line2 = `Data: ${createdStr}${hash ? ` | Hash: ${hash}` : ''}`;
+
+      const hasLogo = Boolean(avaliaSquareImage);
+      const textMaxWidth = Math.max(0, width - marginX * 2 - (hasLogo ? (logoSize + logoMargin) : 0));
+
+      // Faixa branca semitransparente para o carimbo ficar legível mesmo em PDFs escuros/escaneados.
+      const bandPaddingX = 8;
+      const bandPaddingY = 6;
+      const bandHeight = Math.max(logoSize, (y1 - y2) + fontSize) + bandPaddingY * 2;
+      const bandY = Math.max(0, y2 - bandPaddingY);
+      const bandWidth = Math.max(0, width - marginX * 2);
+
+      page.drawRectangle({
+        x: marginX - bandPaddingX,
+        y: bandY,
+        width: bandWidth + bandPaddingX * 2,
+        height: bandHeight,
+        color: rgb(1, 1, 1),
+        opacity: 0.82,
+        borderColor: rgb(0.75, 0.75, 0.75),
+        borderWidth: 0.5,
+      });
+
+      if (hasLogo) {
+        page.drawImage(avaliaSquareImage, {
+          x: Math.max(marginX, width - marginX - logoSize),
+          y: Math.max(0, bandY + (bandHeight - logoSize) / 2),
+          width: logoSize,
+          height: logoSize,
+          opacity: 0.98,
+        });
+      }
+
+      page.drawText(line1, {
+        x: marginX,
+        y: y1,
+        size: fontSize,
+        font,
+        color: rgb(0.05, 0.05, 0.05),
+        maxWidth: textMaxWidth,
+      });
+
+      page.drawText(line2, {
+        x: marginX,
+        y: y2,
+        size: fontSize,
+        font,
+        color: rgb(0.05, 0.05, 0.05),
+        maxWidth: textMaxWidth,
+      });
+    }
+
+    const bytes = await pdfDoc.save({ useObjectStreams: false });
+    return Buffer.from(bytes);
   }
 
   drawHeader(doc) {

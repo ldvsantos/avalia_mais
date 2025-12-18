@@ -987,10 +987,18 @@ app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, 
       return res.status(400).send('Arquivo inválido: PDF corrompido ou formato não suportado');
     }
 
+    // Carimbo visual (para ficar óbvio no navegador) + hash do conteúdo original.
+    // Obs: o hash do arquivo assinado (bytes finais) é diferente porque a assinatura altera o PDF.
+    const contentHash = sha256Hex(uploadedBuffer);
+    const stampedBuffer = await pdfService.stampUploadedPdf(uploadedBuffer, {
+      createdAt: new Date().toISOString(),
+      hash: contentHash,
+    });
+
     // Assina o PDF (mesmo se não foi gerado pelo sistema) para garantir proveniência.
     let signedBuffer;
     try {
-      signedBuffer = await pdfService.signPdf(uploadedBuffer, { requireSignature: true });
+      signedBuffer = await pdfService.signPdf(stampedBuffer, { requireSignature: true });
     } catch (err) {
       console.error('Falha ao assinar PDF enviado pelo admin', err);
       try { fs.unlinkSync(req.file.path); } catch {}
@@ -1014,7 +1022,8 @@ app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, 
       title,
       filename: req.file.filename,
       date: new Date().toISOString(),
-      hash: signedHash,
+      hash: contentHash,
+      signedFileHash: signedHash,
       signedAt: new Date().toISOString(),
       signedBy,
       signedIp,
@@ -1025,7 +1034,8 @@ app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, 
       ip: signedIp,
       filename: req.file.filename,
       originalName,
-      hash: signedHash,
+      hash: contentHash,
+      signedFileHash: signedHash,
     });
 
     res.redirect(`/secret/${ADMIN_SECRET}/admin`);
