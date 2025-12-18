@@ -890,7 +890,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           background-image: url('/img/back_index.jpg');
           background-size: cover;
           background-position: center;
-          opacity: 0.08;
+          opacity: 0.3;
           z-index: 0;
         }
         .auth-container {
@@ -898,7 +898,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           z-index: 1;
           width: 100%;
           max-width: 420px;
-          background: rgba(255, 255, 255, 0.7);
+          background: rgba(255, 255, 255, 0.98);
           border-radius: 16px;
           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
           padding: 40px 32px;
