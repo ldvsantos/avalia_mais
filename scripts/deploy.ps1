@@ -165,6 +165,7 @@ try {
     '--exclude=.github',
     '--exclude=.qodo',
     '--exclude=node_modules',
+    '--exclude=*/node_modules',
     '--exclude=server/node_modules',
     '--exclude=.venv',
     '--exclude=server/data',
@@ -182,9 +183,15 @@ try {
   & tar -czf $archiveLocal @excludes .
   if ($LASTEXITCODE -ne 0) { Fail 'Falha ao gerar o .tgz' }
 
-  Write-Host "Enviando pacote para o servidor: $User@$Server" -ForegroundColor Cyan
-  & scp -i $KeyPath $archiveLocal "${User}@${Server}:$remoteArchive"
+  $pkgSize = (Get-Item $archiveLocal).Length
+  $pkgSizeMB = "{0:N2}" -f ($pkgSize / 1MB)
+  Write-Host "Tamanho do pacote: $pkgSizeMB MB" -ForegroundColor Yellow
+  Write-Host "Iniciando upload para $Server... (Aguarde, isso pode levar alguns minutos)" -ForegroundColor Cyan
+
+  & scp -o StrictHostKeyChecking=no -i $KeyPath $archiveLocal "${User}@${Server}:$remoteArchive"
   if ($LASTEXITCODE -ne 0) { Fail 'Falha no SCP' }
+
+  Write-Host "Upload concluído!" -ForegroundColor Green
 
   $remoteScript = @'
 set -euo pipefail
@@ -282,7 +289,7 @@ echo "DEPLOY_OK: $TS"
   Write-Host 'Aplicando update no servidor (backup + swap + pm2 restart)...' -ForegroundColor Cyan
   # Normaliza quebras de linha para LF (evita \r quebrando bash options como 'pipefail')
   $remoteScriptContent = ($remoteScript -replace "`r`n", "`n") -replace "`r", ""
-  $remoteScriptContent | & ssh -i $KeyPath "${User}@${Server}" "sudo bash -s"
+  $remoteScriptContent | & ssh -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" "sudo bash -s"
   if ($LASTEXITCODE -ne 0) { Fail 'Deploy remoto falhou' }
 
   Write-Host 'Validando resposta pública...' -ForegroundColor Cyan
