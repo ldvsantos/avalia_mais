@@ -9,6 +9,6 @@ Motivo: a sessão usa cookie com flag Secure; se abrir em http:// o navegador po
 Se acontecer de “logar e voltar pro login”, faça Ctrl+F5 ou limpe cookies do site e tente novamente.
 Para pegar o {UUID} na EC2: cat /opt/planterr/server/.admin-secret
 Inscrição:
-http://18.222.198.84/
+https://18.222.198.84/
 
 

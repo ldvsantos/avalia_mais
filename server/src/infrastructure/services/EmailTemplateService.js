@@ -3,7 +3,8 @@ const path = require('path');
 
 class EmailTemplateService {
   constructor() {
-    this.logoUrl = 'http://13.59.123.67/img/logo_avalia_horizontal.png';
+    const siteUrl = String(process.env.SITE_URL || '').trim();
+    this.logoUrl = siteUrl ? `${siteUrl.replace(/\/$/, '')}/img/logo_avalia_horizontal.png` : '';
     this.primaryColor = '#4CAF50'; // Green from the site theme
   }
 
@@ -134,6 +135,10 @@ class EmailTemplateService {
   }
 
   _getLayout(content) {
+    const logoHtml = this.logoUrl
+      ? `<img src="${this.logoUrl}" alt="Avalia Mais Logo">`
+      : '';
+
     return `
       <!DOCTYPE html>
       <html>
@@ -150,7 +155,7 @@ class EmailTemplateService {
       <body>
         <div class="container">
           <div class="header">
-            <img src="${this.logoUrl}" alt="Avalia Mais Logo">
+            ${logoHtml}
           </div>
           <div class="content">
             ${content}

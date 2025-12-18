@@ -195,7 +195,7 @@ function workflowStatusLabel(status) {
 async function notifyCandidatePhaseResult({ protocol, phaseKey, status, score }) {
   try {
     const submission = submissionRepo && typeof submissionRepo.findByProtocol === 'function'
-      ? submissionRepo.findByProtocol(protocol)
+      ? await Promise.resolve(submissionRepo.findByProtocol(protocol))
       : null;
     const to = String(submission?.identified?.email || '').trim();
     if (!to) return;
@@ -312,7 +312,10 @@ if (require.main === module) {
   setInterval(() => {
     try {
       const year = new Date().getFullYear();
-      workflowService.reconcileDefinitiveFailures({ year, now: new Date() });
+      Promise.resolve(workflowService.reconcileDefinitiveFailures({ year, now: new Date() }))
+        .catch((err) => {
+          console.error('Workflow job failed', err);
+        });
     } catch (err) {
       console.error('Workflow job failed', err);
     }
@@ -719,7 +722,7 @@ app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar/edit`, checkAdminI
 });
 
 // Admin: decisão/atualização de status do recurso (para workflow)
-app.post(`/secret/${ADMIN_SECRET}/admin/appeals/:protocol/status`, checkAdminIP, adminAuth, (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/admin/appeals/:protocol/status`, checkAdminIP, adminAuth, async (req, res) => {
   try {
     const protocol = String(req.params.protocol || '').trim();
     if (!protocol) return res.status(400).json({ error: 'Protocolo inválido' });
@@ -731,7 +734,7 @@ app.post(`/secret/${ADMIN_SECRET}/admin/appeals/:protocol/status`, checkAdminIP,
     }
 
     const updated = typeof appealRepo.updateStatus === 'function'
-      ? appealRepo.updateStatus(protocol, status)
+      ? await Promise.resolve(appealRepo.updateStatus(protocol, status))
       : null;
 
     if (!updated) return res.status(404).json({ error: 'Recurso não encontrado' });
@@ -740,11 +743,11 @@ app.post(`/secret/${ADMIN_SECRET}/admin/appeals/:protocol/status`, checkAdminIP,
     try {
       if (updated && updated.submissionProtocol) {
         const submission = submissionRepo && typeof submissionRepo.findByProtocol === 'function'
-          ? submissionRepo.findByProtocol(updated.submissionProtocol)
+          ? await Promise.resolve(submissionRepo.findByProtocol(updated.submissionProtocol))
           : null;
         if (submission) {
           // Decisão Deferido/Indeferido
-          notifyCandidateAppealDecision({ appeal: updated, submission });
+          await notifyCandidateAppealDecision({ appeal: updated, submission });
         }
       }
     } catch {
@@ -753,7 +756,10 @@ app.post(`/secret/${ADMIN_SECRET}/admin/appeals/:protocol/status`, checkAdminIP,
 
     // tenta reconciliar imediatamente após decisão
     const year = new Date().getFullYear();
-    workflowService.reconcileDefinitiveFailures({ year, now: new Date() });
+    Promise.resolve(workflowService.reconcileDefinitiveFailures({ year, now: new Date() }))
+      .catch(() => {
+        // não bloqueia
+      });
 
     return res.json({ ok: true, appeal: updated });
   } catch (err) {

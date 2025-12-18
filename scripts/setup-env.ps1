@@ -12,9 +12,11 @@ param(
 
     [string]$AdminNotifyTo = '',
 
-    [string]$Server = '13.59.123.67',
+    [string]$Server = '18.222.198.84',
     [string]$User = 'ubuntu',
-    [string]$KeyPath = "$env:USERPROFILE\.ssh\planterr.pem"
+    [string]$KeyPath = "$env:USERPROFILE\.ssh\planterr.pem",
+    [int]$SshPort = 22,
+    [int]$SshConnectTimeoutSeconds = 15
 )
 
 $envContent = "SMTP_HOST=$SmtpHost`nSMTP_PORT=$SmtpPort`nSMTP_USER=$SmtpUser`nSMTP_PASS=$SmtpPass`nSMTP_SECURE=$SmtpSecure`nSMTP_FROM=$SmtpFrom"
@@ -32,16 +34,16 @@ $tmpRemote = "/tmp/planterr-env-$timestamp.env"
 Set-Content -Path $tmpLocal -Value $envContent -Encoding UTF8
 
 try {
-    scp -i $KeyPath $tmpLocal "${User}@${Server}:$tmpRemote"
+    scp -P $SshPort -o ConnectTimeout=$SshConnectTimeoutSeconds -o StrictHostKeyChecking=no -i $KeyPath $tmpLocal "${User}@${Server}:$tmpRemote"
     if ($LASTEXITCODE -ne 0) { throw "Falha no SCP" }
 
     # Instala o arquivo garantindo owner/permissões corretos (evita ficar root:root e quebrar leitura do dotenv)
     $remoteInstall = "sudo install -o ubuntu -g ubuntu -m 600 '$tmpRemote' /opt/planterr/server/.env && rm -f '$tmpRemote' && echo 'Arquivo .env instalado com sucesso.'"
-    ssh -i $KeyPath "${User}@${Server}" $remoteInstall
+    ssh -p $SshPort -o ConnectTimeout=$SshConnectTimeoutSeconds -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" $remoteInstall
     if ($LASTEXITCODE -ne 0) { throw "Falha ao instalar .env" }
 
     Write-Host "Configuração concluída! Reiniciando aplicação..." -ForegroundColor Green
-    ssh -i $KeyPath "${User}@${Server}" "sudo -u ubuntu pm2 restart planterr"
+    ssh -p $SshPort -o ConnectTimeout=$SshConnectTimeoutSeconds -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" "sudo -u ubuntu pm2 restart planterr"
 } finally {
     if (Test-Path $tmpLocal) { Remove-Item -Force $tmpLocal }
 }
