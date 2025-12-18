@@ -231,6 +231,10 @@ app.use('/api/', apiLimiter);
 // Serve the existing static site from /src
 app.use('/', express.static(path.join(__dirname, '..', 'src')));
 
+// Também servir imagens em /img (pasta raiz do repo) para assets administrativos (ex.: back_index.jpg)
+// Mantém compatibilidade com /src/img: se não existir em /src, cai aqui.
+app.use('/img', express.static(path.join(__dirname, '..', 'img')));
+
 // QR Code (para validação via PDF)
 app.get('/api/qrcode', async (req, res) => {
   try {
@@ -253,98 +257,37 @@ app.get('/api/qrcode', async (req, res) => {
   }
 });
 
-// Estado do calendário de inscrições (público)
-app.get('/api/registration-window', (req, res) => {
-  try {
-    const year = new Date().getFullYear();
-    const cal = calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
-    const window = cal?.phases?.[PHASE.INSCRICAO] || storage.getRegistrationWindow();
-    const now = new Date();
-    const open = (() => {
-      try {
-        workflowService.assertCanRegisterSubmission(now);
-        return true;
-      } catch {
-        return false;
-      }
-    })();
-    return res.json({ editalYear: year, registrationWindow: window, open, now: now.toISOString() });
-  } catch (err) {
-    return res.status(500).json({ error: 'Falha ao obter calendário' });
-  }
-});
+function toSaoPauloDateInput(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return '';
 
-// --- Admin: calendário do edital (ano) ---
-app.get(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar`, checkAdminIP, adminAuth, (req, res) => {
-  try {
-    const year = Number(req.params.year);
-    const cal = calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
-    return res.json(cal);
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-});
-
-app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar`, checkAdminIP, adminAuth, (req, res) => {
-  try {
-    const year = Number(req.params.year);
-    const saved = calendarRepo.setYearCalendar(year, req.body);
-    return res.json({ ok: true, calendar: saved });
-  } catch (err) {
-    return res.status(400).json({ error: err.message });
-  }
-});
-
-// --- Admin UI: edição do calendário completo (todas as fases) ---
-function toSaoPauloDateInput(iso) {
-  if (!iso) return '';
-  try {
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return '';
-    // sv-SE => YYYY-MM-DD
-    return new Intl.DateTimeFormat('sv-SE', {
-      timeZone: 'America/Sao_Paulo',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(d);
-  } catch {
-    return '';
-  }
+  // en-CA fornece YYYY-MM-DD. Forçamos o fuso de São Paulo para manter consistência.
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
 }
 
 function saoPauloDateToWindow(startDateStr, endDateStr) {
-  const startRaw = String(startDateStr || '').trim();
-  const endRaw = String(endDateStr || '').trim();
-  if (!startRaw || !endRaw) {
-    throw new Error('Datas inválidas (início e fim são obrigatórios)');
-  }
+  const s = String(startDateStr || '').trim();
+  const e = String(endDateStr || '').trim();
 
-  const parseYmd = (s) => {
-    const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!m) return null;
-    const y = Number(m[1]);
-    const mo = Number(m[2]);
-    const d = Number(m[3]);
-    if (!Number.isFinite(y) || !Number.isFinite(mo) || !Number.isFinite(d)) return null;
-    return { y, mo, d };
-  };
-
-  const s = parseYmd(startRaw);
-  const e = parseYmd(endRaw);
   if (!s || !e) {
-    throw new Error('Formato de data inválido (use AAAA-MM-DD)');
+    throw new Error('Datas obrigatórias');
   }
 
-  // Brasília (America/Sao_Paulo) = UTC-03 (sem horário de verão). Convertemos:
-  // - início do dia (00:00 BRT) => 03:00Z
-  // - fim do dia (23:59:59.999 BRT) => 02:59:59.999Z do dia seguinte
-  const start = new Date(Date.UTC(s.y, s.mo - 1, s.d, 3, 0, 0, 0));
-  const end = new Date(Date.UTC(e.y, e.mo - 1, e.d, 26, 59, 59, 999));
+  // Interpretar como horário de Brasília (UTC-03:00): 00:00 até 23:59.
+  // Observação: São Paulo não usa DST atualmente; este offset é suficiente para o edital.
+  const start = new Date(`${s}T00:00:00-03:00`);
+  const end = new Date(`${e}T23:59:59.999-03:00`);
 
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    throw new Error('Datas inválidas');
+    throw new Error('Formato de data inválido');
   }
+
   if (start >= end) {
     throw new Error('Janela inválida (início >= fim)');
   }
@@ -892,7 +835,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
       // Token inválido, continua para login
     }
   }
-  // Servir página de login simples
+  // Servir página de login (layout split: login lateral + imagem)
   res.send(`
     <!DOCTYPE html>
     <html lang="pt-BR">
@@ -901,38 +844,87 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="/theme.css">
+      <style>
+        body { padding: 0; }
+        .auth-layout {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          background: #003366;
+        }
+        .auth-left {
+          flex: 1;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
+        }
+        .auth-right {
+          flex: 1;
+          min-height: 260px;
+          background-image: url('/img/back_index.jpg');
+          background-size: cover;
+          background-position: center;
+          background-repeat: no-repeat;
+        }
+        .auth-card {
+          width: 100%;
+          max-width: 520px;
+        }
+        .auth-header {
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          gap:12px;
+          margin-bottom: 8px;
+          color: #fff;
+        }
+        .auth-header h1 { margin: 0; font-size: 16px; }
+        .auth-subtitle { text-align:center; margin-bottom:12px; color: #fff; }
+        .auth-card .panel { margin-bottom: 0; }
+
+        @media (min-width: 900px) {
+          .auth-layout { flex-direction: row; }
+          .auth-left, .auth-right { flex: 1; }
+          .auth-right { min-height: 100vh; }
+        }
+      </style>
     </head>
-    <body style="min-height:100vh; display:flex; align-items:center; justify-content:center;">
-      <div class="container" style="width:100%; max-width:520px;">
-        <div style="display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px;">
-          <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height: 48px; width:auto;">
-          <h1 style="margin:0;">Acesso Restrito</h1>
-          <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+" style="max-height: 48px; width:auto;">
-        </div>
-        <div style="text-align:center; margin-bottom:12px;">
-          Entre com suas credenciais para continuar.
-        </div>
+    <body>
+      <div class="auth-layout">
+        <div class="auth-left">
+          <div class="auth-card">
+            <div class="auth-header">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height: 48px; width:auto;">
+              <h1>Acesso Restrito</h1>
+              <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+" style="max-height: 48px; width:auto;">
+            </div>
+            <div class="auth-subtitle">Entre com suas credenciais para continuar.</div>
 
-        <section class="panel" style="margin-bottom:0;">
-          <div class="panel-header"><h2>Administração do Processo Seletivo - AVALIA+</h2></div>
-          <div class="panel-body">
-            <div id="error-msg" class="field-feedback error" style="display:none; margin-bottom: 8px;"></div>
+            <section class="panel">
+              <div class="panel-header"><h2>Administração do Processo Seletivo - AVALIA+</h2></div>
+              <div class="panel-body">
+                <div id="error-msg" class="field-feedback error" style="display:none; margin-bottom: 8px;"></div>
 
-            <form id="login-form">
-              <div class="form-group">
-                <label for="username">Usuário</label>
-                <input id="username" type="text" name="username" required autocomplete="username">
+                <form id="login-form">
+                  <div class="form-group">
+                    <label for="username">Usuário</label>
+                    <input id="username" type="text" name="username" required autocomplete="username">
+                  </div>
+                  <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input id="password" type="password" name="password" required autocomplete="current-password">
+                  </div>
+                  <div class="actions-bar" style="margin-top: 10px;">
+                    <button class="btn-primary" type="submit" id="btn-submit">Entrar</button>
+                  </div>
+                </form>
               </div>
-              <div class="form-group">
-                <label for="password">Senha</label>
-                <input id="password" type="password" name="password" required autocomplete="current-password">
-              </div>
-              <div class="actions-bar" style="margin-top: 10px;">
-                <button class="btn-primary" type="submit" id="btn-submit">Entrar</button>
-              </div>
-            </form>
+            </section>
           </div>
-        </section>
+        </div>
+
+        <div class="auth-right" aria-hidden="true"></div>
       </div>
       <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
