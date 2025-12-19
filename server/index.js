@@ -1172,10 +1172,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                const { conflicts } = computeConflicts();
-                if (conflicts.length === 0) {
-                  lastValid.GLOBAL = (fpGlobal?.selectedDates?.length === 2) ? fpGlobal.selectedDates.slice(0, 2) : null;
-                }
+                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1189,15 +1186,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                const { conflicts } = computeConflicts();
-                if (conflicts.length === 0) {
-                  lastValid.INSCRICAO = (fpInscricao?.selectedDates?.length === 2) ? fpInscricao.selectedDates.slice(0, 2) : null;
-                } else if (lastValid.INSCRICAO) {
-                  fpInscricao.setDate(lastValid.INSCRICAO, true);
-                  syncFromPickers();
-                  applyConstraints();
-                  updateTimeline();
-                }
+                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1211,15 +1200,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                const { conflicts } = computeConflicts();
-                if (conflicts.length === 0) {
-                  lastValid.PROJETO = (fpProjeto?.selectedDates?.length === 2) ? fpProjeto.selectedDates.slice(0, 2) : null;
-                } else if (lastValid.PROJETO) {
-                  fpProjeto.setDate(lastValid.PROJETO, true);
-                  syncFromPickers();
-                  applyConstraints();
-                  updateTimeline();
-                }
+                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1233,15 +1214,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                const { conflicts } = computeConflicts();
-                if (conflicts.length === 0) {
-                  lastValid.ENTREVISTA = (fpEntrevista?.selectedDates?.length === 2) ? fpEntrevista.selectedDates.slice(0, 2) : null;
-                } else if (lastValid.ENTREVISTA) {
-                  fpEntrevista.setDate(lastValid.ENTREVISTA, true);
-                  syncFromPickers();
-                  applyConstraints();
-                  updateTimeline();
-                }
+                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1255,15 +1228,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                const { conflicts } = computeConflicts();
-                if (conflicts.length === 0) {
-                  lastValid.RECURSOS = (fpRecursos?.selectedDates?.length === 2) ? fpRecursos.selectedDates.slice(0, 2) : null;
-                } else if (lastValid.RECURSOS) {
-                  fpRecursos.setDate(lastValid.RECURSOS, true);
-                  syncFromPickers();
-                  applyConstraints();
-                  updateTimeline();
-                }
+                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1277,15 +1242,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                const { conflicts } = computeConflicts();
-                if (conflicts.length === 0) {
-                  lastValid.PROVA = (fpProva?.selectedDates?.length === 1) ? [fpProva.selectedDates[0]] : null;
-                } else if (lastValid.PROVA) {
-                  fpProva.setDate(lastValid.PROVA, true);
-                  syncFromPickers();
-                  applyConstraints();
-                  updateTimeline();
-                }
+                // Apenas atualiza visualização, sem reverter
               },
             });
 
