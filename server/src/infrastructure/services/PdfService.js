@@ -498,12 +498,12 @@ class PdfService {
       // Marca d'água da logo UEFS (se existir)
       const hasUefs = fs.existsSync(this.uefsLogoPath);
       if (hasUefs) {
-        // Marca d'água grande, atrás do texto
-        const watermarkSize = 440;
+        // Marca d'água grande, ATRÁS do texto (desenhada primeiro)
+        const watermarkSize = Math.min(width, height) * 0.78;
         const watermarkX = (width - watermarkSize) / 2;
         const watermarkY = (height - watermarkSize) / 2;
         doc.save();
-        doc.opacity(0.12);
+        doc.opacity(0.10);
         doc.image(this.uefsLogoPath, watermarkX, watermarkY, { 
           width: watermarkSize,
           height: watermarkSize,
@@ -512,6 +512,8 @@ class PdfService {
           valign: 'center'
         });
         doc.restore();
+        // Reset explícito (garante que nada fique “lavado” ou em estado incorreto)
+        doc.opacity(1);
       }
 
       // Logos no topo (versão menor)
@@ -538,8 +540,10 @@ class PdfService {
       // Texto principal (centralizado)
       doc.font('Helvetica').fontSize(12).fillColor('#000000');
 
-      const startX = 50;
-      const textOptions = { align: 'center', width: width - 100 };
+      // Caixa de texto mais estreita para dar aparência realmente centralizada
+      const bodyMargin = 90;
+      const startX = bodyMargin;
+      const textOptions = { align: 'center', width: width - (bodyMargin * 2) };
 
       const parts = [];
       parts.push(
@@ -652,7 +656,7 @@ class PdfService {
 
         // Marca d'água também no anexo (mantém identidade do certificado)
         if (hasUefs) {
-          const watermarkSize2 = 440;
+          const watermarkSize2 = Math.min(w2, h2) * 0.78;
           const watermarkX2 = (w2 - watermarkSize2) / 2;
           const watermarkY2 = (h2 - watermarkSize2) / 2;
           doc.save();
@@ -665,6 +669,7 @@ class PdfService {
             valign: 'center'
           });
           doc.restore();
+          doc.opacity(1);
         }
 
         // Topo
