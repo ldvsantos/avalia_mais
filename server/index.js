@@ -3824,7 +3824,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
   const appealsForSubmission = typeof appealRepo.findBySubmissionProtocol === 'function'
     ? await Promise.resolve(appealRepo.findBySubmissionProtocol(protocol))
     : [];
-  const ETAPAS = ['Avaliação do Projeto', 'Entrevista', 'Prova de Língua Estrangeira'];
+  const ETAPAS = ['Inscrição', 'Avaliação do Projeto', 'Entrevista', 'Prova de Língua Estrangeira'];
 
   const renderAppealsTableRows = () => {
     const byEtapa = new Map(ETAPAS.map((e) => [e, []]));
