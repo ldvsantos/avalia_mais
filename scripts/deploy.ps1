@@ -42,32 +42,6 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Em PowerShell 7+, alguns comandos nativos escrevendo em stderr podem virar erro (NativeCommandError)
-# quando $ErrorActionPreference='Stop'. Para o fluxo do git, isso atrapalha.
-if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue) {
-  $global:PSNativeCommandUseErrorActionPreference = $false
-}
-
-# Carrega configuração local opcional (não versionada)
-$configPath = Join-Path $PSScriptRoot 'deploy-config.ps1'
-if (Test-Path $configPath) {
-  try {
-    $cfg = . $configPath
-    if ($cfg -is [hashtable]) {
-      if ($cfg.Host)      { $Server = [string]$cfg.Host }
-      if ($cfg.User)      { $User = [string]$cfg.User }
-      if ($cfg.KeyPath)   { $KeyPath = [string]$cfg.KeyPath }
-      if ($cfg.SshPort)   { $SshPort = [int]$cfg.SshPort }
-      if ($cfg.SshConnectTimeoutSeconds) { $SshConnectTimeoutSeconds = [int]$cfg.SshConnectTimeoutSeconds }
-      if ($cfg.RemoteDir) { $RemoteDir = [string]$cfg.RemoteDir }
-      if ($cfg.Pm2Name)   { $Pm2Name = [string]$cfg.Pm2Name }
-      if ($cfg.Branch)    { $Branch = [string]$cfg.Branch }
-    }
-  } catch {
-    Fail ("Falha ao carregar ${configPath}: " + $_.Exception.Message)
-  }
-}
-
 function Fail([string]$Message) {
   Write-Host "ERRO: $Message" -ForegroundColor Red
   exit 1
@@ -118,6 +92,45 @@ function EnsureGitCredentialHelper {
       }
     }
   }
+}
+
+# Em PowerShell 7+, alguns comandos nativos escrevendo em stderr podem virar erro (NativeCommandError)
+# quando $ErrorActionPreference='Stop'. Para o fluxo do git, isso atrapalha.
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue) {
+  $global:PSNativeCommandUseErrorActionPreference = $false
+}
+
+# Carrega configuração local opcional (não versionada)
+$configPath = Join-Path $PSScriptRoot 'deploy-config.ps1'
+if (Test-Path $configPath) {
+  try {
+    $cfg = . $configPath
+    if ($cfg -is [hashtable]) {
+      if ($cfg.ContainsKey('Host'))      { $Server = [string]$cfg['Host'] }
+      if ($cfg.ContainsKey('User'))      { $User = [string]$cfg['User'] }
+      if ($cfg.ContainsKey('KeyPath'))   { $KeyPath = [string]$cfg['KeyPath'] }
+      if ($cfg.ContainsKey('SshPort'))   { $SshPort = [int]$cfg['SshPort'] }
+      if ($cfg.ContainsKey('SshConnectTimeoutSeconds')) { $SshConnectTimeoutSeconds = [int]$cfg['SshConnectTimeoutSeconds'] }
+      if ($cfg.ContainsKey('RemoteDir')) { $RemoteDir = [string]$cfg['RemoteDir'] }
+      if ($cfg.ContainsKey('Pm2Name'))   { $Pm2Name = [string]$cfg['Pm2Name'] }
+      if ($cfg.ContainsKey('Branch'))    { $Branch = [string]$cfg['Branch'] }
+    }
+  } catch {
+    Fail ("Falha ao carregar ${configPath}: " + $_.Exception.Message)
+  }
+}
+
+# Verificação da chave SSH
+if (-not (Test-Path $KeyPath)) {
+    # Tenta encontrar no diretório do script como fallback
+    $localKey = Join-Path $PSScriptRoot "planterr.pem"
+    if (Test-Path $localKey) {
+        Write-Host "AVISO: Chave não encontrada em '$KeyPath'." -ForegroundColor Yellow
+        Write-Host "       Usando chave local encontrada em '$localKey'." -ForegroundColor Yellow
+        $KeyPath = $localKey
+    } else {
+        Fail "Arquivo de chave privada (PEM) não encontrado!`n   Esperado em: '$KeyPath'`n`n   SOLUÇÃO:`n   1. Copie o arquivo 'planterr.pem' para '$KeyPath'`n   2. Ou coloque-o na pasta 'scripts/'`n   3. Ou crie 'scripts/deploy-config.ps1' para configurar um caminho diferente."
+    }
 }
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
