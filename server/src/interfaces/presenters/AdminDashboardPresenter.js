@@ -426,7 +426,7 @@ class AdminDashboardPresenter {
                     Liste as atividades que farão parte deste evento. Estas aparecerão em uma tabela no certificado.
                   </small>
                   <div id="activitiesList" class="activity-list"></div>
-                  <button type="button" class="btn-add-activity" onclick="addActivity()">+ Adicionar Atividade</button>
+                  <button type="button" class="btn-add-activity" id="addActivityBtn">+ Adicionar Atividade</button>
                   <input type="hidden" name="activities" id="activitiesInput" />
                 </div>
                 
@@ -440,6 +440,9 @@ class AdminDashboardPresenter {
         </div>
         
         <script>
+          // CSP do servidor bloqueia handlers inline (onclick/onchange) via: script-src-attr 'none'.
+          // Portanto, todos os eventos são ligados via addEventListener.
+
           // Garantir que activities seja um array
           let activities = [];
           try {
@@ -449,8 +452,24 @@ class AdminDashboardPresenter {
             console.error('Erro ao carregar atividades:', e);
             activities = [];
           }
-          
-          console.log('Atividades carregadas:', activities);
+
+          function escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+          }
+
+          function updateTotalWorkload() {
+            const total = activities.reduce((sum, act) => sum + (parseFloat(act.workload) || 0), 0);
+            const workloadInput = document.querySelector('input[name="workload"]');
+            if (workloadInput && total > 0) {
+              workloadInput.value = total + ' hora(s)';
+            }
+          }
 
           function renderActivities() {
             const list = document.getElementById('activitiesList');
@@ -461,86 +480,100 @@ class AdminDashboardPresenter {
               updateTotalWorkload();
               return;
             }
-            
-            list.innerHTML = activities.map((act, idx) => \`
-              <div class="activity-row">
+
+            list.innerHTML = activities.map((act, idx) => `
+              <div class="activity-row" data-idx="${idx}">
                 <div>
                   <label style="font-size:11px; color:#666;">Atividade</label>
-                  <input type="text" value="\${escapeHtml(act.name || '')}" 
-                         onchange="updateActivity(\${idx}, 'name', this.value)" 
+                  <input type="text" data-idx="${idx}" data-field="name" value="${escapeHtml(act.name || '')}"
                          placeholder="Ex: Workshop de Redação de Patentes"
                          style="width:100%; padding:8px;" required />
                 </div>
                 <div>
                   <label style="font-size:11px; color:#666;">Função</label>
-                  <input type="text" value="\${escapeHtml(act.role || 'PARTICIPANTE')}" 
-                         onchange="updateActivity(\${idx}, 'role', this.value)" 
+                  <input type="text" data-idx="${idx}" data-field="role" value="${escapeHtml(act.role || 'PARTICIPANTE')}"
                          placeholder="PARTICIPANTE"
                          style="width:100%; padding:8px;" />
                 </div>
                 <div>
                   <label style="font-size:11px; color:#666;">Carga (h)</label>
-                  <input type="number" value="\${act.workload || 0}" 
-                         onchange="updateActivity(\${idx}, 'workload', this.value)" 
+                  <input type="number" data-idx="${idx}" data-field="workload" value="${Number(act.workload || 0)}"
                          placeholder="0"
                          style="width:100%; padding:8px;" min="0" step="0.5" />
                 </div>
-                <button type="button" class="btn-remove" onclick="removeActivity(\${idx})">✕</button>
+                <button type="button" class="btn-remove" data-action="remove" data-idx="${idx}">✕</button>
               </div>
-            \`).join('');
-            
+            `).join('');
+
             updateTotalWorkload();
           }
-          
+
           function addActivity() {
-            console.log('Adicionando atividade...');
             activities.push({ name: '', role: 'PARTICIPANTE', workload: 0 });
             renderActivities();
           }
-          
+
           function removeActivity(idx) {
-            console.log('Removendo atividade', idx);
+            if (!Number.isFinite(idx)) return;
             activities.splice(idx, 1);
             renderActivities();
           }
-          
-          function updateActivity(idx, field, value) {
-            if (!activities[idx]) return;
-            activities[idx][field] = field === 'workload' ? parseFloat(value) || 0 : value;
-            updateTotalWorkload();
-          }
-          
-          function updateTotalWorkload() {
-            const total = activities.reduce((sum, act) => sum + (parseFloat(act.workload) || 0), 0);
-            const workloadInput = document.querySelector('input[name="workload"]');
-            if (workloadInput && total > 0) {
-              workloadInput.value = total + ' hora(s)';
+
+          function bindActivityEvents() {
+            const list = document.getElementById('activitiesList');
+            const addBtn = document.getElementById('addActivityBtn');
+            const form = document.getElementById('eventForm');
+
+            if (addBtn) {
+              addBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                addActivity();
+              });
+            }
+
+            if (list) {
+              // Delegação: remove
+              list.addEventListener('click', (e) => {
+                const btn = e.target && e.target.closest ? e.target.closest('button[data-action="remove"]') : null;
+                if (!btn) return;
+                const idx = Number(btn.getAttribute('data-idx'));
+                removeActivity(idx);
+              });
+
+              // Delegação: edição dos campos
+              const onFieldEdit = (e) => {
+                const target = e.target;
+                if (!target || target.tagName !== 'INPUT') return;
+                const idxStr = target.getAttribute('data-idx');
+                const field = target.getAttribute('data-field');
+                if (idxStr == null || !field) return;
+
+                const idx = Number(idxStr);
+                if (!Number.isFinite(idx) || !activities[idx]) return;
+
+                const value = target.value;
+                activities[idx][field] = field === 'workload' ? (parseFloat(value) || 0) : value;
+                updateTotalWorkload();
+              };
+              list.addEventListener('input', onFieldEdit);
+              list.addEventListener('change', onFieldEdit);
+            }
+
+            if (form) {
+              form.addEventListener('submit', () => {
+                const hidden = document.getElementById('activitiesInput');
+                if (hidden) hidden.value = JSON.stringify(activities);
+              });
             }
           }
-          
-          function escapeHtml(text) {
-            if (!text) return '';
-            return String(text)
-              .replace(/&/g, "&amp;")
-              .replace(/</g, "&lt;")
-              .replace(/>/g, "&gt;")
-              .replace(/"/g, "&quot;")
-              .replace(/'/g, "&#039;");
-          }
-          
-          // Expor funções para o escopo global (window)
-          window.addActivity = addActivity;
-          window.removeActivity = removeActivity;
-          window.updateActivity = updateActivity;
 
-          document.getElementById('eventForm').addEventListener('submit', function(e) {
-            document.getElementById('activitiesInput').value = JSON.stringify(activities);
-          });
-          
-          // Renderizar inicial
           if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', renderActivities);
+            document.addEventListener('DOMContentLoaded', () => {
+              bindActivityEvents();
+              renderActivities();
+            });
           } else {
+            bindActivityEvents();
             renderActivities();
           }
         </script>
