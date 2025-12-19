@@ -496,11 +496,11 @@ class PdfService {
 
       if (hasUefs) {
         // UEFS na esquerda
-        doc.image(this.uefsLogoPath, 60, 60, { width: 100 });
+        doc.image(this.uefsLogoPath, 60, 60, { width: 130 });
       }
       if (hasPlanter) {
         // Planterr na direita
-        doc.image(this.planterLogoPath, width - 160, 60, { width: 100 });
+        doc.image(this.planterLogoPath, width - 190, 60, { width: 130 });
       }
 
       doc.moveDown(6);
