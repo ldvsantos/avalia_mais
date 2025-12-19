@@ -481,29 +481,37 @@ class AdminDashboardPresenter {
               return;
             }
 
-            list.innerHTML = activities.map((act, idx) => `
-              <div class="activity-row" data-idx="${idx}">
-                <div>
-                  <label style="font-size:11px; color:#666;">Atividade</label>
-                  <input type="text" data-idx="${idx}" data-field="name" value="${escapeHtml(act.name || '')}"
-                         placeholder="Ex: Workshop de Redação de Patentes"
-                         style="width:100%; padding:8px;" required />
-                </div>
-                <div>
-                  <label style="font-size:11px; color:#666;">Função</label>
-                  <input type="text" data-idx="${idx}" data-field="role" value="${escapeHtml(act.role || 'PARTICIPANTE')}"
-                         placeholder="PARTICIPANTE"
-                         style="width:100%; padding:8px;" />
-                </div>
-                <div>
-                  <label style="font-size:11px; color:#666;">Carga (h)</label>
-                  <input type="number" data-idx="${idx}" data-field="workload" value="${Number(act.workload || 0)}"
-                         placeholder="0"
-                         style="width:100%; padding:8px;" min="0" step="0.5" />
-                </div>
-                <button type="button" class="btn-remove" data-action="remove" data-idx="${idx}">✕</button>
-              </div>
-            `).join('');
+            // IMPORTANTÍSSIMO: não usar crases (acento grave) aqui, porque este script está
+            // dentro de um template string do Node (AdminDashboardPresenter).
+            // Crases não escapadas quebram o JS do servidor e derrubam o app.
+            list.innerHTML = activities.map((act, idx) => {
+              const name = escapeHtml(act.name || '');
+              const role = escapeHtml(act.role || 'PARTICIPANTE');
+              const workload = Number(act.workload || 0);
+
+              return '' +
+                '<div class="activity-row" data-idx="' + idx + '">' +
+                  '<div>' +
+                    '<label style="font-size:11px; color:#666;">Atividade</label>' +
+                    '<input type="text" data-idx="' + idx + '" data-field="name" value="' + name + '" ' +
+                           'placeholder="Ex: Workshop de Redação de Patentes" ' +
+                           'style="width:100%; padding:8px;" required />' +
+                  '</div>' +
+                  '<div>' +
+                    '<label style="font-size:11px; color:#666;">Função</label>' +
+                    '<input type="text" data-idx="' + idx + '" data-field="role" value="' + role + '" ' +
+                           'placeholder="PARTICIPANTE" ' +
+                           'style="width:100%; padding:8px;" />' +
+                  '</div>' +
+                  '<div>' +
+                    '<label style="font-size:11px; color:#666;">Carga (h)</label>' +
+                    '<input type="number" data-idx="' + idx + '" data-field="workload" value="' + workload + '" ' +
+                           'placeholder="0" ' +
+                           'style="width:100%; padding:8px;" min="0" step="0.5" />' +
+                  '</div>' +
+                  '<button type="button" class="btn-remove" data-action="remove" data-idx="' + idx + '">✕</button>' +
+                '</div>';
+            }).join('');
 
             updateTotalWorkload();
           }
