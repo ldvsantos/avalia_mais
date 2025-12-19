@@ -3292,37 +3292,45 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, 
 
 // Gerar certificado para um inscrito
 app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/certificate/:index`, checkAdminIP, adminAuth, async (req, res) => {
-    const event = await eventRepo.findById(req.params.id);
-    if (!event) return res.status(404).send('Evento não encontrado');
-    
-    const index = parseInt(req.params.index);
-    const registration = event.registrations[index];
-    if (!registration) return res.status(404).send('Inscrição não encontrada');
-    
-    const auditInfo = {
-      ip: getClientIP(req),
-      user: { username: req.session.user || 'admin' },
-      createdAt: new Date()
-    };
-    
-    const pdfBuffer = await pdfService.generateCertificatePdf({
-      nome: registration.nome,
-      cpf: registration.cpf,
-      curso: event.title,
-      data: new Date(event.date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
-      cargaHoraria: event.workload,
-      coordinator: event.coordinator,
-      department: event.department,
-      speakers: event.speakers,
-      role: registration.role || event.participantRole || 'PARTICIPANTE',
-      syllabus: event.syllabus,
-      activities: event.activities,
-      textoLivre: ''
-    }, auditInfo);
-    
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="certificado-${registration.nome.replace(/\s+/g, '_')}.pdf"`);
-    res.send(pdfBuffer);
+    try {
+      const event = await eventRepo.findById(req.params.id);
+      if (!event) return res.status(404).send('Evento não encontrado');
+
+      const index = parseInt(req.params.index);
+      const registration = event.registrations[index];
+      if (!registration) return res.status(404).send('Inscrição não encontrada');
+
+      const auditInfo = {
+        ip: getClientIP(req),
+        user: { username: req.session.user || 'admin' },
+        createdAt: new Date(),
+      };
+
+      const pdfBuffer = await pdfService.generateCertificatePdf(
+        {
+          nome: registration.nome,
+          cpf: registration.cpf,
+          curso: event.title,
+          data: new Date(event.date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
+          cargaHoraria: event.workload,
+          coordinator: event.coordinator,
+          department: event.department,
+          speakers: event.speakers,
+          role: registration.role || event.participantRole || 'PARTICIPANTE',
+          syllabus: event.syllabus,
+          activities: event.activities,
+          textoLivre: '',
+        },
+        auditInfo
+      );
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="certificado-${registration.nome.replace(/\s+/g, '_')}.pdf"`);
+      return res.send(pdfBuffer);
+    } catch (err) {
+      console.error('Erro ao gerar certificado:', err);
+      return res.status(500).send('Erro ao gerar certificado');
+    }
 });
 
 app.get(`/secret/${ADMIN_SECRET}/admin/appeals`, checkAdminIP, adminAuth, async (req, res) => {

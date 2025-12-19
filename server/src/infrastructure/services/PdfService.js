@@ -465,7 +465,6 @@ class PdfService {
 
   async generateCertificatePdf(data, auditInfo) {
     const pdfBuffer = await new Promise((resolve, reject) => {
-      // Certificado em paisagem usando template PNG marca_certificado.png
       const doc = new PDFDocument({ margin: 0, size: 'A4', layout: 'landscape' });
       const buffers = [];
 
@@ -473,138 +472,74 @@ class PdfService {
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
 
-      const { 
-        nome, 
-        cpf, 
-        curso, 
-        data: dataEvento, 
-        cargaHoraria, 
-        textoLivre,
+      const {
+        nome,
+        cpf,
+        curso,
+        data: dataEvento,
+        cargaHoraria,
         coordinator,
         department,
         speakers,
         role,
         syllabus,
-        activities
+        activities,
       } = data;
-      
+
       const width = doc.page.width;
       const height = doc.page.height;
 
-      // Gera códigos de verificação
       const verificationCode = this.generateVerificationCode();
       const documentNumber = this.generateDocumentNumber();
 
-      // Marca d'água da logo UEFS (se existir)
-      const hasUefs = fs.existsSync(this.uefsLogoPath);
-      if (hasUefs) {
-                const savedY = doc.y;
-        // Marca d'água grande, ATRÁS do texto (desenhada primeiro)
-        const watermarkSize = Math.min(width, height) * 0.78;
-        const watermarkX = (width - watermarkSize) / 2;
-
-        // Centraliza no miolo do certificado (entre cabeçalho e rodapé),
-        // para ficar claramente atrás do texto (e não “abaixo” dele).
-        const headerBottomY = 140;
-        const footerTopY = height - 150;
-        const contentCenterY = (headerBottomY + footerTopY) / 2;
-        const watermarkY = contentCenterY - (watermarkSize / 2);
-        doc.save();
-        doc.opacity(0.10);
-        doc.image(this.uefsLogoPath, watermarkX, watermarkY, { 
-          width: watermarkSize,
-          height: watermarkSize,
-          fit: [watermarkSize, watermarkSize],
-          align: 'center',
-          valign: 'center'
-        });
-        doc.restore();
-        // Reset explícito (garante que nada fique “lavado” ou em estado incorreto)
-        doc.opacity(1);
-              doc.y = savedY;
+      // Página 1: template como fundo + texto por cima
+      const templatePath = path.join(__dirname, '../../../../src/img/marca_certificado.png');
+      if (fs.existsSync(templatePath)) {
+        doc.image(templatePath, 0, 0, { width, height });
       }
 
-      // Logos no topo (versão menor)
-      const hasPlanter = fs.existsSync(this.planterLogoPath);
-      if (hasUefs) {
-        doc.image(this.uefsLogoPath, 50, 40, { width: 80 });
-      }
-      if (hasPlanter) {
-        doc.image(this.planterLogoPath, width - 130, 40, { width: 80 });
-      }
+      // Texto alinhado à esquerda para não invadir a "parra" do lado direito
+      const leftMargin = 80;
+      const topStart = 280;
+      const textWidth = 480;
 
-      // Espaçamento após logos
-      doc.moveDown(4);
-
-      // Título em letras grandes (estilo do exemplo)
-      doc.font('Helvetica-Bold').fontSize(30).fillColor('#000000')
-        .text('CERTIFICADO', { align: 'center' });
-
-      doc.font('Helvetica-Bold').fontSize(16).fillColor('#000000')
-        .text('DE PARTICIPAÇÃO', { align: 'center' });
-      
-      doc.moveDown(1.5);
-
-      // Texto principal (centralizado)
       doc.font('Helvetica').fontSize(12).fillColor('#000000');
+      const textoCompleto = `Certificamos que ${(nome || '').toUpperCase()}, CPF ${cpf || 'N/A'}, participou da Atividade de Extensão ${(curso || '').toUpperCase()}, na função de ${(role || 'PARTICIPANTE').toUpperCase()}, com ${cargaHoraria || '0'} hora(s) de atividades desenvolvidas. A atividade foi realizada ${dataEvento ? 'no dia ' + dataEvento : 'conforme programação'}.`;
+      doc.text(textoCompleto, leftMargin, topStart, { align: 'left', width: textWidth, lineGap: 4 });
 
-      // Caixa de texto mais estreita para dar aparência realmente centralizada
-      const bodyMargin = 90;
-      const startX = bodyMargin;
-      const textOptions = { align: 'center', width: width - (bodyMargin * 2) };
-
-      const parts = [];
-      parts.push(
-        `Certificamos que ${nome ? nome.toUpperCase() : ''}, CPF ${cpf || 'N/A'}, participou da Atividade de Extensão ${(curso || '').toUpperCase()}`
-      );
-      if (coordinator) parts.push(`coordenada pelo(a) ${String(coordinator).toUpperCase()}`);
-      if (department) parts.push(`promovida pelo(a) ${String(department).toUpperCase()}`);
-      parts.push(`na função de ${(role || 'PARTICIPANTE').toUpperCase()}`);
-      if (cargaHoraria) parts.push(`com ${cargaHoraria} de atividades desenvolvidas`);
-
-      const mainText = parts.join(', ') + `. A atividade foi realizada ${dataEvento ? 'no dia ' + dataEvento : 'conforme programação'}.`;
-
-      doc.text(mainText, startX, doc.y, textOptions);
-
-      doc.moveDown(1.5);
-
-      // A ementa e a tabela de atividades ficam na 2ª página (como anexo),
-      // para manter a 1ª página “estilo certificado” limpa.
-
-      // Texto livre adicional
-      if (textoLivre) {
-        doc.fontSize(11).font('Helvetica').text(textoLivre, startX, doc.y, textOptions);
-        doc.moveDown(1.5);
-      }
-
-      // Local e data de emissão
       const localEmissao = 'Feira de Santana';
-      const dataEmissao = new Date().toLocaleDateString('pt-BR', { 
-        day: 'numeric', 
-        month: 'long', 
-        year: 'numeric' 
+      const dataEmissao = new Date().toLocaleDateString('pt-BR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
       });
-      
-      doc.moveDown(2);
-      doc.fontSize(11).font('Helvetica')
-         .text(`${localEmissao}, ${dataEmissao}`, leftMargin, doc.y, { 
-           align: 'left',
-           width: textWidth
-         });
+      doc.fontSize(11).font('Helvetica').text(`${localEmissao}, ${dataEmissao}`, leftMargin, doc.y + 24, {
+        align: 'left',
+        width: textWidth,
+      });
 
-      // Rodapé: código de verificação e número do documento
       const footerY = height - 80;
-      doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000')
-         .text(`Código de verificação: ${verificationCode}`, leftMargin, footerY, { align: 'left' });
-      
-      doc.fontSize(9)
-         .text(`Número do Documento: ${documentNumber}`, leftMargin,
-        doc.y + 10,
-        { width: width - 100, align: 'left' }
-      );
+      doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
+      doc.text(`Código de verificação: ${verificationCode}`, leftMargin, footerY, { align: 'left', width: textWidth });
+      doc.fontSize(9).font('Helvetica').fillColor('#000000');
+      doc.text(`Número do Documento: ${documentNumber}`, leftMargin, footerY + 14, { align: 'left', width: textWidth });
 
-      // --- 2ª PÁGINA (ANEXO) ---
-      const hasAnnex = (syllabus && String(syllabus).trim()) || (activities && Array.isArray(activities) && activities.length > 0);
+      // Página 2 (anexo): ementa/atividades, se houver
+      const parsedActivities = (() => {
+        if (!activities) return null;
+        if (Array.isArray(activities)) return activities;
+        if (typeof activities === 'string') {
+          try {
+            const parsed = JSON.parse(activities);
+            return Array.isArray(parsed) ? parsed : null;
+          } catch {
+            return null;
+          }
+        }
+        return null;
+      })();
+
+      const hasAnnex = (syllabus && String(syllabus).trim()) || (parsedActivities && parsedActivities.length > 0);
       if (hasAnnex) {
         doc.addPage({ margin: 50, size: 'A4', layout: 'landscape' });
 
@@ -613,41 +548,9 @@ class PdfService {
         const startX2 = 50;
         const textOptions2 = { align: 'justify', width: w2 - 100 };
 
-        // Marca d'água também no anexo (mantém identidade do certificado)
-        if (hasUefs) {
-          const watermarkSize2 = Math.min(w2, h2) * 0.78;
-          const watermarkX2 = (w2 - watermarkSize2) / 2;
-
-          const headerBottomY2 = 130;
-          const footerTopY2 = h2 - 120;
-          const contentCenterY2 = (headerBottomY2 + footerTopY2) / 2;
-          const watermarkY2 = contentCenterY2 - (watermarkSize2 / 2);
-          doc.save();
-          doc.opacity(0.08);
-          doc.image(this.uefsLogoPath, watermarkX2, watermarkY2, {
-            width: watermarkSize2,
-            height: watermarkSize2,
-            fit: [watermarkSize2, watermarkSize2],
-            align: 'center',
-            valign: 'center'
-          });
-          doc.restore();
-          doc.opacity(1);
-        }
-
-        // Topo
-        if (hasUefs) {
-          doc.image(this.uefsLogoPath, 50, 40, { width: 70 });
-        }
-        if (hasPlanter) {
-          doc.image(this.planterLogoPath, w2 - 120, 40, { width: 70 });
-        }
-
-        doc.moveDown(3);
-        doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-          .text('ANEXO - ATIVIDADES E EMENTA', { align: 'center' });
-
+        doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000').text('ANEXO - ATIVIDADES E EMENTA', { align: 'center' });
         doc.moveDown(1);
+
         doc.font('Helvetica').fontSize(10).fillColor('#000000');
         doc.text(`Evento: ${(curso || '').toUpperCase()}`, startX2, doc.y, textOptions2);
         doc.text(`Participante: ${(nome || '').toUpperCase()}  |  CPF: ${cpf || 'N/A'}`, startX2, doc.y + 2, textOptions2);
@@ -657,15 +560,13 @@ class PdfService {
 
         doc.moveDown(1);
 
-        // Ementa (se houver)
         if (syllabus && String(syllabus).trim()) {
           doc.fontSize(11).font('Helvetica-Bold').text('Ementa:', startX2, doc.y);
           doc.fontSize(10).font('Helvetica').text(String(syllabus).trim(), startX2, doc.y + 2, textOptions2);
           doc.moveDown(1);
         }
 
-        // Tabela de Atividades (se houver)
-        if (activities && Array.isArray(activities) && activities.length > 0) {
+        if (parsedActivities && parsedActivities.length > 0) {
           doc.fontSize(11).font('Helvetica-Bold').text('Atividades:', startX2, doc.y);
           doc.moveDown(0.3);
 
@@ -676,7 +577,6 @@ class PdfService {
           const colFuncao = Math.floor(totalWidth * 0.24);
           const colCarga = totalWidth - colAtividade - colFuncao;
 
-          // Cabeçalho
           doc.rect(tableLeft, tableTop, totalWidth, 20).fillAndStroke('#f0f0f0', '#000000');
           doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
           doc.text('Atividades', tableLeft + 5, tableTop + 6, { width: colAtividade - 10 });
@@ -686,7 +586,7 @@ class PdfService {
           let currentY = tableTop + 20;
           doc.fontSize(8).font('Helvetica').fillColor('#000000');
 
-          activities.forEach((activity) => {
+          parsedActivities.forEach((activity) => {
             const rowHeight = 18;
             doc.rect(tableLeft, currentY, totalWidth, rowHeight).stroke('#000000');
             doc.text(String(activity?.name || ''), tableLeft + 5, currentY + 5, { width: colAtividade - 10 });
@@ -695,7 +595,7 @@ class PdfService {
             currentY += rowHeight;
           });
 
-          const totalWorkload = activities.reduce((sum, act) => sum + (parseFloat(act.workload) || 0), 0);
+          const totalWorkload = parsedActivities.reduce((sum, act) => sum + (parseFloat(act?.workload) || 0), 0);
           doc.rect(tableLeft, currentY, totalWidth, 20).fillAndStroke('#f0f0f0', '#000000');
           doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
           doc.text('Total', tableLeft + 5, currentY + 6, { width: colAtividade + colFuncao - 10 });
@@ -704,14 +604,14 @@ class PdfService {
           doc.y = currentY + 30;
         }
 
-        // Rodapé do anexo com os mesmos dados de verificação
         doc.y = h2 - 90;
-        doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000')
-          .text(`Código de verificação: ${verificationCode}  |  Número do Documento: ${documentNumber}`, startX2, doc.y, { align: 'left' });
+        doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000').text(
+          `Código de verificação: ${verificationCode}  |  Número do Documento: ${documentNumber}`,
+          startX2,
+          doc.y,
+          { align: 'left' }
+        );
       }
-
-      // Rodapé de Auditoria (comentado para não interferir com layout SIGAA)
-      // this.drawAuditFooter(doc, auditInfo);
 
       doc.end();
     });
