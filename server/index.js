@@ -487,75 +487,7 @@ function saoPauloDateToWindow(startDateStr, endDateStr) {
 }
 
 function renderCalendarEditPage({ year, values, saved, error }) {
-  const phaseLabels = {
-    INSCRICAO: 'Inscrição',
-    RECURSO_INSCRICAO: 'Recurso da Inscrição',
-    PROJETO: 'Avaliação do Projeto',
-    RECURSO_PROJETO: 'Recurso do Projeto',
-    ENTREVISTA: 'Entrevista',
-    RECURSO_ENTREVISTA: 'Recurso da Entrevista',
-    LINGUA: 'Prova de Língua',
-    RECURSO_LINGUA: 'Recurso da Prova de Língua',
-  };
-
-  const phaseOrder = [
-    'PROJETO',
-    'ENTREVISTA',
-  ];
-
   const field = (k) => String(values?.[k] || '');
-
-  const macroManagedPhases = new Set([
-    'INSCRICAO',
-    'RECURSO_INSCRICAO',
-    'PROJETO',
-    'RECURSO_PROJETO',
-    'ENTREVISTA',
-    'RECURSO_ENTREVISTA',
-    'LINGUA',
-    'RECURSO_LINGUA',
-  ]);
-
-  const rows = phaseOrder.map((phaseKey) => {
-    const label = phaseLabels[phaseKey] || phaseKey;
-    const startVal = escapeHtml(field(phaseKey + '_start'));
-    const endVal = escapeHtml(field(phaseKey + '_end'));
-
-    if (macroManagedPhases.has(phaseKey)) {
-      return `
-      <div class="box" style="margin-bottom: 10px; opacity: 0.95;">
-        <div style="font-weight:bold; color:#003366; margin-bottom:6px;">${escapeHtml(label)} (${escapeHtml(phaseKey)})</div>
-        <div class="hint" style="margin-bottom:6px;">Gerenciado pelos campos principais (range picker).</div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 8px;">
-          <div class="form-group" style="margin-bottom:0;">
-            <label>Início</label>
-            <input type="date" value="${startVal}" disabled />
-          </div>
-          <div class="form-group" style="margin-bottom:0;">
-            <label>Fim</label>
-            <input type="date" value="${endVal}" disabled />
-          </div>
-        </div>
-      </div>
-    `;
-    }
-
-    return `
-      <div class="box" style="margin-bottom: 10px;">
-        <div style="font-weight:bold; color:#003366; margin-bottom:6px;">${escapeHtml(label)} (${escapeHtml(phaseKey)})</div>
-        <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 8px;">
-          <div class="form-group" style="margin-bottom:0;">
-            <label for="${phaseKey}_start">Início</label>
-            <input id="${phaseKey}_start" name="${phaseKey}_start" type="date" required value="${startVal}" />
-          </div>
-          <div class="form-group" style="margin-bottom:0;">
-            <label for="${phaseKey}_end">Fim</label>
-            <input id="${phaseKey}_end" name="${phaseKey}_end" type="date" required value="${endVal}" />
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
 
   return `
     <!doctype html>
@@ -685,16 +617,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               </div>
 
               <p class="hint" style="text-align:center; margin-top: 10px;">Datas são interpretadas como horário de Brasília (00:00 até 23:59).</p>
-            </div>
-          </section>
 
-          <section class="panel">
-            <div class="panel-header"><h2>Fases (avançado)</h2></div>
-            <div class="panel-body">
-              <details>
-                <summary style="cursor:pointer; font-weight:700; color:#003366;">Mostrar / ocultar configuração avançada</summary>
-                <div style="margin-top:10px;">${rows}</div>
-              </details>
               <div class="admin-actions" style="justify-content:center; margin-top: 10px;">
                 <button class="btn-primary" id="calendar-submit" type="submit">Salvar Calendário</button>
               </div>
@@ -709,11 +632,19 @@ function renderCalendarEditPage({ year, values, saved, error }) {
         (function () {
           const $ = (id) => document.getElementById(id);
 
+          // Normaliza datas como "meio-dia" local para reduzir problemas de DST/timezone
+          // (mantém consistência ao formatar como YYYY-MM-DD e ao somar dias).
+          const asLocalNoon = (d) => {
+            if (!d) return null;
+            return new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);
+          };
+
           const fmt = (d) => {
             if (!d) return '';
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
+            const x = asLocalNoon(d);
+            const y = x.getFullYear();
+            const m = String(x.getMonth() + 1).padStart(2, '0');
+            const day = String(x.getDate()).padStart(2, '0');
             return String(y) + '-' + m + '-' + day;
           };
 
@@ -725,14 +656,21 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             const y = Number(parts[0]);
             const m = Number(parts[1]);
             const d = Number(parts[2]);
-            const dt = new Date(y, m - 1, d);
+            const dt = new Date(y, m - 1, d, 12, 0, 0, 0);
             return Number.isNaN(dt.getTime()) ? null : dt;
           };
 
           const addDays = (dt, days) => {
-            const x = new Date(dt.getTime());
+            const x = asLocalNoon(dt);
             x.setDate(x.getDate() + days);
             return x;
+          };
+
+          const daysBetween = (start, end) => {
+            const a = asLocalNoon(start);
+            const b = asLocalNoon(end);
+            const ms = b.getTime() - a.getTime();
+            return Math.round(ms / 86400000);
           };
 
           const readRangeFromHidden = (startId, endId) => {
@@ -748,6 +686,188 @@ function renderCalendarEditPage({ year, values, saved, error }) {
 
           const ensureFlatpickr = () => {
             if (!window.flatpickr) throw new Error('Flatpickr não carregou');
+          };
+
+          const sameYMD = (a, b) => {
+            const x = asLocalNoon(a);
+            const y = asLocalNoon(b);
+            return x.getFullYear() === y.getFullYear() && x.getMonth() === y.getMonth() && x.getDate() === y.getDate();
+          };
+
+          const isDateDisabledByRule = (date, rule) => {
+            if (!rule) return false;
+            if (typeof rule === 'function') return !!rule(date);
+            if (rule instanceof Date) return sameYMD(rule, date);
+
+            const t = typeof rule;
+            if (t === 'string') {
+              const dt = parseInputDate(rule);
+              return dt ? sameYMD(dt, date) : false;
+            }
+
+            // Suporta { from: Date|string, to: Date|string }
+            if (t === 'object' && (rule.from || rule.to)) {
+              const from = rule.from instanceof Date ? asLocalNoon(rule.from) : parseInputDate(rule.from);
+              const to = rule.to instanceof Date ? asLocalNoon(rule.to) : parseInputDate(rule.to);
+              const d = asLocalNoon(date);
+              if (from && to) return d >= from && d <= to;
+              if (from && !to) return d >= from;
+              if (!from && to) return d <= to;
+              return false;
+            }
+
+            return false;
+          };
+
+          const isDateEnabledInFp = (date, fp) => {
+            if (!fp) return false;
+            const d = asLocalNoon(date);
+
+            const minDate = fp.config && fp.config.minDate instanceof Date ? asLocalNoon(fp.config.minDate) : null;
+            const maxDate = fp.config && fp.config.maxDate instanceof Date ? asLocalNoon(fp.config.maxDate) : null;
+            if (minDate && d < minDate) return false;
+            if (maxDate && d > maxDate) return false;
+
+            const enableRules = Array.isArray(fp.config?.enable) ? fp.config.enable : [];
+            if (enableRules.length > 0) {
+              // Se há enable[], precisa casar pelo menos um
+              const ok = enableRules.some((r) => isDateDisabledByRule(d, r));
+              if (!ok) return false;
+            }
+
+            const disableRules = Array.isArray(fp.config?.disable) ? fp.config.disable : [];
+            if (disableRules.some((r) => isDateDisabledByRule(d, r))) return false;
+            return true;
+          };
+
+          const rangeIsValid = (start, end, fp, { minNights = 0, maxNights = null } = {}) => {
+            if (!start || !end) return false;
+            const s = asLocalNoon(start);
+            const e = asLocalNoon(end);
+            const a = s <= e ? s : e;
+            const b = s <= e ? e : s;
+
+            const nights = daysBetween(a, b);
+            if (nights < Number(minNights || 0)) return false;
+            if (maxNights != null && Number.isFinite(Number(maxNights)) && nights > Number(maxNights)) return false;
+
+            // Não permite intervalos que atravessem dias desabilitados
+            for (let cursor = asLocalNoon(a); cursor <= b; cursor = addDays(cursor, 1)) {
+              if (!isDateEnabledInFp(cursor, fp)) return false;
+            }
+            return true;
+          };
+
+          const enableDragRange = (fp, { minNights = 0, maxNights = null } = {}) => {
+            if (!fp || !fp.calendarContainer) return;
+
+            let dragging = false;
+            let dragStart = null;
+            let lastHover = null;
+            let prevSelection = null;
+
+            const findDayElem = (target) => {
+              if (!target) return null;
+              const el = target.closest ? target.closest('.flatpickr-day') : null;
+              if (!el) return null;
+              if (el.classList.contains('prevMonthDay') || el.classList.contains('nextMonthDay')) return null;
+              if (!el.dateObj) return null;
+              return el;
+            };
+
+            const begin = (dayDate, ev) => {
+              if (!dayDate) return;
+              const d = asLocalNoon(dayDate);
+              if (!isDateEnabledInFp(d, fp)) return;
+
+              dragging = true;
+              dragStart = d;
+              lastHover = d;
+              prevSelection = Array.isArray(fp.selectedDates) ? fp.selectedDates.slice() : [];
+
+              // Reinicia o intervalo imediatamente (estilo Airbnb: novo check-in)
+              fp.setDate([dragStart, dragStart], false);
+              fp.redraw();
+
+              if (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+              }
+            };
+
+            const move = (dayDate) => {
+              if (!dragging || !dragStart || !dayDate) return;
+              const d = asLocalNoon(dayDate);
+              if (!isDateEnabledInFp(d, fp)) return;
+              if (lastHover && sameYMD(lastHover, d)) return;
+              lastHover = d;
+
+              if (!rangeIsValid(dragStart, d, fp, { minNights, maxNights })) return;
+              fp.setDate([dragStart, d], false);
+              fp.redraw();
+            };
+
+            const end = (ev) => {
+              if (!dragging) return;
+              dragging = false;
+
+              const sel = Array.isArray(fp.selectedDates) ? fp.selectedDates.slice() : [];
+              if (sel.length === 2 && rangeIsValid(sel[0], sel[1], fp, { minNights, maxNights })) {
+                fp.setDate([asLocalNoon(sel[0]), asLocalNoon(sel[1])], true);
+                return;
+              }
+
+              // Se ficou inválido (ou incompleto), restaura seleção anterior
+              if (prevSelection && prevSelection.length > 0) {
+                fp.setDate(prevSelection, true);
+              } else {
+                fp.clear();
+              }
+
+              if (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+              }
+            };
+
+            // Desktop: pointer events
+            fp.calendarContainer.addEventListener('pointerdown', (ev) => {
+              if (ev.button != null && ev.button !== 0) return;
+              const dayEl = findDayElem(ev.target);
+              if (!dayEl) return;
+              begin(dayEl.dateObj, ev);
+            }, { passive: false });
+
+            fp.calendarContainer.addEventListener('pointerenter', (ev) => {
+              const dayEl = findDayElem(ev.target);
+              if (!dayEl) return;
+              move(dayEl.dateObj);
+            }, true);
+
+            window.addEventListener('pointerup', end, { passive: false });
+
+            // Mobile/legacy: touch fallback (quando pointer não cobre bem)
+            fp.calendarContainer.addEventListener('touchstart', (ev) => {
+              const t = ev.touches && ev.touches[0];
+              if (!t) return;
+              const el = document.elementFromPoint(t.clientX, t.clientY);
+              const dayEl = findDayElem(el);
+              if (!dayEl) return;
+              begin(dayEl.dateObj, ev);
+            }, { passive: false });
+
+            fp.calendarContainer.addEventListener('touchmove', (ev) => {
+              if (!dragging) return;
+              const t = ev.touches && ev.touches[0];
+              if (!t) return;
+              const el = document.elementFromPoint(t.clientX, t.clientY);
+              const dayEl = findDayElem(el);
+              if (!dayEl) return;
+              move(dayEl.dateObj);
+              ev.preventDefault();
+            }, { passive: false });
+
+            window.addEventListener('touchend', end, { passive: false });
           };
 
           const fpCommon = {
@@ -1238,6 +1358,14 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             fpEntrevista.set('disable', [buildDisableFn('ENTREVISTA', fpEntrevista)]);
             fpProva.set('disable', [buildDisableFn('PROVA', fpProva)]);
             fpRecursos.set('disable', [buildDisableFn('RECURSOS', fpRecursos)]);
+
+            // Drag-to-select (estilo Airbnb) para intervalos: arrastar do início ao fim.
+            // Comportamento adotado após intervalo completo: iniciar novo intervalo ao tocar/clicar de novo.
+            enableDragRange(fpGlobal, { minNights: 0, maxNights: null });
+            enableDragRange(fpInscricao, { minNights: 0, maxNights: null });
+            enableDragRange(fpProjeto, { minNights: 0, maxNights: null });
+            enableDragRange(fpEntrevista, { minNights: 0, maxNights: null });
+            enableDragRange(fpRecursos, { minNights: 0, maxNights: null });
 
             // Garantir sync inicial (útil quando os campos hidden já vieram preenchidos)
             syncFromPickers();
