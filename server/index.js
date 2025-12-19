@@ -1360,13 +1360,12 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             fpProva.set('disable', [buildDisableFn('PROVA', fpProva)]);
             fpRecursos.set('disable', [buildDisableFn('RECURSOS', fpRecursos)]);
 
-            // Drag-to-select (estilo Airbnb) para intervalos: arrastar do início ao fim.
-            // Comportamento adotado após intervalo completo: iniciar novo intervalo ao tocar/clicar de novo.
-            enableDragRange(fpGlobal, { minNights: 0, maxNights: null });
-            enableDragRange(fpInscricao, { minNights: 0, maxNights: null });
-            enableDragRange(fpProjeto, { minNights: 0, maxNights: null });
-            enableDragRange(fpEntrevista, { minNights: 0, maxNights: null });
-            enableDragRange(fpRecursos, { minNights: 0, maxNights: null });
+            // Drag-to-select removido para restaurar comportamento padrão (Click-Click) que é mais estável.
+            // enableDragRange(fpGlobal, { minNights: 0, maxNights: null });
+            // enableDragRange(fpInscricao, { minNights: 0, maxNights: null });
+            // enableDragRange(fpProjeto, { minNights: 0, maxNights: null });
+            // enableDragRange(fpEntrevista, { minNights: 0, maxNights: null });
+            // enableDragRange(fpRecursos, { minNights: 0, maxNights: null });
 
             // Garantir sync inicial (útil quando os campos hidden já vieram preenchidos)
             syncFromPickers();
