@@ -508,6 +508,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
         .calendar-macro label { display:block; font-weight: 700; margin-bottom: 6px; }
         .calendar-macro input[type="text"] { width: 100%; }
         .calendar-hidden { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+        .color-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
 
         /* Destaque visual de fases ocupadas no Flatpickr */
         .flatpickr-day.fp-occupied-inscricoes { background: rgba(46,125,50,0.18); border-color: rgba(46,125,50,0.35); }
@@ -569,56 +570,56 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               <div class="hint" id="global-first-hint" style="margin-bottom:10px;">Defina o Período Global para habilitar Inscrições, Projeto, Entrevista, Prova e Recursos.</div>
               <div class="calendar-macro-grid">
                 <div class="calendar-macro">
-                  <label for="INSCRICAO_range">Inscrições (intervalo)</label>
+                  <label for="INSCRICAO_range"><span class="color-dot" style="background:#2e7d32"></span> Inscrições (intervalo)</label>
                   <input id="INSCRICAO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="INSCRICAO_start" name="INSCRICAO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('INSCRICAO_start'))}" />
                   <input id="INSCRICAO_end" name="INSCRICAO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('INSCRICAO_end'))}" />
                 </div>
 
                 <div class="calendar-macro">
-                  <label for="PROJETO_range">Avaliação do Projeto (intervalo)</label>
+                  <label for="PROJETO_range"><span class="color-dot" style="background:#003366"></span> Avaliação do Projeto (intervalo)</label>
                   <input id="PROJETO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="PROJETO_start" name="PROJETO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('PROJETO_start'))}" />
                   <input id="PROJETO_end" name="PROJETO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('PROJETO_end'))}" />
                 </div>
 
                 <div class="calendar-macro">
-                  <label for="ENTREVISTA_range">Entrevista (intervalo)</label>
+                  <label for="ENTREVISTA_range"><span class="color-dot" style="background:#86A3C2"></span> Entrevista (intervalo)</label>
                   <input id="ENTREVISTA_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="ENTREVISTA_start" name="ENTREVISTA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('ENTREVISTA_start'))}" />
                   <input id="ENTREVISTA_end" name="ENTREVISTA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('ENTREVISTA_end'))}" />
                 </div>
 
                 <div class="calendar-macro">
-                  <label for="PROVA_date">Prova de Língua (data única)</label>
+                  <label for="PROVA_date"><span class="color-dot" style="background:#1565c0"></span> Prova de Língua (data única)</label>
                   <input id="PROVA_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
                   <input id="LINGUA_start" name="LINGUA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('LINGUA_start'))}" />
                   <input id="LINGUA_end" name="LINGUA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('LINGUA_end'))}" />
                 </div>
 
                 <div class="calendar-macro">
-                  <label for="RECURSO_INSCRICAO_range">Recursos de Inscrição</label>
+                  <label for="RECURSO_INSCRICAO_range"><span class="color-dot" style="background:#f9a825"></span> Recursos de Inscrição</label>
                   <input id="RECURSO_INSCRICAO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="RECURSO_INSCRICAO_start" name="RECURSO_INSCRICAO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_INSCRICAO_start'))}" />
                   <input id="RECURSO_INSCRICAO_end" name="RECURSO_INSCRICAO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_INSCRICAO_end'))}" />
                 </div>
 
                 <div class="calendar-macro">
-                  <label for="RECURSO_PROJETO_range">Recursos de Projeto</label>
+                  <label for="RECURSO_PROJETO_range"><span class="color-dot" style="background:#f9a825"></span> Recursos de Projeto</label>
                   <input id="RECURSO_PROJETO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="RECURSO_PROJETO_start" name="RECURSO_PROJETO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_PROJETO_start'))}" />
                   <input id="RECURSO_PROJETO_end" name="RECURSO_PROJETO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_PROJETO_end'))}" />
                 </div>
 
                 <div class="calendar-macro">
-                  <label for="RECURSO_ENTREVISTA_range">Recursos de Entrevista</label>
+                  <label for="RECURSO_ENTREVISTA_range"><span class="color-dot" style="background:#f9a825"></span> Recursos de Entrevista</label>
                   <input id="RECURSO_ENTREVISTA_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="RECURSO_ENTREVISTA_start" name="RECURSO_ENTREVISTA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_ENTREVISTA_start'))}" />
                   <input id="RECURSO_ENTREVISTA_end" name="RECURSO_ENTREVISTA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_ENTREVISTA_end'))}" />
                 </div>
 
                 <div class="calendar-macro">
-                  <label for="RECURSO_LINGUA_range">Recursos de Prova de Língua</label>
+                  <label for="RECURSO_LINGUA_range"><span class="color-dot" style="background:#f9a825"></span> Recursos de Prova de Língua</label>
                   <input id="RECURSO_LINGUA_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="RECURSO_LINGUA_start" name="RECURSO_LINGUA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_LINGUA_start'))}" />
                   <input id="RECURSO_LINGUA_end" name="RECURSO_LINGUA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_LINGUA_end'))}" />
