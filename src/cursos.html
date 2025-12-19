@@ -118,6 +118,7 @@
                         const date = formatDate(e && e.date ? e.date : null);
                         const location = escapeHtml(e && e.location ? e.location : '');
                         const workload = escapeHtml(e && e.workload ? e.workload : '');
+                        const speakers = escapeHtml(e && e.speakers ? e.speakers : '');
                         const desc = escapeHtml(e && e.description ? e.description : '');
                         const id = e && e.id ? String(e.id) : '';
 
@@ -127,6 +128,7 @@
                             (date ? '<div><strong>Data:</strong> ' + date + '</div>' : '') +
                             (location ? '<div><strong>Local:</strong> ' + location + '</div>' : '') +
                             (workload ? '<div><strong>Carga horária:</strong> ' + workload + '</div>' : '') +
+                            (speakers ? '<div><strong>Palestrante/Ministrante:</strong> ' + speakers + '</div>' : '') +
                             '</div>' +
                             (desc ? '<div style="white-space: pre-wrap; color:#444;">' + desc + '</div>' : '') +
                             '<div class="course-actions">' +

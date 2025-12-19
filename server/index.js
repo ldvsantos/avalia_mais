@@ -1818,6 +1818,7 @@ app.get('/api/public-events', async (req, res) => {
         location: String(e.location || ''),
         workload: String(e.workload || ''),
         description: String(e.description || ''),
+        speakers: String(e.speakers || ''),
       }))
       .sort((a, b) => {
         const da = a.date ? new Date(a.date).getTime() : 0;
@@ -1986,6 +1987,13 @@ app.get('/eventos/:id', async (req, res) => {
 
   const syllabus = String(event.syllabus || '').trim();
   const activities = Array.isArray(event.activities) ? event.activities : [];
+  const speakers = String(event.speakers || '').trim();
+
+  const speakersHtml = speakers
+    ? `
+        <p><strong>Palestrante/Ministrante:</strong> ${escapeHtml(speakers)}</p>
+      `
+    : '';
 
   const syllabusHtml = syllabus
     ? `
@@ -2050,6 +2058,7 @@ app.get('/eventos/:id', async (req, res) => {
             <p><strong>Data:</strong> ${new Date(event.date).toLocaleDateString('pt-BR')}</p>
             <p><strong>Local:</strong> ${escapeHtml(event.location)}</p>
             <p><strong>Carga Horária:</strong> ${escapeHtml(event.workload)}</p>
+            ${speakersHtml}
             <h3>Descrição</h3>
             <div style="margin: 12px 0; white-space: pre-wrap;">${escapeHtml(event.description)}</div>
             ${syllabusHtml}
