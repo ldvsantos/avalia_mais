@@ -465,8 +465,8 @@ class PdfService {
 
   async generateCertificatePdf(data, auditInfo) {
     const pdfBuffer = await new Promise((resolve, reject) => {
-      // Layout retrato para certificado estilo SIGAA
-      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      // Certificado em paisagem (como combinado). A 2ª página também será paisagem.
+      const doc = new PDFDocument({ margin: 50, size: 'A4', layout: 'landscape' });
       const buffers = [];
 
       doc.on('data', buffers.push.bind(buffers));
@@ -490,6 +490,10 @@ class PdfService {
       
       const width = doc.page.width;
       const height = doc.page.height;
+
+      // Gera uma única vez (vale para as 2 páginas)
+      const verificationCode = this.generateVerificationCode();
+      const documentNumber = this.generateDocumentNumber();
 
       // Marca d'água da logo UEFS (se existir)
       const hasUefs = fs.existsSync(this.uefsLogoPath);
@@ -568,65 +572,8 @@ class PdfService {
 
       doc.moveDown(1.5);
 
-      // Ementa (se houver)
-      if (syllabus && syllabus.trim()) {
-        doc.fontSize(10).font('Helvetica-Bold').text('Ementa:', startX, doc.y);
-        doc.fontSize(10).font('Helvetica').text(syllabus, startX, doc.y + 2, textOptions);
-        doc.moveDown(1);
-      }
-
-      // Tabela de Atividades (se houver)
-      if (activities && Array.isArray(activities) && activities.length > 0) {
-        doc.fontSize(10).font('Helvetica-Bold').text('Atividades:', startX, doc.y);
-        doc.moveDown(0.3);
-        
-        const tableTop = doc.y;
-        const tableLeft = startX;
-        const colWidths = {
-          atividade: 310,
-          funcao: 110,
-          carga: 60
-        };
-        
-        // Cabeçalho da tabela
-        doc.rect(tableLeft, tableTop, colWidths.atividade + colWidths.funcao + colWidths.carga, 20)
-           .fillAndStroke('#f0f0f0', '#000000');
-        
-        doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
-        doc.text('Atividades', tableLeft + 5, tableTop + 6, { width: colWidths.atividade - 10 });
-        doc.text('Função', tableLeft + colWidths.atividade + 5, tableTop + 6, { width: colWidths.funcao - 10 });
-        doc.text('Carga', tableLeft + colWidths.atividade + colWidths.funcao + 5, tableTop + 6, { width: colWidths.carga - 10 });
-        
-        let currentY = tableTop + 20;
-        
-        // Linhas de atividades
-        activities.forEach((activity, idx) => {
-          const rowHeight = 18;
-          
-          // Linha
-          doc.rect(tableLeft, currentY, colWidths.atividade + colWidths.funcao + colWidths.carga, rowHeight)
-             .stroke('#000000');
-          
-          doc.fontSize(8).font('Helvetica').fillColor('#000000');
-          doc.text(activity.name || '', tableLeft + 5, currentY + 5, { width: colWidths.atividade - 10 });
-          doc.text(activity.role || '', tableLeft + colWidths.atividade + 5, currentY + 5, { width: colWidths.funcao - 10 });
-          doc.text(String(activity.workload || '0'), tableLeft + colWidths.atividade + colWidths.funcao + 5, currentY + 5, { width: colWidths.carga - 10 });
-          
-          currentY += rowHeight;
-        });
-        
-        // Linha de total
-        const totalWorkload = activities.reduce((sum, act) => sum + (parseFloat(act.workload) || 0), 0);
-        doc.rect(tableLeft, currentY, colWidths.atividade + colWidths.funcao + colWidths.carga, 20)
-           .fillAndStroke('#f0f0f0', '#000000');
-        
-        doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
-        doc.text('Total', tableLeft + 5, currentY + 6, { width: colWidths.atividade + colWidths.funcao - 10 });
-        doc.text(`${totalWorkload} hora(s)`, tableLeft + colWidths.atividade + colWidths.funcao + 5, currentY + 6, { width: colWidths.carga - 10 });
-        
-        doc.y = currentY + 25;
-        doc.moveDown(1);
-      }
+      // A ementa e a tabela de atividades ficam na 2ª página (como anexo),
+      // para manter a 1ª página “estilo certificado” limpa.
 
       // Texto livre adicional
       if (textoLivre) {
@@ -684,9 +631,6 @@ class PdfService {
          .text(proReitor, width - 280, doc.y + 5, { width: 180, align: 'center' });
 
       // Rodapé: código de verificação e número do documento
-      const verificationCode = this.generateVerificationCode();
-      const documentNumber = this.generateDocumentNumber();
-      
       doc.y = height - 120;
       doc.fontSize(9)
          .font('Helvetica-Bold')
@@ -711,6 +655,108 @@ class PdfService {
         doc.y + 10,
         { width: width - 100, align: 'left' }
       );
+
+      // --- 2ª PÁGINA (ANEXO) ---
+      const hasAnnex = (syllabus && String(syllabus).trim()) || (activities && Array.isArray(activities) && activities.length > 0);
+      if (hasAnnex) {
+        doc.addPage({ margin: 50, size: 'A4', layout: 'landscape' });
+
+        const w2 = doc.page.width;
+        const h2 = doc.page.height;
+        const startX2 = 50;
+        const textOptions2 = { align: 'justify', width: w2 - 100 };
+
+        // Marca d'água também no anexo (mantém identidade do certificado)
+        if (hasUefs) {
+          const watermarkSize2 = 300;
+          const watermarkX2 = (w2 - watermarkSize2) / 2;
+          const watermarkY2 = (h2 - watermarkSize2) / 2;
+          doc.save();
+          doc.opacity(0.06);
+          doc.image(this.uefsLogoPath, watermarkX2, watermarkY2, {
+            width: watermarkSize2,
+            height: watermarkSize2,
+            fit: [watermarkSize2, watermarkSize2],
+            align: 'center',
+            valign: 'center'
+          });
+          doc.restore();
+        }
+
+        // Topo
+        if (hasUefs) {
+          doc.image(this.uefsLogoPath, 50, 40, { width: 70 });
+        }
+        if (hasPlanter) {
+          doc.image(this.planterLogoPath, w2 - 120, 40, { width: 70 });
+        }
+
+        doc.moveDown(3);
+        doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
+          .text('ANEXO - ATIVIDADES E EMENTA', { align: 'center' });
+
+        doc.moveDown(1);
+        doc.font('Helvetica').fontSize(10).fillColor('#000000');
+        doc.text(`Evento: ${(curso || '').toUpperCase()}`, startX2, doc.y, textOptions2);
+        doc.text(`Participante: ${(nome || '').toUpperCase()}  |  CPF: ${cpf || 'N/A'}`, startX2, doc.y + 2, textOptions2);
+        if (speakers) doc.text(`Palestrante(s)/Ministrante(s): ${String(speakers).toUpperCase()}`, startX2, doc.y + 2, textOptions2);
+        if (coordinator) doc.text(`Coordenador(a): ${String(coordinator).toUpperCase()}`, startX2, doc.y + 2, textOptions2);
+        if (department) doc.text(`Departamento/Órgão Promotor: ${String(department).toUpperCase()}`, startX2, doc.y + 2, textOptions2);
+
+        doc.moveDown(1);
+
+        // Ementa (se houver)
+        if (syllabus && String(syllabus).trim()) {
+          doc.fontSize(11).font('Helvetica-Bold').text('Ementa:', startX2, doc.y);
+          doc.fontSize(10).font('Helvetica').text(String(syllabus).trim(), startX2, doc.y + 2, textOptions2);
+          doc.moveDown(1);
+        }
+
+        // Tabela de Atividades (se houver)
+        if (activities && Array.isArray(activities) && activities.length > 0) {
+          doc.fontSize(11).font('Helvetica-Bold').text('Atividades:', startX2, doc.y);
+          doc.moveDown(0.3);
+
+          const tableTop = doc.y;
+          const tableLeft = startX2;
+          const totalWidth = w2 - 100;
+          const colAtividade = Math.floor(totalWidth * 0.62);
+          const colFuncao = Math.floor(totalWidth * 0.24);
+          const colCarga = totalWidth - colAtividade - colFuncao;
+
+          // Cabeçalho
+          doc.rect(tableLeft, tableTop, totalWidth, 20).fillAndStroke('#f0f0f0', '#000000');
+          doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
+          doc.text('Atividades', tableLeft + 5, tableTop + 6, { width: colAtividade - 10 });
+          doc.text('Função', tableLeft + colAtividade + 5, tableTop + 6, { width: colFuncao - 10 });
+          doc.text('Carga', tableLeft + colAtividade + colFuncao + 5, tableTop + 6, { width: colCarga - 10 });
+
+          let currentY = tableTop + 20;
+          doc.fontSize(8).font('Helvetica').fillColor('#000000');
+
+          activities.forEach((activity) => {
+            const rowHeight = 18;
+            doc.rect(tableLeft, currentY, totalWidth, rowHeight).stroke('#000000');
+            doc.text(String(activity?.name || ''), tableLeft + 5, currentY + 5, { width: colAtividade - 10 });
+            doc.text(String(activity?.role || ''), tableLeft + colAtividade + 5, currentY + 5, { width: colFuncao - 10 });
+            doc.text(String(activity?.workload || '0'), tableLeft + colAtividade + colFuncao + 5, currentY + 5, { width: colCarga - 10 });
+            currentY += rowHeight;
+          });
+
+          const totalWorkload = activities.reduce((sum, act) => sum + (parseFloat(act.workload) || 0), 0);
+          doc.rect(tableLeft, currentY, totalWidth, 20).fillAndStroke('#f0f0f0', '#000000');
+          doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
+          doc.text('Total', tableLeft + 5, currentY + 6, { width: colAtividade + colFuncao - 10 });
+          doc.text(`${totalWorkload} hora(s)`, tableLeft + colAtividade + colFuncao + 5, currentY + 6, { width: colCarga - 10 });
+
+          doc.y = currentY + 30;
+        }
+
+        // Rodapé do anexo com os mesmos dados de verificação
+        doc.y = h2 - 90;
+        doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000')
+          .text(`Código de verificação: ${verificationCode}  |  Número do Documento: ${documentNumber}`, startX2, doc.y, { align: 'left' });
+      }
 
       // Rodapé de Auditoria (comentado para não interferir com layout SIGAA)
       // this.drawAuditFooter(doc, auditInfo);
