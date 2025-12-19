@@ -975,7 +975,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
 
             const conflicts = [];
 
-            // Contenção no global
+            // Contenção no global (Apenas aviso, não bloqueio)
             for (const ph of phases) {
               if (ph.start < global.start) conflicts.push(ph.label + ': início fora do Período Global');
               if (ph.endExcl > global.endExcl) conflicts.push(ph.label + ': fim fora do Período Global');
@@ -987,11 +987,32 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               if (rec.start < provaEndInclusive) conflicts.push('Recursos: início antes do fim da Prova');
             }
 
-            // Sobreposição
+            // Regra específica: Inscrição não pode ter Prova (Exclusão Mútua)
+            if (inscr && prova) {
+              if (overlap(inscr, prova)) {
+                conflicts.push('Conflito: Inscrição x Prova (não podem coincidir)');
+              }
+            }
+
+            // Sobreposição genérica (Aviso apenas, exceto regras acima)
             for (let a = 0; a < phases.length; a++) {
               for (let b = a + 1; b < phases.length; b++) {
+                // Ignora par Inscrição x Prova pois já tratamos acima
+                // Ignora par Projeto x Recursos pois é permitido
+                const labelA = phases[a].label;
+                const labelB = phases[b].label;
+                
+                // Se for Projeto x Recursos (ou vice-versa), permite
+                if ((labelA === 'Avaliação do Projeto' && labelB === 'Recursos') || 
+                    (labelB === 'Avaliação do Projeto' && labelA === 'Recursos')) {
+                  continue;
+                }
+
                 if (overlap(phases[a], phases[b])) {
-                  conflicts.push('Sobreposição: ' + phases[a].label + ' x ' + phases[b].label);
+                  // Se não for Inscrição x Prova (já avisado), avisa aqui
+                  if (!((labelA === 'Inscrições' && labelB === 'Prova') || (labelB === 'Inscrições' && labelA === 'Prova'))) {
+                     conflicts.push('Aviso de Sobreposição: ' + labelA + ' x ' + labelB);
+                  }
                 }
               }
             }
@@ -1001,82 +1022,23 @@ function renderCalendarEditPage({ year, values, saved, error }) {
 
           const buildOnDayCreate = (selfKey) => {
             return (dObj, dStr, fp, dayElem) => {
-              const { global, inscr, prova, rec, proj, ent } = getAllIntervals();
-              const date = dayElem.dateObj;
-              if (!date) return;
-
-              // Não marca fora do global quando ainda não definido
-              const occupied = [];
-
-              if (selfKey !== 'INSCRICAO' && inscr && dateInInterval(date, inscr)) occupied.push('fp-occupied-inscricoes');
-              if (selfKey !== 'PROVA' && prova && dateInInterval(date, prova)) occupied.push('fp-occupied-prova');
-              if (selfKey !== 'RECURSOS' && rec && dateInInterval(date, rec)) occupied.push('fp-occupied-recursos');
-              // Outros (fases avançadas)
-              if (selfKey !== 'PROJETO' && proj && dateInInterval(date, proj)) occupied.push('fp-occupied-outros');
-              if (selfKey !== 'ENTREVISTA' && ent && dateInInterval(date, ent)) occupied.push('fp-occupied-outros');
-
-              if (occupied.length > 1) {
-                dayElem.classList.add('fp-occupied-multi');
-                dayElem.title = 'Conflito: dia em múltiplas fases';
-                return;
-              }
-
-              if (occupied.length === 1) {
-                dayElem.classList.add(occupied[0]);
-                return;
-              }
-
-              if (global) {
-                const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                if (d < global.start || d >= global.endExcl) {
-                  // Deixa o visual padrão do flatpickr (min/max já bloqueiam)
-                }
-              }
+              // Removemos a lógica visual complexa para evitar confusão ou travamento
+              // Mantemos apenas o básico se necessário, ou limpamos.
+              // Por enquanto, vamos limpar para garantir performance.
             };
           };
 
           const buildDisableFn = (selfKey, fpInstance) => {
             return (date) => {
-              const { global, inscr, prova, rec, proj, ent } = getAllIntervals();
-              if (selfKey !== 'GLOBAL') {
-                if (!global) return true;
-                const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                if (d < global.start || d >= global.endExcl) return true;
-              }
-
-              // Permitir clicar na própria seleção atual (para não travar edição)
-              const sel = fpInstance?.selectedDates || [];
-              if (sel.length > 0) {
-                if (sel.length === 1 && sameDate(sel[0], date)) return false;
-                if (sel.length === 2) {
-                  const s = new Date(sel[0].getFullYear(), sel[0].getMonth(), sel[0].getDate());
-                  const e = new Date(sel[1].getFullYear(), sel[1].getMonth(), sel[1].getDate());
-                  const start = s < e ? s : e;
-                  const endExcl = addDays(s < e ? e : s, 1);
-                  const curr = { start, endExcl };
-                  if (dateInInterval(date, curr)) return false;
-                }
-              }
-
-              // Bloqueio específico: recursos não pode começar antes do fim da prova
-              if (selfKey === 'RECURSOS' && prova) {
-                const provaEndInclusive = addDays(prova.endExcl, -1);
-                const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                if (d < provaEndInclusive) return true;
-              }
-
-              // Ocupado por outras fases
-              if (selfKey !== 'INSCRICAO' && inscr && dateInInterval(date, inscr)) return true;
-              if (selfKey !== 'PROVA' && prova && dateInInterval(date, prova)) return true;
-              if (selfKey !== 'RECURSOS' && rec && dateInInterval(date, rec)) return true;
-              if (selfKey !== 'PROJETO' && proj && dateInInterval(date, proj)) return true;
-              if (selfKey !== 'ENTREVISTA' && ent && dateInInterval(date, ent)) return true;
-              return false;
+              // Removemos todos os bloqueios rígidos entre fases.
+              // O usuário pediu para o Global ser apenas guia e permitir sobreposições específicas.
+              // A validação será feita apenas via mensagens de conflito (computeConflicts).
+              return false; 
             };
           };
 
           const applyConstraints = () => {
-            const { global, prova } = getAllIntervals();
+            const { global } = getAllIntervals();
             const globalFirstHint = $('global-first-hint');
             const globalDefined = !!global;
             if (globalFirstHint) globalFirstHint.style.display = globalDefined ? 'none' : 'block';
@@ -1087,41 +1049,15 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             setPickerEnabled(fpProva, globalDefined);
             setPickerEnabled(fpRecursos, globalDefined);
 
-            if (globalDefined) {
-              const globalStart = global.start;
-              const globalEndInclusive = addDays(global.endExcl, -1);
+            // Removemos a imposição de minDate/maxDate baseada no Global
+            // para que ele seja apenas um guia visual, conforme solicitado.
+            if (fpInscricao) { fpInscricao.set('minDate', null); fpInscricao.set('maxDate', null); }
+            if (fpProjeto) { fpProjeto.set('minDate', null); fpProjeto.set('maxDate', null); }
+            if (fpEntrevista) { fpEntrevista.set('minDate', null); fpEntrevista.set('maxDate', null); }
+            if (fpProva) { fpProva.set('minDate', null); fpProva.set('maxDate', null); }
+            if (fpRecursos) { fpRecursos.set('minDate', null); fpRecursos.set('maxDate', null); }
 
-              if (fpInscricao) {
-                fpInscricao.set('minDate', globalStart);
-                fpInscricao.set('maxDate', globalEndInclusive);
-              }
-              if (fpProjeto) {
-                fpProjeto.set('minDate', globalStart);
-                fpProjeto.set('maxDate', globalEndInclusive);
-              }
-              if (fpEntrevista) {
-                fpEntrevista.set('minDate', globalStart);
-                fpEntrevista.set('maxDate', globalEndInclusive);
-              }
-              if (fpProva) {
-                fpProva.set('minDate', globalStart);
-                fpProva.set('maxDate', globalEndInclusive);
-              }
-              if (fpRecursos) {
-                const provaEndInclusive = prova ? addDays(prova.endExcl, -1) : null;
-                const minRec = provaEndInclusive && provaEndInclusive > globalStart ? provaEndInclusive : globalStart;
-                fpRecursos.set('minDate', minRec);
-                fpRecursos.set('maxDate', globalEndInclusive);
-              }
-            } else {
-              if (fpInscricao) { fpInscricao.set('minDate', null); fpInscricao.set('maxDate', null); }
-              if (fpProjeto) { fpProjeto.set('minDate', null); fpProjeto.set('maxDate', null); }
-              if (fpEntrevista) { fpEntrevista.set('minDate', null); fpEntrevista.set('maxDate', null); }
-              if (fpProva) { fpProva.set('minDate', null); fpProva.set('maxDate', null); }
-              if (fpRecursos) { fpRecursos.set('minDate', null); fpRecursos.set('maxDate', null); }
-            }
-
-            // Força redesenho para aplicar highlights/disabled
+            // Força redesenho
             if (fpInscricao) fpInscricao.redraw();
             if (fpProjeto) fpProjeto.redraw();
             if (fpEntrevista) fpEntrevista.redraw();
