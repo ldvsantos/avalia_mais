@@ -597,14 +597,29 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 </div>
 
                 <div class="calendar-macro">
-                  <label for="RECURSOS_range">Recursos (intervalo)</label>
-                  <input id="RECURSOS_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
+                  <label for="RECURSO_INSCRICAO_range">Recursos de Inscrição</label>
+                  <input id="RECURSO_INSCRICAO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="RECURSO_INSCRICAO_start" name="RECURSO_INSCRICAO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_INSCRICAO_start'))}" />
                   <input id="RECURSO_INSCRICAO_end" name="RECURSO_INSCRICAO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_INSCRICAO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RECURSO_PROJETO_range">Recursos de Projeto</label>
+                  <input id="RECURSO_PROJETO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="RECURSO_PROJETO_start" name="RECURSO_PROJETO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_PROJETO_start'))}" />
                   <input id="RECURSO_PROJETO_end" name="RECURSO_PROJETO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_PROJETO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RECURSO_ENTREVISTA_range">Recursos de Entrevista</label>
+                  <input id="RECURSO_ENTREVISTA_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="RECURSO_ENTREVISTA_start" name="RECURSO_ENTREVISTA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_ENTREVISTA_start'))}" />
                   <input id="RECURSO_ENTREVISTA_end" name="RECURSO_ENTREVISTA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_ENTREVISTA_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RECURSO_LINGUA_range">Recursos de Prova de Língua</label>
+                  <input id="RECURSO_LINGUA_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
                   <input id="RECURSO_LINGUA_start" name="RECURSO_LINGUA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_LINGUA_start'))}" />
                   <input id="RECURSO_LINGUA_end" name="RECURSO_LINGUA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RECURSO_LINGUA_end'))}" />
                 </div>
@@ -885,7 +900,10 @@ function renderCalendarEditPage({ year, values, saved, error }) {
           let fpInscricao = null;
           let fpProjeto = null;
           let fpEntrevista = null;
-          let fpRecursos = null;
+          let fpRecursoInscricao = null;
+          let fpRecursoProjeto = null;
+          let fpRecursoEntrevista = null;
+          let fpRecursoLingua = null;
           let fpProva = null;
 
           const setPickerEnabled = (fp, enabled) => {
@@ -908,15 +926,17 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             const ev = fpEntrevista?.selectedDates || [];
             if (ev.length === 2) setHiddenRange('ENTREVISTA_start', 'ENTREVISTA_end', ev[0], ev[1]);
 
-            const r = fpRecursos?.selectedDates || [];
-            if (r.length === 2) {
-              const start = r[0];
-              const end = r[1];
-              setHiddenRange('RECURSO_INSCRICAO_start', 'RECURSO_INSCRICAO_end', start, end);
-              setHiddenRange('RECURSO_PROJETO_start', 'RECURSO_PROJETO_end', start, end);
-              setHiddenRange('RECURSO_ENTREVISTA_start', 'RECURSO_ENTREVISTA_end', start, end);
-              setHiddenRange('RECURSO_LINGUA_start', 'RECURSO_LINGUA_end', start, end);
-            }
+            const ri = fpRecursoInscricao?.selectedDates || [];
+            if (ri.length === 2) setHiddenRange('RECURSO_INSCRICAO_start', 'RECURSO_INSCRICAO_end', ri[0], ri[1]);
+
+            const rp = fpRecursoProjeto?.selectedDates || [];
+            if (rp.length === 2) setHiddenRange('RECURSO_PROJETO_start', 'RECURSO_PROJETO_end', rp[0], rp[1]);
+
+            const re = fpRecursoEntrevista?.selectedDates || [];
+            if (re.length === 2) setHiddenRange('RECURSO_ENTREVISTA_start', 'RECURSO_ENTREVISTA_end', re[0], re[1]);
+
+            const rl = fpRecursoLingua?.selectedDates || [];
+            if (rl.length === 2) setHiddenRange('RECURSO_LINGUA_start', 'RECURSO_LINGUA_end', rl[0], rl[1]);
 
             const p = fpProva?.selectedDates || [];
             if (p.length === 1) {
@@ -956,14 +976,17 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             const global = getGlobalInterval();
             const inscr = intervalFromIds('INSCRICAO_start', 'INSCRICAO_end');
             const prova = intervalFromIds('LINGUA_start', 'LINGUA_end', { singleDay: true });
-            const rec = intervalFromIds('RECURSO_INSCRICAO_start', 'RECURSO_INSCRICAO_end');
+            const recInsc = intervalFromIds('RECURSO_INSCRICAO_start', 'RECURSO_INSCRICAO_end');
+            const recProj = intervalFromIds('RECURSO_PROJETO_start', 'RECURSO_PROJETO_end');
+            const recEnt = intervalFromIds('RECURSO_ENTREVISTA_start', 'RECURSO_ENTREVISTA_end');
+            const recLing = intervalFromIds('RECURSO_LINGUA_start', 'RECURSO_LINGUA_end');
             const proj = intervalFromIds('PROJETO_start', 'PROJETO_end');
             const ent = intervalFromIds('ENTREVISTA_start', 'ENTREVISTA_end');
-            return { global, inscr, prova, rec, proj, ent };
+            return { global, inscr, prova, recInsc, recProj, recEnt, recLing, proj, ent };
           };
 
           const computeConflicts = () => {
-            const { global, inscr, prova, rec, proj, ent } = getAllIntervals();
+            const { global, inscr, prova, recInsc, recProj, recEnt, recLing, proj, ent } = getAllIntervals();
             if (!global) return { conflicts: ['Selecione o Período Global.'], globalMissing: true };
 
             const phases = [];
@@ -971,7 +994,10 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             if (proj) phases.push({ label: 'Avaliação do Projeto', ...proj });
             if (ent) phases.push({ label: 'Entrevista', ...ent });
             if (prova) phases.push({ label: 'Prova', ...prova });
-            if (rec) phases.push({ label: 'Recursos', ...rec });
+            if (recInsc) phases.push({ label: 'Recurso Inscrição', ...recInsc });
+            if (recProj) phases.push({ label: 'Recurso Projeto', ...recProj });
+            if (recEnt) phases.push({ label: 'Recurso Entrevista', ...recEnt });
+            if (recLing) phases.push({ label: 'Recurso Língua', ...recLing });
 
             const conflicts = [];
 
@@ -979,12 +1005,6 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             for (const ph of phases) {
               if (ph.start < global.start) conflicts.push(ph.label + ': início fora do Período Global');
               if (ph.endExcl > global.endExcl) conflicts.push(ph.label + ': fim fora do Período Global');
-            }
-
-            // Bloqueio específico: Recursos não inicia antes do fim da Prova
-            if (rec && prova) {
-              const provaEndInclusive = addDays(prova.endExcl, -1);
-              if (rec.start < provaEndInclusive) conflicts.push('Recursos: início antes do fim da Prova');
             }
 
             // Regra específica: Inscrição não pode ter Prova (Exclusão Mútua)
@@ -997,22 +1017,16 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             // Sobreposição genérica (Aviso apenas, exceto regras acima)
             for (let a = 0; a < phases.length; a++) {
               for (let b = a + 1; b < phases.length; b++) {
-                // Ignora par Inscrição x Prova pois já tratamos acima
-                // Ignora par Projeto x Recursos pois é permitido
                 const labelA = phases[a].label;
                 const labelB = phases[b].label;
                 
-                // Se for Projeto x Recursos (ou vice-versa), permite
-                if ((labelA === 'Avaliação do Projeto' && labelB === 'Recursos') || 
-                    (labelB === 'Avaliação do Projeto' && labelA === 'Recursos')) {
-                  continue;
+                // Ignora par Inscrição x Prova pois já tratamos acima
+                if ((labelA === 'Inscrições' && labelB === 'Prova') || (labelB === 'Inscrições' && labelA === 'Prova')) {
+                   continue;
                 }
 
                 if (overlap(phases[a], phases[b])) {
-                  // Se não for Inscrição x Prova (já avisado), avisa aqui
-                  if (!((labelA === 'Inscrições' && labelB === 'Prova') || (labelB === 'Inscrições' && labelA === 'Prova'))) {
-                     conflicts.push('Aviso de Sobreposição: ' + labelA + ' x ' + labelB);
-                  }
+                   conflicts.push('Aviso de Sobreposição: ' + labelA + ' x ' + labelB);
                 }
               }
             }
@@ -1023,16 +1037,12 @@ function renderCalendarEditPage({ year, values, saved, error }) {
           const buildOnDayCreate = (selfKey) => {
             return (dObj, dStr, fp, dayElem) => {
               // Removemos a lógica visual complexa para evitar confusão ou travamento
-              // Mantemos apenas o básico se necessário, ou limpamos.
-              // Por enquanto, vamos limpar para garantir performance.
             };
           };
 
           const buildDisableFn = (selfKey, fpInstance) => {
             return (date) => {
               // Removemos todos os bloqueios rígidos entre fases.
-              // O usuário pediu para o Global ser apenas guia e permitir sobreposições específicas.
-              // A validação será feita apenas via mensagens de conflito (computeConflicts).
               return false; 
             };
           };
@@ -1047,22 +1057,30 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             setPickerEnabled(fpProjeto, globalDefined);
             setPickerEnabled(fpEntrevista, globalDefined);
             setPickerEnabled(fpProva, globalDefined);
-            setPickerEnabled(fpRecursos, globalDefined);
+            setPickerEnabled(fpRecursoInscricao, globalDefined);
+            setPickerEnabled(fpRecursoProjeto, globalDefined);
+            setPickerEnabled(fpRecursoEntrevista, globalDefined);
+            setPickerEnabled(fpRecursoLingua, globalDefined);
 
             // Removemos a imposição de minDate/maxDate baseada no Global
-            // para que ele seja apenas um guia visual, conforme solicitado.
             if (fpInscricao) { fpInscricao.set('minDate', null); fpInscricao.set('maxDate', null); }
             if (fpProjeto) { fpProjeto.set('minDate', null); fpProjeto.set('maxDate', null); }
             if (fpEntrevista) { fpEntrevista.set('minDate', null); fpEntrevista.set('maxDate', null); }
             if (fpProva) { fpProva.set('minDate', null); fpProva.set('maxDate', null); }
-            if (fpRecursos) { fpRecursos.set('minDate', null); fpRecursos.set('maxDate', null); }
+            if (fpRecursoInscricao) { fpRecursoInscricao.set('minDate', null); fpRecursoInscricao.set('maxDate', null); }
+            if (fpRecursoProjeto) { fpRecursoProjeto.set('minDate', null); fpRecursoProjeto.set('maxDate', null); }
+            if (fpRecursoEntrevista) { fpRecursoEntrevista.set('minDate', null); fpRecursoEntrevista.set('maxDate', null); }
+            if (fpRecursoLingua) { fpRecursoLingua.set('minDate', null); fpRecursoLingua.set('maxDate', null); }
 
             // Força redesenho
             if (fpInscricao) fpInscricao.redraw();
             if (fpProjeto) fpProjeto.redraw();
             if (fpEntrevista) fpEntrevista.redraw();
             if (fpProva) fpProva.redraw();
-            if (fpRecursos) fpRecursos.redraw();
+            if (fpRecursoInscricao) fpRecursoInscricao.redraw();
+            if (fpRecursoProjeto) fpRecursoProjeto.redraw();
+            if (fpRecursoEntrevista) fpRecursoEntrevista.redraw();
+            if (fpRecursoLingua) fpRecursoLingua.redraw();
           };
 
           const updateTimeline = () => {
@@ -1098,14 +1116,17 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               return;
             }
 
-            const { inscr, prova, rec, proj, ent } = getAllIntervals();
+            const { inscr, prova, recInsc, recProj, recEnt, recLing, proj, ent } = getAllIntervals();
 
             const phases = [];
             if (inscr) phases.push({ key: 'inscricoes', label: 'Inscrições', cls: 'seg-inscricoes', ...inscr });
             if (proj) phases.push({ key: 'projeto', label: 'Avaliação do Projeto', cls: 'seg-projeto', ...proj });
             if (ent) phases.push({ key: 'entrevista', label: 'Entrevista', cls: 'seg-entrevista', ...ent });
             if (prova) phases.push({ key: 'prova', label: 'Prova', cls: 'seg-prova', ...prova });
-            if (rec) phases.push({ key: 'recursos', label: 'Recursos', cls: 'seg-recursos', ...rec });
+            if (recInsc) phases.push({ key: 'recursos', label: 'Recurso Inscrição', cls: 'seg-recursos', ...recInsc });
+            if (recProj) phases.push({ key: 'recursos', label: 'Recurso Projeto', cls: 'seg-recursos', ...recProj });
+            if (recEnt) phases.push({ key: 'recursos', label: 'Recurso Entrevista', cls: 'seg-recursos', ...recEnt });
+            if (recLing) phases.push({ key: 'recursos', label: 'Recurso Língua', cls: 'seg-recursos', ...recLing });
 
             const { conflicts } = computeConflicts();
 
@@ -1137,31 +1158,12 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             const i0 = readRangeFromHidden('INSCRICAO_start', 'INSCRICAO_end');
             const pj0 = readRangeFromHidden('PROJETO_start', 'PROJETO_end');
             const ev0 = readRangeFromHidden('ENTREVISTA_start', 'ENTREVISTA_end');
-
-            const rCandidates = [
-              readRangeFromHidden('RECURSO_INSCRICAO_start', 'RECURSO_INSCRICAO_end'),
-              readRangeFromHidden('RECURSO_PROJETO_start', 'RECURSO_PROJETO_end'),
-              readRangeFromHidden('RECURSO_ENTREVISTA_start', 'RECURSO_ENTREVISTA_end'),
-              readRangeFromHidden('RECURSO_LINGUA_start', 'RECURSO_LINGUA_end'),
-            ].filter((x) => x.start && x.end);
-
-            let r0 = { start: null, end: null };
-            if (rCandidates.length > 0) {
-              const minStart = rCandidates.reduce((a, b) => (a.start < b.start ? a : b)).start;
-              const maxEnd = rCandidates.reduce((a, b) => (a.end > b.end ? a : b)).end;
-              r0 = { start: minStart, end: maxEnd };
-            }
+            const ri0 = readRangeFromHidden('RECURSO_INSCRICAO_start', 'RECURSO_INSCRICAO_end');
+            const rp0 = readRangeFromHidden('RECURSO_PROJETO_start', 'RECURSO_PROJETO_end');
+            const re0 = readRangeFromHidden('RECURSO_ENTREVISTA_start', 'RECURSO_ENTREVISTA_end');
+            const rl0 = readRangeFromHidden('RECURSO_LINGUA_start', 'RECURSO_LINGUA_end');
 
             const prova0 = parseInputDate($('LINGUA_start')?.value);
-
-            const lastValid = {
-              GLOBAL: (g0.start && g0.end) ? [g0.start, g0.end] : null,
-              INSCRICAO: (i0.start && i0.end) ? [i0.start, i0.end] : null,
-              PROJETO: (pj0.start && pj0.end) ? [pj0.start, pj0.end] : null,
-              ENTREVISTA: (ev0.start && ev0.end) ? [ev0.start, ev0.end] : null,
-              PROVA: prova0 ? [prova0] : null,
-              RECURSOS: null,
-            };
 
             fpGlobal = flatpickr('#GLOBAL_range', {
               ...fpCommon,
@@ -1172,7 +1174,6 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1186,7 +1187,6 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1200,7 +1200,6 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1214,21 +1213,58 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                // Apenas atualiza visualização, sem reverter
               },
             });
 
-            fpRecursos = flatpickr('#RECURSOS_range', {
+            fpRecursoInscricao = flatpickr('#RECURSO_INSCRICAO_range', {
               ...fpCommon,
               mode: 'range',
-              defaultDate: (r0.start && r0.end) ? [r0.start, r0.end] : null,
-              onDayCreate: buildOnDayCreate('RECURSOS'),
+              defaultDate: (ri0.start && ri0.end) ? [ri0.start, ri0.end] : null,
+              onDayCreate: buildOnDayCreate('RECURSO_INSCRICAO'),
               disable: [],
               onChange: () => {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                // Apenas atualiza visualização, sem reverter
+              },
+            });
+
+            fpRecursoProjeto = flatpickr('#RECURSO_PROJETO_range', {
+              ...fpCommon,
+              mode: 'range',
+              defaultDate: (rp0.start && rp0.end) ? [rp0.start, rp0.end] : null,
+              onDayCreate: buildOnDayCreate('RECURSO_PROJETO'),
+              disable: [],
+              onChange: () => {
+                syncFromPickers();
+                applyConstraints();
+                updateTimeline();
+              },
+            });
+
+            fpRecursoEntrevista = flatpickr('#RECURSO_ENTREVISTA_range', {
+              ...fpCommon,
+              mode: 'range',
+              defaultDate: (re0.start && re0.end) ? [re0.start, re0.end] : null,
+              onDayCreate: buildOnDayCreate('RECURSO_ENTREVISTA'),
+              disable: [],
+              onChange: () => {
+                syncFromPickers();
+                applyConstraints();
+                updateTimeline();
+              },
+            });
+
+            fpRecursoLingua = flatpickr('#RECURSO_LINGUA_range', {
+              ...fpCommon,
+              mode: 'range',
+              defaultDate: (rl0.start && rl0.end) ? [rl0.start, rl0.end] : null,
+              onDayCreate: buildOnDayCreate('RECURSO_LINGUA'),
+              disable: [],
+              onChange: () => {
+                syncFromPickers();
+                applyConstraints();
+                updateTimeline();
               },
             });
 
@@ -1242,7 +1278,6 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 syncFromPickers();
                 applyConstraints();
                 updateTimeline();
-                // Apenas atualiza visualização, sem reverter
               },
             });
 
@@ -1251,14 +1286,10 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             fpProjeto.set('disable', [buildDisableFn('PROJETO', fpProjeto)]);
             fpEntrevista.set('disable', [buildDisableFn('ENTREVISTA', fpEntrevista)]);
             fpProva.set('disable', [buildDisableFn('PROVA', fpProva)]);
-            fpRecursos.set('disable', [buildDisableFn('RECURSOS', fpRecursos)]);
-
-            // Drag-to-select removido para restaurar comportamento padrão (Click-Click) que é mais estável.
-            // enableDragRange(fpGlobal, { minNights: 0, maxNights: null });
-            // enableDragRange(fpInscricao, { minNights: 0, maxNights: null });
-            // enableDragRange(fpProjeto, { minNights: 0, maxNights: null });
-            // enableDragRange(fpEntrevista, { minNights: 0, maxNights: null });
-            // enableDragRange(fpRecursos, { minNights: 0, maxNights: null });
+            fpRecursoInscricao.set('disable', [buildDisableFn('RECURSO_INSCRICAO', fpRecursoInscricao)]);
+            fpRecursoProjeto.set('disable', [buildDisableFn('RECURSO_PROJETO', fpRecursoProjeto)]);
+            fpRecursoEntrevista.set('disable', [buildDisableFn('RECURSO_ENTREVISTA', fpRecursoEntrevista)]);
+            fpRecursoLingua.set('disable', [buildDisableFn('RECURSO_LINGUA', fpRecursoLingua)]);
 
             // Garantir sync inicial (útil quando os campos hidden já vieram preenchidos)
             syncFromPickers();
