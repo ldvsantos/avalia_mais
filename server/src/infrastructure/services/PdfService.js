@@ -37,6 +37,7 @@ class PdfService {
     this.avaliaLogoPath = path.join(__dirname, '../../../../src/img/logo_avalia_horizontal.png');
     this.avaliaLogoSquarePath = path.join(__dirname, '../../../../src/img/logo_avalia_quadrado.png');
     this.planterLogoPath = path.join(__dirname, '../../../../src/img/logo_planter.png');
+    this.uefsLogoPath = path.join(__dirname, '../../../../src/img/logo_uefs.png');
   }
 
   async stampUploadedPdf(pdfBuffer, stampInfo) {
@@ -491,13 +492,15 @@ class PdfService {
 
       // Logos (se existirem)
       const hasPlanter = fs.existsSync(this.planterLogoPath);
-      const hasAvalia = fs.existsSync(this.avaliaLogoPath);
+      const hasUefs = fs.existsSync(this.uefsLogoPath);
 
-      if (hasPlanter) {
-        doc.image(this.planterLogoPath, width / 2 - 160, 60, { width: 100 });
+      if (hasUefs) {
+        // UEFS na esquerda
+        doc.image(this.uefsLogoPath, 60, 60, { width: 100 });
       }
-      if (hasAvalia) {
-        doc.image(this.avaliaLogoPath, width / 2 + 60, 60, { width: 120 });
+      if (hasPlanter) {
+        // Planterr na direita
+        doc.image(this.planterLogoPath, width - 160, 60, { width: 100 });
       }
 
       doc.moveDown(6);
