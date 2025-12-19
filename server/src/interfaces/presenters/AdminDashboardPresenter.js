@@ -129,6 +129,140 @@ class AdminDashboardPresenter {
     `;
   }
 
+  renderEventsList(events) {
+    const rows = (events || []).map(e => {
+      const date = e.date ? new Date(e.date).toLocaleDateString('pt-BR') : '';
+      return `
+        <tr>
+          <td>${escapeHtml(e.title)}</td>
+          <td>${escapeHtml(date)}</td>
+          <td>${escapeHtml(e.location)}</td>
+          <td>${escapeHtml(e.workload)}</td>
+          <td>${escapeHtml(e.status)}</td>
+          <td>
+            <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/events/${e.id}/edit">Editar</a>
+            <form method="POST" action="/secret/${this.adminSecret}/admin/events/${e.id}/delete" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
+              <button class="btn-secondary" style="background-color:#d9534f; border-color:#d43f3a; color:white;" type="submit">Excluir</button>
+            </form>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    return `
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Admin - Eventos</title>
+        <link rel="stylesheet" href="/theme.css" />
+      </head>
+      <body>
+        <div class="container">
+          <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <h1>Gestão de Eventos</h1>
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+            </div>
+          </header>
+          <section class="panel">
+            <div class="panel-header"><h2>Eventos Cadastrados</h2></div>
+            <div class="panel-body">
+              <div class="admin-actions">
+                <a class="btn-primary" href="/secret/${this.adminSecret}/admin/events/new">Novo Evento</a>
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Voltar ao Admin</a>
+              </div>
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Título</th>
+                    <th>Data</th>
+                    <th>Local</th>
+                    <th>Carga Horária</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  renderEventForm(event = {}) {
+    const isEdit = !!event.id;
+    const action = isEdit 
+      ? `/secret/${this.adminSecret}/admin/events/${event.id}/edit` 
+      : `/secret/${this.adminSecret}/admin/events`;
+    
+    return `
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>${isEdit ? 'Editar' : 'Novo'} Evento</title>
+        <link rel="stylesheet" href="/theme.css" />
+      </head>
+      <body>
+        <div class="container">
+          <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <h1>${isEdit ? 'Editar' : 'Novo'} Evento</h1>
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+            </div>
+          </header>
+          <section class="panel">
+            <div class="panel-body">
+              <form method="POST" action="${action}">
+                <div class="form-group">
+                  <label>Título</label>
+                  <input name="title" value="${escapeHtml(event.title)}" required />
+                </div>
+                <div class="form-group">
+                  <label>Data</label>
+                  <input name="date" type="date" value="${escapeHtml(event.date)}" required />
+                </div>
+                <div class="form-group">
+                  <label>Local</label>
+                  <input name="location" value="${escapeHtml(event.location)}" />
+                </div>
+                <div class="form-group">
+                  <label>Carga Horária</label>
+                  <input name="workload" value="${escapeHtml(event.workload)}" />
+                </div>
+                <div class="form-group">
+                  <label>Status</label>
+                  <select name="status">
+                    <option value="draft" ${event.status === 'draft' ? 'selected' : ''}>Rascunho</option>
+                    <option value="open" ${event.status === 'open' ? 'selected' : ''}>Inscrições Abertas</option>
+                    <option value="closed" ${event.status === 'closed' ? 'selected' : ''}>Encerrado</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Descrição</label>
+                  <textarea name="description" rows="5">${escapeHtml(event.description)}</textarea>
+                </div>
+                <div class="actions">
+                  <button class="btn-primary" type="submit">Salvar</button>
+                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/events">Cancelar</a>
+                </div>
+              </form>
+            </div>
+          </section>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
   render(submissions, evaluations, filters) {
     const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen, editalYear, publicFiles } = filters;
     const evalMap = new Map(evaluations.map(e => [e.protocol, e]));
@@ -229,6 +363,16 @@ class AdminDashboardPresenter {
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/edital/${encodeURIComponent(String(editalYear || new Date().getFullYear()))}/calendar/edit">Calendário do Edital (todas as fases)</a>
               </div>
               <p class="hint" style="text-align:center; margin-top: 6px;">Use esta tela para configurar também as janelas de recursos e etapas (projeto/entrevista/língua).</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Gestão de Eventos</h2></div>
+            <div class="panel-body">
+              <div class="admin-actions" style="justify-content:center;">
+                <a class="btn-primary" href="/secret/${this.adminSecret}/admin/events">Gerenciar Eventos</a>
+              </div>
+              <p class="hint" style="text-align:center; margin-top: 6px;">Crie eventos, gerencie inscrições e emita certificados.</p>
             </div>
           </section>
 

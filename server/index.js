@@ -27,6 +27,7 @@ const JsonProcessCalendarRepository = require('./src/infrastructure/repositories
 const JsonCandidatePhaseStatusRepository = require('./src/infrastructure/repositories/JsonCandidatePhaseStatusRepository');
 const SqlCandidatePhaseStatusRepository = require('./src/infrastructure/repositories/SqlCandidatePhaseStatusRepository');
 const JsonPublicFileRepository = require('./src/infrastructure/repositories/JsonPublicFileRepository');
+const JsonEventRepository = require('./src/infrastructure/repositories/JsonEventRepository');
 const { getPgPool } = require('./src/infrastructure/db/postgres');
 const JwtService = require('./src/infrastructure/security/JwtService');
 const EmailService = require('./src/infrastructure/services/EmailService');
@@ -42,6 +43,7 @@ const SubmissionController = require('./src/interfaces/http/controllers/Submissi
 const AppealController = require('./src/interfaces/http/controllers/AppealController');
 const AuthController = require('./src/interfaces/http/controllers/AuthController');
 const EvaluationController = require('./src/interfaces/http/controllers/EvaluationController');
+const EventController = require('./src/interfaces/http/controllers/EventController');
 const AdminController = require('./src/interfaces/controllers/AdminController');
 const AdminDashboardPresenter = require('./src/interfaces/presenters/AdminDashboardPresenter');
 const ListSubmissions = require('./src/application/ListSubmissions');
@@ -150,6 +152,7 @@ const phaseStatusRepo = USE_POSTGRES
   ? new SqlCandidatePhaseStatusRepository({ pool: pgPool })
   : new JsonCandidatePhaseStatusRepository(dataDir);
 const publicFileRepo = new JsonPublicFileRepository(dataDir);
+const eventRepo = new JsonEventRepository(dataDir);
 const jwtService = new JwtService(JWT_SECRET);
 const emailService = new EmailService();
 const emailTemplateService = new EmailTemplateService();
@@ -298,6 +301,7 @@ const listEvaluationsUseCase = new ListEvaluations(evaluationRepo);
 const listAppealsUseCase = new ListAppeals(appealRepo);
 
 const adminDashboardPresenter = new AdminDashboardPresenter(ADMIN_SECRET);
+const eventController = new EventController(eventRepo);
 
 const submissionController = new SubmissionController(registerSubmissionUseCase, workflowService);
 const appealController = new AppealController(registerAppealUseCase, workflowService);
@@ -1948,6 +1952,111 @@ app.use(`/secret/${ADMIN_SECRET}/logout`, (req, res) => {
 // --- ROTAS DO PORTAL DO CANDIDATO ---
 
 // Página de consulta pública de inscrição
+// --- EVENTOS (PÚBLICO) ---
+app.get('/eventos/:id', async (req, res) => {
+  const event = await eventRepo.findById(req.params.id);
+  if (!event || event.status !== 'open') return res.status(404).send('Evento não encontrado ou inscrições encerradas.');
+  
+  res.send(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>${escapeHtml(event.title)}</title>
+      <link rel="stylesheet" href="/style.css" />
+      <link rel="stylesheet" href="/theme.css" />
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <h1>Inscrição em Evento</h1>
+              <img src="/img/logo_uefs.png" alt="Logo UEFS" style="max-height:80px; width:auto;">
+            </div>
+        </header>
+        <section class="panel">
+          <div class="panel-header"><h2>${escapeHtml(event.title)}</h2></div>
+          <div class="panel-body">
+            <p><strong>Data:</strong> ${new Date(event.date).toLocaleDateString('pt-BR')}</p>
+            <p><strong>Local:</strong> ${escapeHtml(event.location)}</p>
+            <p><strong>Carga Horária:</strong> ${escapeHtml(event.workload)}</p>
+            <div style="margin: 20px 0; white-space: pre-wrap;">${escapeHtml(event.description)}</div>
+            
+            <hr />
+            <h3>Inscreva-se</h3>
+            <form method="POST" action="/eventos/${event.id}/inscrever">
+              <div class="form-group">
+                <label>Nome Completo</label>
+                <input name="nome" required class="form-control" style="width: 100%; padding: 8px;" />
+              </div>
+              <div class="form-group">
+                <label>Email</label>
+                <input name="email" type="email" required class="form-control" style="width: 100%; padding: 8px;" />
+              </div>
+              <div class="form-group">
+                <label>CPF</label>
+                <input name="cpf" required placeholder="000.000.000-00" class="form-control" style="width: 100%; padding: 8px;" />
+              </div>
+              <br/>
+              <button class="btn-primary" type="submit">Confirmar Inscrição</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+app.post('/eventos/:id/inscrever', async (req, res) => {
+  const event = await eventRepo.findById(req.params.id);
+  if (!event || event.status !== 'open') return res.status(404).send('Evento não encontrado ou inscrições encerradas.');
+
+  const { nome, email, cpf } = req.body;
+  if (!nome || !email || !cpf) return res.status(400).send('Todos os campos são obrigatórios.');
+
+  if (event.registrations.some(r => r.cpf === cpf)) {
+      return res.send(`
+        <!doctype html>
+        <html>
+        <head><link rel="stylesheet" href="/theme.css" /></head>
+        <body>
+          <div class="container" style="text-align:center; margin-top:50px;">
+            <h1>Atenção</h1>
+            <p>O CPF <strong>${escapeHtml(cpf)}</strong> já está inscrito neste evento.</p>
+            <a href="/eventos/${event.id}" class="btn-primary">Voltar</a>
+          </div>
+        </body>
+        </html>
+      `);
+  }
+
+  event.registrations.push({
+      nome,
+      email,
+      cpf,
+      registeredAt: new Date().toISOString()
+  });
+
+  await eventRepo.save(event);
+
+  res.send(`
+    <!doctype html>
+    <html>
+    <head><link rel="stylesheet" href="/theme.css" /></head>
+    <body>
+      <div class="container" style="text-align:center; margin-top:50px;">
+        <h1>Inscrição Confirmada!</h1>
+        <p>Obrigado, ${escapeHtml(nome)}. Sua inscrição no evento <strong>${escapeHtml(event.title)}</strong> foi realizada com sucesso.</p>
+        <a href="/" class="btn-primary">Voltar ao Início</a>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
 app.get('/consulta', (req, res) => {
   const error = req.query.error;
   res.send(`
@@ -2929,6 +3038,62 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
 
 app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, async (req, res) => {
   return adminController.dashboard(req, res);
+});
+
+// --- GESTÃO DE EVENTOS ---
+app.get(`/secret/${ADMIN_SECRET}/admin/events`, checkAdminIP, adminAuth, async (req, res) => {
+  const events = await eventRepo.findAll();
+  events.sort((a, b) => new Date(b.date) - new Date(a.date));
+  res.send(adminDashboardPresenter.renderEventsList(events));
+});
+
+app.get(`/secret/${ADMIN_SECRET}/admin/events/new`, checkAdminIP, adminAuth, (req, res) => {
+  res.send(adminDashboardPresenter.renderEventForm());
+});
+
+app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAuth, async (req, res) => {
+  const event = await eventRepo.findById(req.params.id);
+  if (!event) return res.status(404).send('Evento não encontrado');
+  res.send(adminDashboardPresenter.renderEventForm(event));
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/events`, checkAdminIP, adminAuth, async (req, res) => {
+  const { title, description, date, location, workload, status } = req.body;
+  const crypto = require('crypto');
+  const newEvent = {
+      id: crypto.randomUUID(),
+      title,
+      description: description || '',
+      date,
+      location: location || '',
+      workload: workload || '',
+      status: status || 'draft',
+      registrations: [],
+      audit: {}
+  };
+  await eventRepo.save(newEvent);
+  res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAuth, async (req, res) => {
+    const event = await eventRepo.findById(req.params.id);
+    if (!event) return res.status(404).send('Evento não encontrado');
+
+    const { title, description, date, location, workload, status } = req.body;
+    if (title) event.title = title;
+    event.description = description;
+    if (date) event.date = date;
+    event.location = location;
+    event.workload = workload;
+    if (status) event.status = status;
+
+    await eventRepo.save(event);
+    res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/delete`, checkAdminIP, adminAuth, async (req, res) => {
+    await eventRepo.delete(req.params.id);
+    res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);
 });
 
 app.get(`/secret/${ADMIN_SECRET}/admin/appeals`, checkAdminIP, adminAuth, async (req, res) => {
