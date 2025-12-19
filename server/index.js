@@ -1981,6 +1981,8 @@ app.use(`/secret/${ADMIN_SECRET}/logout`, (req, res) => {
 
 // Página de consulta pública de inscrição
 // --- EVENTOS (PÚBLICO) ---
+const normalizeCpf = (value) => String(value || '').replace(/\D/g, '');
+
 app.get('/eventos/:id', async (req, res) => {
   const event = await eventRepo.findById(req.params.id);
   if (!event || event.status !== 'open') return res.status(404).send('Evento não encontrado ou inscrições encerradas.');
@@ -2082,6 +2084,18 @@ app.get('/eventos/:id', async (req, res) => {
               <br/>
               <button class="btn-primary" type="submit">Confirmar Inscrição</button>
             </form>
+
+            <hr />
+            <h3>Gerar Certificado</h3>
+            <p>Digite o mesmo CPF usado na inscrição para gerar seu certificado.</p>
+            <form method="POST" action="/eventos/${event.id}/certificado" target="_blank">
+              <div class="form-group">
+                <label>CPF</label>
+                <input name="cpf" required placeholder="000.000.000-00" class="form-control" style="width: 100%; padding: 8px;" />
+              </div>
+              <br/>
+              <button class="btn-primary" type="submit">Gerar Certificado (PDF)</button>
+            </form>
           </div>
         </section>
       </div>
@@ -2097,7 +2111,10 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
   const { nome, email, cpf } = req.body;
   if (!nome || !email || !cpf) return res.status(400).send('Todos os campos são obrigatórios.');
 
-  if (event.registrations.some(r => r.cpf === cpf)) {
+  const cpfNorm = normalizeCpf(cpf);
+  if (cpfNorm.length !== 11) return res.status(400).send('CPF inválido.');
+
+  if (event.registrations.some(r => normalizeCpf(r.cpf) === cpfNorm)) {
       return res.send(`
         <!doctype html>
         <html>
@@ -2116,7 +2133,7 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
   event.registrations.push({
       nome,
       email,
-      cpf,
+      cpf: cpfNorm,
       role: event.participantRole || 'PARTICIPANTE',
       registeredAt: new Date().toISOString()
   });
@@ -2136,6 +2153,63 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
     </body>
     </html>
   `);
+});
+
+// Gerar certificado (público) condicionado ao CPF do inscrito
+app.post('/eventos/:id/certificado', apiLimiter, async (req, res) => {
+  try {
+    const event = await eventRepo.findById(req.params.id);
+    if (!event) return res.status(404).send('Evento não encontrado.');
+
+    const cpfInput = String(req.body?.cpf || '');
+    const cpfNorm = normalizeCpf(cpfInput);
+    if (cpfNorm.length !== 11) return res.status(400).send('CPF inválido.');
+
+    const registration = (event.registrations || []).find(r => normalizeCpf(r?.cpf) === cpfNorm);
+    if (!registration) {
+      return res.status(404).send(`
+        <!doctype html>
+        <html>
+        <head><link rel="stylesheet" href="/theme.css" /></head>
+        <body>
+          <div class="container" style="text-align:center; margin-top:50px;">
+            <h1>Não encontrado</h1>
+            <p>Não encontramos inscrição para este CPF neste evento.</p>
+            <a href="/eventos/${event.id}" class="btn-primary">Voltar</a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    const auditInfo = {
+      ip: getClientIP(req),
+      user: { username: 'public' },
+      createdAt: new Date(),
+    };
+
+    const pdfBuffer = await pdfService.generateCertificatePdf({
+      nome: registration.nome,
+      cpf: registration.cpf,
+      curso: event.title,
+      data: event.date ? new Date(event.date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
+      cargaHoraria: event.workload,
+      coordinator: event.coordinator,
+      department: event.department,
+      speakers: event.speakers,
+      role: registration.role || event.participantRole || 'PARTICIPANTE',
+      syllabus: event.syllabus,
+      activities: event.activities,
+      textoLivre: '',
+    }, auditInfo);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="certificado-${String(registration.nome || 'participante').replace(/\s+/g, '_')}.pdf"`);
+    return res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Erro ao gerar certificado (público):', err);
+    return res.status(500).send('Erro ao gerar certificado');
+  }
 });
 
 app.get('/consulta', (req, res) => {
