@@ -107,6 +107,86 @@
     </div>
 
     <script>
+        // Limita as etapas do recurso pelo calendário (apenas fases de RECURSO em prazo)
+        (async function hydrateOpenAppealEtapas() {
+            const etapaSelect = document.getElementById('etapa_processo');
+            const form = document.getElementById('recurso-form');
+            const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+            if (!etapaSelect) return;
+
+            const originalOptions = Array.from(etapaSelect.options).map(o => ({ value: o.value, label: o.textContent }));
+
+            const keepPlaceholderOnly = (label) => {
+                etapaSelect.innerHTML = '';
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = label;
+                etapaSelect.appendChild(opt);
+            };
+
+            try {
+                const year = new Date().getFullYear();
+                const resp = await fetch(`/api/public/open-appeal-etapas?year=${encodeURIComponent(String(year))}`);
+                if (!resp.ok) throw new Error('Falha ao carregar calendário');
+                const payload = await resp.json();
+                const etapas = Array.isArray(payload && payload.etapas) ? payload.etapas : [];
+
+                const previousValue = String(etapaSelect.value || '').trim();
+
+                if (!etapas.length) {
+                    keepPlaceholderOnly('Nenhuma etapa em prazo no momento');
+                    etapaSelect.disabled = true;
+                    if (submitBtn) submitBtn.disabled = true;
+                    return;
+                }
+
+                etapaSelect.disabled = false;
+                if (submitBtn) submitBtn.disabled = false;
+
+                // Reconstrói as opções com base no calendário
+                etapaSelect.innerHTML = '';
+                const base = document.createElement('option');
+                base.value = '';
+                base.textContent = 'Selecione a etapa...';
+                etapaSelect.appendChild(base);
+
+                etapas.forEach((et) => {
+                    const v = String(et || '').trim();
+                    if (!v) return;
+                    const opt = document.createElement('option');
+                    opt.value = v;
+                    opt.textContent = v;
+                    etapaSelect.appendChild(opt);
+                });
+
+                // Reaplica valor anterior (ex.: vindo do prefill) se ainda existir
+                if (previousValue) {
+                    const exists = Array.from(etapaSelect.options).some(o => String(o.value) === previousValue);
+                    if (exists) etapaSelect.value = previousValue;
+                }
+
+                // Se veio via querystring, tenta selecionar se ainda estiver em prazo
+                const params = new URLSearchParams(window.location.search || '');
+                const etapaFromQuery = params.get('etapa_processo');
+                if (etapaFromQuery && String(etapaSelect.value || '').trim() === '') {
+                    const wanted = String(etapaFromQuery).trim();
+                    const exists = Array.from(etapaSelect.options).some(o => String(o.value) === wanted);
+                    if (exists) etapaSelect.value = wanted;
+                }
+            } catch (err) {
+                // Fallback: mantém as opções originais (não filtra) se o endpoint falhar.
+                etapaSelect.innerHTML = '';
+                originalOptions.forEach((o) => {
+                    const opt = document.createElement('option');
+                    opt.value = o.value;
+                    opt.textContent = o.label;
+                    etapaSelect.appendChild(opt);
+                });
+                etapaSelect.disabled = false;
+                if (submitBtn) submitBtn.disabled = false;
+            }
+        })();
+
         // Prefill via querystring (ex.: vindo do Portal do Candidato)
         (function prefillFromQuery() {
             const params = new URLSearchParams(window.location.search || '');
@@ -130,6 +210,7 @@
             setIfPresent('email', 'email');
             setIfPresent('titulo_projeto', 'titulo_projeto');
             setIfPresent('linha_pesquisa', 'linha_pesquisa');
+            // etapa_processo é tratada também no hydrateOpenAppealEtapas()
             setIfPresent('etapa_processo', 'etapa_processo');
 
             // Força a máscara do CPF quando preenchido via JS.

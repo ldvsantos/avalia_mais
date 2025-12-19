@@ -943,6 +943,49 @@ app.post('/api/submissions', (req, res) => submissionController.register(req, re
 
 app.post('/api/appeals', (req, res) => appealController.register(req, res));
 
+// Etapas de recurso em prazo (público; baseado no calendário do edital)
+app.get('/api/public/open-appeal-etapas', (req, res) => {
+  try {
+    const now = new Date();
+    const yearRaw = String(req.query?.year || '').trim();
+    const year = yearRaw ? Number(yearRaw) : now.getFullYear();
+
+    if (!Number.isFinite(year) || year < 2000 || year > 2100) {
+      return res.status(400).json({ error: 'Ano inválido' });
+    }
+
+    const cal = workflowService.getCalendar(year);
+    const phases = cal?.phases || {};
+
+    const withinWindow = (window) => {
+      try {
+        const start = window?.startISO ? new Date(window.startISO) : null;
+        const end = window?.endISO ? new Date(window.endISO) : null;
+        if (!start || !end || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
+        return now >= start && now <= end;
+      } catch {
+        return false;
+      }
+    };
+
+    const etapaMap = [
+      { etapa: 'Inscrição', appealPhase: PHASE.RECURSO_INSCRICAO },
+      { etapa: 'Avaliação do Projeto', appealPhase: PHASE.RECURSO_PROJETO },
+      { etapa: 'Entrevista', appealPhase: PHASE.RECURSO_ENTREVISTA },
+      { etapa: 'Prova de Língua Estrangeira', appealPhase: PHASE.RECURSO_LINGUA },
+    ];
+
+    const etapas = etapaMap
+      .filter((x) => withinWindow(phases?.[x.appealPhase]))
+      .map((x) => x.etapa);
+
+    return res.json({ year, nowISO: now.toISOString(), etapas });
+  } catch (err) {
+    console.error('Falha ao calcular etapas de recurso em prazo', err);
+    return res.status(500).json({ error: 'Falha ao calcular etapas em prazo' });
+  }
+});
+
 // Download do comprovante (PDF) do recurso
 app.get('/api/appeals/:protocol/pdf', async (req, res) => {
   try {

@@ -240,7 +240,7 @@ class WorkflowService {
     // Recurso só é permitido se estiver REPROVADO_PRELIMINAR na fase pai.
     const parentStatus = await this.getStatus(year, submissionProtocol, parentPhase);
     if (parentStatus !== STATUS.REPROVADO_PRELIMINAR) {
-      throw new Error('Recurso permitido apenas para reprovação preliminar na etapa informada.');
+      throw new Error('Recurso não permitido: fora do prazo ou candidato não está em reprovação preliminar na etapa informada.');
     }
 
     return { year, parentPhase, appealPhase };
