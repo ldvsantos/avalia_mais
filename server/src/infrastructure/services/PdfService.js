@@ -503,8 +503,21 @@ class PdfService {
       const topStart = 280;
       const textWidth = 480;
 
-      doc.font('Helvetica').fontSize(12).fillColor('#000000');
-      const textoCompleto = `Certificamos que ${(nome || '').toUpperCase()}, CPF ${cpf || 'N/A'}, participou da Atividade de Extensão ${(curso || '').toUpperCase()}, na função de ${(role || 'PARTICIPANTE').toUpperCase()}, com ${cargaHoraria || '0'} hora(s) de atividades desenvolvidas. A atividade foi realizada ${dataEvento ? 'no dia ' + dataEvento : 'conforme programação'}.`;
+      const formatWorkload = (value) => {
+        if (value === null || value === undefined) return '0 hora(s)';
+        if (typeof value === 'number') return `${value} hora(s)`;
+        const str = String(value).trim();
+        if (!str) return '0 hora(s)';
+        // Se já vier com "hora", não adiciona de novo.
+        if (/hora/i.test(str)) return str;
+        return `${str} hora(s)`;
+      };
+
+      const workloadText = formatWorkload(cargaHoraria);
+
+      doc.font('Helvetica').fontSize(13).fillColor('#000000');
+      const speakersText = speakers ? `, com Palestrante(s)/Ministrante(s): ${String(speakers).toUpperCase()}` : '';
+      const textoCompleto = `Certificamos que ${(nome || '').toUpperCase()}, CPF ${cpf || 'N/A'}, participou da Atividade de Extensão ${(curso || '').toUpperCase()}${speakersText}, na função de ${(role || 'PARTICIPANTE').toUpperCase()}, com ${workloadText} de atividades desenvolvidas. A atividade foi realizada ${dataEvento ? 'no dia ' + dataEvento : 'conforme programação'}.`;
       doc.text(textoCompleto, leftMargin, topStart, { align: 'left', width: textWidth, lineGap: 4 });
 
       const localEmissao = 'Feira de Santana';
