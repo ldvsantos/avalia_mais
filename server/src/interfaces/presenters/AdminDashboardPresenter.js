@@ -440,10 +440,22 @@ class AdminDashboardPresenter {
         </div>
         
         <script>
-          let activities = ${activitiesJson};
+          // Garantir que activities seja um array
+          let activities = [];
+          try {
+            activities = ${activitiesJson};
+            if (!Array.isArray(activities)) activities = [];
+          } catch (e) {
+            console.error('Erro ao carregar atividades:', e);
+            activities = [];
+          }
           
+          console.log('Atividades carregadas:', activities);
+
           function renderActivities() {
             const list = document.getElementById('activitiesList');
+            if (!list) return;
+
             if (activities.length === 0) {
               list.innerHTML = '<p style="color:#999; text-align:center;">Nenhuma atividade cadastrada</p>';
               updateTotalWorkload();
@@ -481,16 +493,19 @@ class AdminDashboardPresenter {
           }
           
           function addActivity() {
+            console.log('Adicionando atividade...');
             activities.push({ name: '', role: 'PARTICIPANTE', workload: 0 });
             renderActivities();
           }
           
           function removeActivity(idx) {
+            console.log('Removendo atividade', idx);
             activities.splice(idx, 1);
             renderActivities();
           }
           
           function updateActivity(idx, field, value) {
+            if (!activities[idx]) return;
             activities[idx][field] = field === 'workload' ? parseFloat(value) || 0 : value;
             updateTotalWorkload();
           }
@@ -513,11 +528,21 @@ class AdminDashboardPresenter {
               .replace(/'/g, "&#039;");
           }
           
+          // Expor funções para o escopo global (window)
+          window.addActivity = addActivity;
+          window.removeActivity = removeActivity;
+          window.updateActivity = updateActivity;
+
           document.getElementById('eventForm').addEventListener('submit', function(e) {
             document.getElementById('activitiesInput').value = JSON.stringify(activities);
           });
           
-          renderActivities();
+          // Renderizar inicial
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', renderActivities);
+          } else {
+            renderActivities();
+          }
         </script>
       </body>
       </html>
