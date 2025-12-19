@@ -501,7 +501,13 @@ class PdfService {
         // Marca d'água grande, ATRÁS do texto (desenhada primeiro)
         const watermarkSize = Math.min(width, height) * 0.78;
         const watermarkX = (width - watermarkSize) / 2;
-        const watermarkY = (height - watermarkSize) / 2;
+
+        // Centraliza no miolo do certificado (entre cabeçalho e rodapé),
+        // para ficar claramente atrás do texto (e não “abaixo” dele).
+        const headerBottomY = 140;
+        const footerTopY = height - 150;
+        const contentCenterY = (headerBottomY + footerTopY) / 2;
+        const watermarkY = contentCenterY - (watermarkSize / 2);
         doc.save();
         doc.opacity(0.10);
         doc.image(this.uefsLogoPath, watermarkX, watermarkY, { 
@@ -658,7 +664,11 @@ class PdfService {
         if (hasUefs) {
           const watermarkSize2 = Math.min(w2, h2) * 0.78;
           const watermarkX2 = (w2 - watermarkSize2) / 2;
-          const watermarkY2 = (h2 - watermarkSize2) / 2;
+
+          const headerBottomY2 = 130;
+          const footerTopY2 = h2 - 120;
+          const contentCenterY2 = (headerBottomY2 + footerTopY2) / 2;
+          const watermarkY2 = contentCenterY2 - (watermarkSize2 / 2);
           doc.save();
           doc.opacity(0.08);
           doc.image(this.uefsLogoPath, watermarkX2, watermarkY2, {
