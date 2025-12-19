@@ -13,6 +13,11 @@ class AdminController {
     this.publicFileRepo = publicFileRepo;
   }
 
+  async index(req, res) {
+    const html = this.adminDashboardPresenter.renderIndex();
+    res.type('html').send(html);
+  }
+
   async dashboard(req, res) {
     const q = String(req.query.q ?? '');
     const status = String(req.query.status ?? '');

@@ -3037,6 +3037,10 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
 });
 
 app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, async (req, res) => {
+  return adminController.index(req, res);
+});
+
+app.get(`/secret/${ADMIN_SECRET}/admin/selection`, checkAdminIP, adminAuth, async (req, res) => {
   return adminController.dashboard(req, res);
 });
 

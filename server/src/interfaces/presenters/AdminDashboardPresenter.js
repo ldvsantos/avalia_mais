@@ -12,6 +12,102 @@ class AdminDashboardPresenter {
     this.adminSecret = adminSecret;
   }
 
+  renderIndex() {
+    return `
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Painel Administrativo - PLANTERR</title>
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="/theme.css" />
+        <style>
+          .admin-home-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            gap: 40px;
+          }
+          .admin-cards {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+          }
+          .admin-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 40px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+          }
+          .admin-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+            border-color: #2e7d32;
+          }
+          .admin-card h2 {
+            margin: 0;
+            color: #2e7d32;
+            font-size: 1.5rem;
+          }
+          .admin-card p {
+            color: #666;
+            margin: 0;
+          }
+          .admin-card-icon {
+            font-size: 48px;
+            color: #2e7d32;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <h1>Painel Administrativo</h1>
+              <img src="/img/logo_uefs.png" alt="Logo UEFS" style="max-height:80px; width:auto;">
+            </div>
+          </header>
+
+          <div class="admin-home-container">
+            <div class="admin-cards">
+              <a href="/secret/${this.adminSecret}/admin/selection" class="admin-card">
+                <div class="admin-card-icon">📋</div>
+                <h2>Processo Seletivo</h2>
+                <p>Gerenciar inscrições, avaliações, recursos e resultados do processo seletivo.</p>
+              </a>
+
+              <a href="/secret/${this.adminSecret}/admin/events" class="admin-card">
+                <div class="admin-card-icon">📅</div>
+                <h2>Gestão de Eventos</h2>
+                <p>Criar eventos, gerenciar inscrições e emitir certificados.</p>
+              </a>
+            </div>
+            
+            <div style="margin-top: 20px;">
+               <a href="/secret/${this.adminSecret}/logout" class="btn-secondary">Sair</a>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
   renderAppeals(appeals, filters) {
     const { q, fromStr, toStr } = filters;
 
@@ -367,16 +463,6 @@ class AdminDashboardPresenter {
           </section>
 
           <section class="panel">
-            <div class="panel-header"><h2>Gestão de Eventos</h2></div>
-            <div class="panel-body">
-              <div class="admin-actions" style="justify-content:center;">
-                <a class="btn-primary" href="/secret/${this.adminSecret}/admin/events">Gerenciar Eventos</a>
-              </div>
-              <p class="hint" style="text-align:center; margin-top: 6px;">Crie eventos, gerencie inscrições e emita certificados.</p>
-            </div>
-          </section>
-
-          <section class="panel">
             <div class="panel-header"><h2>Gerenciar Publicações e Resultados</h2></div>
             <div class="panel-body">
               <form method="POST" action="/secret/${this.adminSecret}/admin/public-files" enctype="multipart/form-data" style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
@@ -413,13 +499,14 @@ class AdminDashboardPresenter {
             <div class="panel-body">
               <div class="hint">Dica: clique no protocolo para ver detalhes, status e verificação.</div>
               <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Voltar ao Início</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/appeals">Recursos</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/committee">Área da Comissão</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/committee/results">Ranking / Resultados</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/evaluator-links">Credenciais Avaliadores</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/logout" style="background-color: #d9534f; border-color: #d43f3a;">Sair</a>
               </div>
-              <form method="GET" action="/secret/${this.adminSecret}/admin">
+              <form method="GET" action="/secret/${this.adminSecret}/admin/selection">
                 <div class="filters-grid" style="margin-top: 8px;">
                   <div class="form-group" style="margin-bottom: 0;">
                     <label for="q">Busca (protocolo, nome, email, título)</label>
@@ -445,7 +532,7 @@ class AdminDashboardPresenter {
                 </div>
                 <div class="filters-actions">
                   <button class="btn-primary" type="submit">Filtrar</button>
-                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Limpar Filtros</a>
+                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/selection">Limpar Filtros</a>
                   <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/export.csv?${new URLSearchParams({ q, status, from: fromStr, to: toStr }).toString()}">Exportar CSV</a>
                 </div>
               </form>
