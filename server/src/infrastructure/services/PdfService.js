@@ -498,11 +498,12 @@ class PdfService {
       // Marca d'água da logo UEFS (se existir)
       const hasUefs = fs.existsSync(this.uefsLogoPath);
       if (hasUefs) {
-        const watermarkSize = 300;
+        // Marca d'água grande, atrás do texto
+        const watermarkSize = 440;
         const watermarkX = (width - watermarkSize) / 2;
         const watermarkY = (height - watermarkSize) / 2;
         doc.save();
-        doc.opacity(0.08);
+        doc.opacity(0.12);
         doc.image(this.uefsLogoPath, watermarkX, watermarkY, { 
           width: watermarkSize,
           height: watermarkSize,
@@ -525,50 +526,33 @@ class PdfService {
       // Espaçamento após logos
       doc.moveDown(4);
 
-      // Título do certificado
-      doc.font('Helvetica-Bold').fontSize(18).fillColor('#000000')
-         .text('CERTIFICADO DE PARTICIPAÇÃO', { align: 'center' });
+      // Título em letras grandes (estilo do exemplo)
+      doc.font('Helvetica-Bold').fontSize(30).fillColor('#000000')
+        .text('CERTIFICADO', { align: 'center' });
+
+      doc.font('Helvetica-Bold').fontSize(16).fillColor('#000000')
+        .text('DE PARTICIPAÇÃO', { align: 'center' });
       
       doc.moveDown(1.5);
 
-      // Texto principal no estilo SIGAA
+      // Texto principal (centralizado)
       doc.font('Helvetica').fontSize(12).fillColor('#000000');
-      
-      const textOptions = { align: 'justify', width: width - 100 };
+
       const startX = 50;
-      
-      // Linha 1: Certificamos que...
-      doc.text(
-        `Certificamos que ${nome ? nome.toUpperCase() : ''}, CPF ${cpf || 'N/A'}, participou da Atividade de Extensão `,
-        startX, doc.y, 
-        { ...textOptions, continued: true }
+      const textOptions = { align: 'center', width: width - 100 };
+
+      const parts = [];
+      parts.push(
+        `Certificamos que ${nome ? nome.toUpperCase() : ''}, CPF ${cpf || 'N/A'}, participou da Atividade de Extensão ${(curso || '').toUpperCase()}`
       );
-      
-      // Nome do curso em negrito
-      doc.font('Helvetica-Bold')
-         .text(`${(curso || '').toUpperCase()}`, { continued: true });
-      
-      // Coordenador
-      doc.font('Helvetica');
-      if (coordinator) {
-        doc.text(`, coordenada pelo(a) ${coordinator.toUpperCase()}`, { continued: true });
-      }
-      
-      // Departamento
-      if (department) {
-        doc.text(`, promovida pelo(a) ${department.toUpperCase()}`, { continued: true });
-      }
-      
-      // Função
-      doc.text(`, na função de ${(role || 'PARTICIPANTE').toUpperCase()}`, { continued: true });
-      
-      // Carga horária
-      if (cargaHoraria) {
-        doc.text(`, com ${cargaHoraria} de atividades desenvolvidas`, { continued: true });
-      }
-      
-      // Data de realização
-      doc.text(`. A atividade foi realizada ${dataEvento ? 'no dia ' + dataEvento : 'conforme programação'}.`, textOptions);
+      if (coordinator) parts.push(`coordenada pelo(a) ${String(coordinator).toUpperCase()}`);
+      if (department) parts.push(`promovida pelo(a) ${String(department).toUpperCase()}`);
+      parts.push(`na função de ${(role || 'PARTICIPANTE').toUpperCase()}`);
+      if (cargaHoraria) parts.push(`com ${cargaHoraria} de atividades desenvolvidas`);
+
+      const mainText = parts.join(', ') + `. A atividade foi realizada ${dataEvento ? 'no dia ' + dataEvento : 'conforme programação'}.`;
+
+      doc.text(mainText, startX, doc.y, textOptions);
 
       doc.moveDown(1.5);
 
@@ -668,11 +652,11 @@ class PdfService {
 
         // Marca d'água também no anexo (mantém identidade do certificado)
         if (hasUefs) {
-          const watermarkSize2 = 300;
+          const watermarkSize2 = 440;
           const watermarkX2 = (w2 - watermarkSize2) / 2;
           const watermarkY2 = (h2 - watermarkSize2) / 2;
           doc.save();
-          doc.opacity(0.06);
+          doc.opacity(0.08);
           doc.image(this.uefsLogoPath, watermarkX2, watermarkY2, {
             width: watermarkSize2,
             height: watermarkSize2,
