@@ -461,6 +461,99 @@ class PdfService {
     };
     return this.generateAppealPdfFromData(data, protocol, auditInfo);
   }
+
+  async generateCertificatePdf(data, auditInfo) {
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      // Layout paisagem para certificado
+      const doc = new PDFDocument({ layout: 'landscape', margin: 40, size: 'A4' });
+      const buffers = [];
+
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+      doc.on('error', reject);
+
+      const { nome, curso, data: dataEvento, cargaHoraria, textoLivre } = data;
+      const width = doc.page.width;
+      const height = doc.page.height;
+
+      // Borda decorativa
+      const borderPadding = 20;
+      doc.lineWidth(3)
+         .strokeColor('#003366')
+         .rect(borderPadding, borderPadding, width - (borderPadding * 2), height - (borderPadding * 2))
+         .stroke();
+      
+      // Borda interna fina
+      doc.lineWidth(1)
+         .strokeColor('#86A3C2')
+         .rect(borderPadding + 5, borderPadding + 5, width - (borderPadding * 2) - 10, height - (borderPadding * 2) - 10)
+         .stroke();
+
+      // Logos (se existirem)
+      const hasPlanter = fs.existsSync(this.planterLogoPath);
+      const hasAvalia = fs.existsSync(this.avaliaLogoPath);
+
+      if (hasPlanter) {
+        doc.image(this.planterLogoPath, width / 2 - 160, 60, { width: 100 });
+      }
+      if (hasAvalia) {
+        doc.image(this.avaliaLogoPath, width / 2 + 60, 60, { width: 120 });
+      }
+
+      doc.moveDown(6);
+
+      // Título
+      doc.font('Helvetica-Bold').fontSize(36).fillColor('#003366')
+         .text('CERTIFICADO', { align: 'center' });
+      
+      doc.moveDown(1);
+
+      // Texto Principal
+      doc.font('Helvetica').fontSize(16).fillColor('#000000')
+         .text('Certificamos que', { align: 'center' });
+      
+      doc.moveDown(0.5);
+      
+      doc.font('Helvetica-Bold').fontSize(24).fillColor('#000000')
+         .text(String(nome || '').toUpperCase(), { align: 'center' });
+      
+      doc.moveDown(0.8);
+
+      doc.font('Helvetica').fontSize(16)
+         .text('participou do evento/curso:', { align: 'center' });
+      
+      doc.moveDown(0.5);
+
+      doc.font('Helvetica-Bold').fontSize(20).fillColor('#003366')
+         .text(String(curso || ''), { align: 'center' });
+
+      doc.moveDown(1);
+
+      const detalhes = [];
+      if (dataEvento) detalhes.push(`Realizado em: ${dataEvento}`);
+      if (cargaHoraria) detalhes.push(`Carga Horária: ${cargaHoraria}`);
+      
+      doc.font('Helvetica').fontSize(14).fillColor('#333333')
+         .text(detalhes.join('  |  '), { align: 'center' });
+
+      if (textoLivre) {
+        doc.moveDown(1);
+        doc.fontSize(12).text(textoLivre, { align: 'center', width: width - 200, align: 'center' });
+      }
+
+      // Assinatura (Simulada)
+      const assinaturaY = height - 130;
+      doc.moveTo(width / 2 - 100, assinaturaY).lineTo(width / 2 + 100, assinaturaY).lineWidth(1).strokeColor('#000000').stroke();
+      doc.fontSize(12).text('Coordenação do Evento', width / 2 - 100, assinaturaY + 10, { width: 200, align: 'center' });
+
+      // Rodapé de Auditoria
+      this.drawAuditFooter(doc, auditInfo);
+
+      doc.end();
+    });
+
+    return this.signPdf(pdfBuffer);
+  }
 }
 
 module.exports = PdfService;

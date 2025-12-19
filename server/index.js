@@ -3799,6 +3799,86 @@ app.post(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adm
   return res.redirect(`/secret/${ADMIN_SECRET}/admin/submission/${encodeURIComponent(protocol)}`);
 });
 
+// POC: Teste de Certificado
+app.get(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminAuth, (req, res) => {
+  res.type('html').send(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Teste de Certificado</title>
+      <link rel="stylesheet" href="/theme.css" />
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header">
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <h1>Gerador de Certificado (Teste)</h1>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+          </div>
+        </header>
+        <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
+        </div>
+        <form method="POST" action="/secret/${ADMIN_SECRET}/admin/certificados/teste" target="_blank">
+          <section class="panel">
+            <div class="panel-header"><h2>Dados do Certificado</h2></div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>Nome do Participante</label>
+                <input type="text" name="nome" value="Fulano de Tal" required />
+              </div>
+              <div class="form-group">
+                <label>Nome do Evento/Curso</label>
+                <input type="text" name="curso" value="Workshop de Inovação" required />
+              </div>
+              <div class="form-group">
+                <label>Data de Realização</label>
+                <input type="text" name="data" value="20 de Dezembro de 2025" />
+              </div>
+              <div class="form-group">
+                <label>Carga Horária</label>
+                <input type="text" name="cargaHoraria" value="8 horas" />
+              </div>
+              <div class="form-group">
+                <label>Texto Livre (Opcional)</label>
+                <textarea name="textoLivre" rows="3">Este certificado é concedido em reconhecimento à participação ativa e contribuição para o sucesso do evento.</textarea>
+              </div>
+              <button type="submit" class="btn-primary">Gerar PDF</button>
+            </div>
+          </section>
+        </form>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminAuth, async (req, res) => {
+  try {
+    const { nome, curso, data, cargaHoraria, textoLivre } = req.body;
+    
+    const auditInfo = {
+      ip: getClientIP(req),
+      user: { username: req.session.user || 'admin' },
+      createdAt: new Date()
+    };
+
+    const pdfBuffer = await pdfService.generateCertificatePdf({
+      nome, curso, data, cargaHoraria, textoLivre
+    }, auditInfo);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="certificado-teste.pdf"`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Erro ao gerar certificado:', err);
+    res.status(500).send('Erro ao gerar certificado: ' + err.message);
+  }
+});
+
 app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
   const protocol = req.params.protocol;
   const record = await Promise.resolve(submissionRepo.findByProtocol(protocol));
