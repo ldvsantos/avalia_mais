@@ -390,7 +390,7 @@ class AdminDashboardPresenter {
                 </div>
                 <div class="form-group">
                   <label>Departamento/Órgão Promotor</label>
-                  <input name="department" value="${escapeHtml(event.department)}" placeholder="Ex: DEPARTAMENTO DE ENGENHARIA AGRÍCOLA" />
+                  <input name="department" value="${escapeHtml(event.department)}" placeholder="Ex: DEPARTAMENTO DE CIÊNCIAS HUMANDAS E FILOSOFIA" />
                 </div>
                 <div class="form-group">
                   <label>Palestrante(s)/Ministrante(s)</label>
@@ -504,9 +504,13 @@ class AdminDashboardPresenter {
           }
           
           function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text || '';
-            return div.innerHTML;
+            if (!text) return '';
+            return String(text)
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
           }
           
           document.getElementById('eventForm').addEventListener('submit', function(e) {
@@ -515,10 +519,6 @@ class AdminDashboardPresenter {
           
           renderActivities();
         </script>
-      </body>
-      </html>
-          </section>
-        </div>
       </body>
       </html>
     `;

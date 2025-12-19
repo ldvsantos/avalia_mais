@@ -4150,15 +4150,15 @@ app.get(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminA
               </div>
               <div class="form-group">
                 <label>Nome do Evento/Atividade de Extensão</label>
-                <input type="text" name="curso" value="BIOSPECKLE LASER APLICADO A BIOSSISTEMAS" required />
+                <input type="text" name="curso" value="PLANEJAMENTO DO ESPAÇO URBANO" required />
               </div>
               <div class="form-group">
                 <label>Coordenador(a)</label>
-                <input type="text" name="coordinator" value="Professor(a) ADILSON MACHADO ENES" />
+                <input type="text" name="coordinator" value="Professor(a) Wodis Kleber Oliveira Araujo" />
               </div>
               <div class="form-group">
                 <label>Departamento/Órgão Promotor</label>
-                <input type="text" name="department" value="DEPARTAMENTO DE ENGENHARIA AGRÍCOLA" />
+                <input type="text" name="department" value="DEPARTAMENTO DE CIÊNCIAS HUMANDAS E FILOSOFIA" />
               </div>
               <div class="form-group">
                 <label>Palestrante(s)/Ministrante(s) (Opcional)</label>
