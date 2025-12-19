@@ -1973,7 +1973,7 @@ app.get('/eventos/:id', async (req, res) => {
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
               <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
               <h1>Inscrição em Evento</h1>
-              <img src="/img/logo_uefs.png" alt="Logo UEFS" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
         </header>
         <section class="panel">
