@@ -465,97 +465,273 @@ class PdfService {
 
   async generateCertificatePdf(data, auditInfo) {
     const pdfBuffer = await new Promise((resolve, reject) => {
-      // Layout paisagem para certificado
-      const doc = new PDFDocument({ layout: 'landscape', margin: 40, size: 'A4' });
+      // Layout retrato para certificado estilo SIGAA
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
       const buffers = [];
 
       doc.on('data', buffers.push.bind(buffers));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', reject);
 
-      const { nome, curso, data: dataEvento, cargaHoraria, textoLivre } = data;
+      const { 
+        nome, 
+        cpf, 
+        curso, 
+        data: dataEvento, 
+        cargaHoraria, 
+        textoLivre,
+        coordinator,
+        department,
+        speakers,
+        role,
+        syllabus,
+        activities
+      } = data;
+      
       const width = doc.page.width;
       const height = doc.page.height;
 
-      // Borda decorativa
-      const borderPadding = 20;
-      doc.lineWidth(3)
-         .strokeColor('#003366')
-         .rect(borderPadding, borderPadding, width - (borderPadding * 2), height - (borderPadding * 2))
-         .stroke();
-      
-      // Borda interna fina
-      doc.lineWidth(1)
-         .strokeColor('#86A3C2')
-         .rect(borderPadding + 5, borderPadding + 5, width - (borderPadding * 2) - 10, height - (borderPadding * 2) - 10)
-         .stroke();
-
-      // Logos (se existirem)
-      const hasPlanter = fs.existsSync(this.planterLogoPath);
+      // Marca d'água da logo UEFS (se existir)
       const hasUefs = fs.existsSync(this.uefsLogoPath);
-
       if (hasUefs) {
-        // UEFS na esquerda
-        doc.image(this.uefsLogoPath, 60, 60, { width: 130 });
+        const watermarkSize = 300;
+        const watermarkX = (width - watermarkSize) / 2;
+        const watermarkY = (height - watermarkSize) / 2;
+        doc.save();
+        doc.opacity(0.08);
+        doc.image(this.uefsLogoPath, watermarkX, watermarkY, { 
+          width: watermarkSize,
+          height: watermarkSize,
+          fit: [watermarkSize, watermarkSize],
+          align: 'center',
+          valign: 'center'
+        });
+        doc.restore();
+      }
+
+      // Logos no topo (versão menor)
+      const hasPlanter = fs.existsSync(this.planterLogoPath);
+      if (hasUefs) {
+        doc.image(this.uefsLogoPath, 50, 40, { width: 80 });
       }
       if (hasPlanter) {
-        // Planterr na direita
-        doc.image(this.planterLogoPath, width - 190, 60, { width: 130 });
+        doc.image(this.planterLogoPath, width - 130, 40, { width: 80 });
       }
 
-      doc.moveDown(6);
+      // Espaçamento após logos
+      doc.moveDown(4);
 
-      // Título
-      doc.font('Helvetica-Bold').fontSize(36).fillColor('#003366')
-         .text('CERTIFICADO', { align: 'center' });
+      // Título do certificado
+      doc.font('Helvetica-Bold').fontSize(18).fillColor('#000000')
+         .text('CERTIFICADO DE PARTICIPAÇÃO', { align: 'center' });
       
-      doc.moveDown(1);
+      doc.moveDown(1.5);
 
-      // Texto Principal
-      doc.font('Helvetica').fontSize(16).fillColor('#000000')
-         .text('Certificamos que', { align: 'center' });
+      // Texto principal no estilo SIGAA
+      doc.font('Helvetica').fontSize(12).fillColor('#000000');
       
-      doc.moveDown(0.5);
+      const textOptions = { align: 'justify', width: width - 100 };
+      const startX = 50;
       
-      doc.font('Helvetica-Bold').fontSize(24).fillColor('#000000')
-         .text(String(nome || '').toUpperCase(), { align: 'center' });
+      // Linha 1: Certificamos que...
+      doc.text(
+        `Certificamos que ${nome ? nome.toUpperCase() : ''}, CPF ${cpf || 'N/A'}, participou da Atividade de Extensão `,
+        startX, doc.y, 
+        { ...textOptions, continued: true }
+      );
       
-      doc.moveDown(0.8);
-
-      doc.font('Helvetica').fontSize(16)
-         .text('participou do evento/curso:', { align: 'center' });
+      // Nome do curso em negrito
+      doc.font('Helvetica-Bold')
+         .text(`${(curso || '').toUpperCase()}`, { continued: true });
       
-      doc.moveDown(0.5);
-
-      doc.font('Helvetica-Bold').fontSize(20).fillColor('#003366')
-         .text(String(curso || ''), { align: 'center' });
-
-      doc.moveDown(1);
-
-      const detalhes = [];
-      if (dataEvento) detalhes.push(`Realizado em: ${dataEvento}`);
-      if (cargaHoraria) detalhes.push(`Carga Horária: ${cargaHoraria}`);
+      // Coordenador
+      doc.font('Helvetica');
+      if (coordinator) {
+        doc.text(`, coordenada pelo(a) ${coordinator.toUpperCase()}`, { continued: true });
+      }
       
-      doc.font('Helvetica').fontSize(14).fillColor('#333333')
-         .text(detalhes.join('  |  '), { align: 'center' });
+      // Departamento
+      if (department) {
+        doc.text(`, promovida pelo(a) ${department.toUpperCase()}`, { continued: true });
+      }
+      
+      // Função
+      doc.text(`, na função de ${(role || 'PARTICIPANTE').toUpperCase()}`, { continued: true });
+      
+      // Carga horária
+      if (cargaHoraria) {
+        doc.text(`, com ${cargaHoraria} de atividades desenvolvidas`, { continued: true });
+      }
+      
+      // Data de realização
+      doc.text(`. A atividade foi realizada ${dataEvento ? 'no dia ' + dataEvento : 'conforme programação'}.`, textOptions);
 
-      if (textoLivre) {
+      doc.moveDown(1.5);
+
+      // Ementa (se houver)
+      if (syllabus && syllabus.trim()) {
+        doc.fontSize(10).font('Helvetica-Bold').text('Ementa:', startX, doc.y);
+        doc.fontSize(10).font('Helvetica').text(syllabus, startX, doc.y + 2, textOptions);
         doc.moveDown(1);
-        doc.fontSize(12).text(textoLivre, { align: 'center', width: width - 200, align: 'center' });
       }
 
-      // Assinatura (Simulada)
-      const assinaturaY = height - 130;
-      doc.moveTo(width / 2 - 100, assinaturaY).lineTo(width / 2 + 100, assinaturaY).lineWidth(1).strokeColor('#000000').stroke();
-      doc.fontSize(12).text('Coordenação do Evento', width / 2 - 100, assinaturaY + 10, { width: 200, align: 'center' });
+      // Tabela de Atividades (se houver)
+      if (activities && Array.isArray(activities) && activities.length > 0) {
+        doc.fontSize(10).font('Helvetica-Bold').text('Atividades:', startX, doc.y);
+        doc.moveDown(0.3);
+        
+        const tableTop = doc.y;
+        const tableLeft = startX;
+        const colWidths = {
+          atividade: 310,
+          funcao: 110,
+          carga: 60
+        };
+        
+        // Cabeçalho da tabela
+        doc.rect(tableLeft, tableTop, colWidths.atividade + colWidths.funcao + colWidths.carga, 20)
+           .fillAndStroke('#f0f0f0', '#000000');
+        
+        doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
+        doc.text('Atividades', tableLeft + 5, tableTop + 6, { width: colWidths.atividade - 10 });
+        doc.text('Função', tableLeft + colWidths.atividade + 5, tableTop + 6, { width: colWidths.funcao - 10 });
+        doc.text('Carga', tableLeft + colWidths.atividade + colWidths.funcao + 5, tableTop + 6, { width: colWidths.carga - 10 });
+        
+        let currentY = tableTop + 20;
+        
+        // Linhas de atividades
+        activities.forEach((activity, idx) => {
+          const rowHeight = 18;
+          
+          // Linha
+          doc.rect(tableLeft, currentY, colWidths.atividade + colWidths.funcao + colWidths.carga, rowHeight)
+             .stroke('#000000');
+          
+          doc.fontSize(8).font('Helvetica').fillColor('#000000');
+          doc.text(activity.name || '', tableLeft + 5, currentY + 5, { width: colWidths.atividade - 10 });
+          doc.text(activity.role || '', tableLeft + colWidths.atividade + 5, currentY + 5, { width: colWidths.funcao - 10 });
+          doc.text(String(activity.workload || '0'), tableLeft + colWidths.atividade + colWidths.funcao + 5, currentY + 5, { width: colWidths.carga - 10 });
+          
+          currentY += rowHeight;
+        });
+        
+        // Linha de total
+        const totalWorkload = activities.reduce((sum, act) => sum + (parseFloat(act.workload) || 0), 0);
+        doc.rect(tableLeft, currentY, colWidths.atividade + colWidths.funcao + colWidths.carga, 20)
+           .fillAndStroke('#f0f0f0', '#000000');
+        
+        doc.fontSize(9).font('Helvetica-Bold').fillColor('#000000');
+        doc.text('Total', tableLeft + 5, currentY + 6, { width: colWidths.atividade + colWidths.funcao - 10 });
+        doc.text(`${totalWorkload} hora(s)`, tableLeft + colWidths.atividade + colWidths.funcao + 5, currentY + 6, { width: colWidths.carga - 10 });
+        
+        doc.y = currentY + 25;
+        doc.moveDown(1);
+      }
 
-      // Rodapé de Auditoria
-      this.drawAuditFooter(doc, auditInfo);
+      // Texto livre adicional
+      if (textoLivre) {
+        doc.fontSize(11).font('Helvetica').text(textoLivre, startX, doc.y, textOptions);
+        doc.moveDown(1.5);
+      }
+
+      // Assinaturas
+      const assinaturaY = height - 220;
+      doc.y = assinaturaY;
+
+      // Assinatura do Coordenador
+      if (coordinator) {
+        doc.moveTo(startX + 50, assinaturaY)
+           .lineTo(startX + 230, assinaturaY)
+           .lineWidth(1)
+           .strokeColor('#000000')
+           .stroke();
+        
+        doc.fontSize(11)
+           .font('Helvetica-Bold')
+           .fillColor('#000000')
+           .text(coordinator.toUpperCase(), startX, assinaturaY + 5, { width: 280, align: 'center' });
+        
+        doc.fontSize(10)
+           .font('Helvetica')
+           .text('Coordenador(a)', startX, assinaturaY + 20, { width: 280, align: 'center' });
+      }
+
+      // Local e data de emissão
+      doc.y = assinaturaY + 50;
+      const localEmissao = 'Feira de Santana';
+      const dataEmissao = new Date().toLocaleDateString('pt-BR', { 
+        day: 'numeric', 
+        month: 'long', 
+        year: 'numeric' 
+      });
+      
+      doc.fontSize(11)
+         .font('Helvetica')
+         .text(`${localEmissao}, ${dataEmissao}`, { align: 'center' });
+
+      doc.moveDown(1.5);
+
+      // Assinatura do Pró-Reitor (se aplicável)
+      const proReitor = 'Pró-Reitor(a) de Extensão';
+      doc.moveTo(width - 280, doc.y)
+         .lineTo(width - 100, doc.y)
+         .lineWidth(1)
+         .strokeColor('#000000')
+         .stroke();
+      
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text(proReitor, width - 280, doc.y + 5, { width: 180, align: 'center' });
+
+      // Rodapé: código de verificação e número do documento
+      const verificationCode = this.generateVerificationCode();
+      const documentNumber = this.generateDocumentNumber();
+      
+      doc.y = height - 120;
+      doc.fontSize(9)
+         .font('Helvetica-Bold')
+         .text(`Código de verificação: ${verificationCode}`, startX, doc.y, { align: 'left' });
+      
+      doc.fontSize(9)
+         .text(`Número do Documento: ${documentNumber}`, startX, doc.y + 12, { align: 'left' });
+
+      // Instruções de verificação
+      doc.fontSize(8)
+         .font('Helvetica')
+         .text(
+           'Para verificar a autenticidade deste documento acesse o sistema de certificados da UEFS,',
+           startX, 
+           doc.y + 28, 
+           { width: width - 100, align: 'left' }
+         );
+      
+      doc.text(
+        'informando o número e data de emissão do documento e o código de verificação.',
+        startX,
+        doc.y + 10,
+        { width: width - 100, align: 'left' }
+      );
+
+      // Rodapé de Auditoria (comentado para não interferir com layout SIGAA)
+      // this.drawAuditFooter(doc, auditInfo);
 
       doc.end();
     });
 
     return this.signPdf(pdfBuffer);
+  }
+
+  generateVerificationCode() {
+    // Gera código de verificação de 10 caracteres hexadecimais
+    const crypto = require('crypto');
+    return crypto.randomBytes(5).toString('hex');
+  }
+
+  generateDocumentNumber() {
+    // Gera número de documento baseado em timestamp
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 10000);
+    return `${timestamp}${random}`.substring(0, 12);
   }
 }
 

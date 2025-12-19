@@ -228,6 +228,7 @@ class AdminDashboardPresenter {
   renderEventsList(events) {
     const rows = (events || []).map(e => {
       const date = e.date ? new Date(e.date).toLocaleDateString('pt-BR') : '';
+      const registrationCount = (e.registrations || []).length;
       return `
         <tr>
           <td>${escapeHtml(e.title)}</td>
@@ -235,8 +236,10 @@ class AdminDashboardPresenter {
           <td>${escapeHtml(e.location)}</td>
           <td>${escapeHtml(e.workload)}</td>
           <td>${escapeHtml(e.status)}</td>
+          <td>${registrationCount}</td>
           <td>
             <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/events/${e.id}/edit">Editar</a>
+            <a class="btn-primary" href="/secret/${this.adminSecret}/admin/events/${e.id}/registrations">Inscritos</a>
             <form method="POST" action="/secret/${this.adminSecret}/admin/events/${e.id}/delete" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
               <button class="btn-secondary" style="background-color:#d9534f; border-color:#d43f3a; color:white;" type="submit">Excluir</button>
             </form>
@@ -278,6 +281,7 @@ class AdminDashboardPresenter {
                     <th>Local</th>
                     <th>Carga Horária</th>
                     <th>Status</th>
+                    <th>Inscritos</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -297,6 +301,8 @@ class AdminDashboardPresenter {
       ? `/secret/${this.adminSecret}/admin/events/${event.id}/edit` 
       : `/secret/${this.adminSecret}/admin/events`;
     
+    const activitiesJson = JSON.stringify(event.activities || []);
+    
     return `
       <!doctype html>
       <html lang="pt-BR">
@@ -305,6 +311,44 @@ class AdminDashboardPresenter {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>${isEdit ? 'Editar' : 'Novo'} Evento</title>
         <link rel="stylesheet" href="/theme.css" />
+        <style>
+          .activity-row {
+            display: grid;
+            grid-template-columns: 1fr 200px 80px;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: end;
+          }
+          .activity-list {
+            margin-top: 10px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 4px;
+          }
+          .btn-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+          }
+          .btn-remove:hover {
+            background: #c82333;
+          }
+          .btn-add-activity {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+          }
+          .btn-add-activity:hover {
+            background: #218838;
+          }
+        </style>
       </head>
       <body>
         <div class="container">
@@ -315,9 +359,14 @@ class AdminDashboardPresenter {
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
+          
+          <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
+            <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/events">← Voltar aos Eventos</a>
+          </div>
+          
           <section class="panel">
             <div class="panel-body">
-              <form method="POST" action="${action}">
+              <form method="POST" action="${action}" id="eventForm">
                 <div class="form-group">
                   <label>Título</label>
                   <input name="title" value="${escapeHtml(event.title)}" required />
@@ -331,8 +380,26 @@ class AdminDashboardPresenter {
                   <input name="location" value="${escapeHtml(event.location)}" />
                 </div>
                 <div class="form-group">
-                  <label>Carga Horária</label>
-                  <input name="workload" value="${escapeHtml(event.workload)}" />
+                  <label>Carga Horária Total</label>
+                  <input name="workload" value="${escapeHtml(event.workload)}" placeholder="Ex: 12 hora(s)" />
+                  <small style="color:#666; font-size:11px;">Será calculada automaticamente com base nas atividades abaixo</small>
+                </div>
+                <div class="form-group">
+                  <label>Coordenador(a)</label>
+                  <input name="coordinator" value="${escapeHtml(event.coordinator)}" placeholder="Ex: Prof. João da Silva" />
+                </div>
+                <div class="form-group">
+                  <label>Departamento/Órgão Promotor</label>
+                  <input name="department" value="${escapeHtml(event.department)}" placeholder="Ex: DEPARTAMENTO DE ENGENHARIA AGRÍCOLA" />
+                </div>
+                <div class="form-group">
+                  <label>Palestrante(s)/Ministrante(s)</label>
+                  <input name="speakers" value="${escapeHtml(event.speakers)}" placeholder="Ex: Dra. Maria Santos, Dr. José Lima" />
+                </div>
+                <div class="form-group">
+                  <label>Função Padrão dos Participantes</label>
+                  <input name="participantRole" value="${escapeHtml(event.participantRole)}" placeholder="Ex: PARTICIPANTE, COLABORADOR(A), OUVINTE" />
+                  <small style="color:#666; font-size:11px;">Esta será a função padrão no certificado.</small>
                 </div>
                 <div class="form-group">
                   <label>Status</label>
@@ -346,12 +413,110 @@ class AdminDashboardPresenter {
                   <label>Descrição</label>
                   <textarea name="description" rows="5">${escapeHtml(event.description)}</textarea>
                 </div>
+                
+                <div class="form-group">
+                  <label>Ementa do Curso</label>
+                  <textarea name="syllabus" rows="4" placeholder="Descreva a ementa do curso...">${escapeHtml(event.syllabus)}</textarea>
+                  <small style="color:#666; font-size:11px;">Descrição geral do conteúdo programático</small>
+                </div>
+                
+                <div class="form-group">
+                  <label>Atividades do Evento</label>
+                  <small style="color:#666; font-size:11px; display:block; margin-bottom:10px;">
+                    Liste as atividades que farão parte deste evento. Estas aparecerão em uma tabela no certificado.
+                  </small>
+                  <div id="activitiesList" class="activity-list"></div>
+                  <button type="button" class="btn-add-activity" onclick="addActivity()">+ Adicionar Atividade</button>
+                  <input type="hidden" name="activities" id="activitiesInput" />
+                </div>
+                
                 <div class="actions">
                   <button class="btn-primary" type="submit">Salvar</button>
                   <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/events">Cancelar</a>
                 </div>
               </form>
             </div>
+          </section>
+        </div>
+        
+        <script>
+          let activities = ${activitiesJson};
+          
+          function renderActivities() {
+            const list = document.getElementById('activitiesList');
+            if (activities.length === 0) {
+              list.innerHTML = '<p style="color:#999; text-align:center;">Nenhuma atividade cadastrada</p>';
+              updateTotalWorkload();
+              return;
+            }
+            
+            list.innerHTML = activities.map((act, idx) => \`
+              <div class="activity-row">
+                <div>
+                  <label style="font-size:11px; color:#666;">Atividade</label>
+                  <input type="text" value="\${escapeHtml(act.name || '')}" 
+                         onchange="updateActivity(\${idx}, 'name', this.value)" 
+                         placeholder="Ex: Workshop de Redação de Patentes"
+                         style="width:100%; padding:8px;" required />
+                </div>
+                <div>
+                  <label style="font-size:11px; color:#666;">Função</label>
+                  <input type="text" value="\${escapeHtml(act.role || 'PARTICIPANTE')}" 
+                         onchange="updateActivity(\${idx}, 'role', this.value)" 
+                         placeholder="PARTICIPANTE"
+                         style="width:100%; padding:8px;" />
+                </div>
+                <div>
+                  <label style="font-size:11px; color:#666;">Carga (h)</label>
+                  <input type="number" value="\${act.workload || 0}" 
+                         onchange="updateActivity(\${idx}, 'workload', this.value)" 
+                         placeholder="0"
+                         style="width:100%; padding:8px;" min="0" step="0.5" />
+                </div>
+                <button type="button" class="btn-remove" onclick="removeActivity(\${idx})">✕</button>
+              </div>
+            \`).join('');
+            
+            updateTotalWorkload();
+          }
+          
+          function addActivity() {
+            activities.push({ name: '', role: 'PARTICIPANTE', workload: 0 });
+            renderActivities();
+          }
+          
+          function removeActivity(idx) {
+            activities.splice(idx, 1);
+            renderActivities();
+          }
+          
+          function updateActivity(idx, field, value) {
+            activities[idx][field] = field === 'workload' ? parseFloat(value) || 0 : value;
+            updateTotalWorkload();
+          }
+          
+          function updateTotalWorkload() {
+            const total = activities.reduce((sum, act) => sum + (parseFloat(act.workload) || 0), 0);
+            const workloadInput = document.querySelector('input[name="workload"]');
+            if (workloadInput && total > 0) {
+              workloadInput.value = total + ' hora(s)';
+            }
+          }
+          
+          function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+          }
+          
+          document.getElementById('eventForm').addEventListener('submit', function(e) {
+            document.getElementById('activitiesInput').value = JSON.stringify(activities);
+          });
+          
+          renderActivities();
+        </script>
+      </body>
+      </html>
           </section>
         </div>
       </body>

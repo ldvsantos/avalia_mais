@@ -2037,6 +2037,7 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
       nome,
       email,
       cpf,
+      role: event.participantRole || 'PARTICIPANTE',
       registeredAt: new Date().toISOString()
   });
 
@@ -3062,8 +3063,19 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAuth
 });
 
 app.post(`/secret/${ADMIN_SECRET}/admin/events`, checkAdminIP, adminAuth, async (req, res) => {
-  const { title, description, date, location, workload, status } = req.body;
+  const { title, description, date, location, workload, status, coordinator, department, speakers, participantRole, syllabus, activities } = req.body;
   const crypto = require('crypto');
+  
+  // Parse activities JSON if it's a string
+  let parsedActivities = [];
+  if (activities) {
+    try {
+      parsedActivities = typeof activities === 'string' ? JSON.parse(activities) : activities;
+    } catch (e) {
+      parsedActivities = [];
+    }
+  }
+  
   const newEvent = {
       id: crypto.randomUUID(),
       title,
@@ -3072,6 +3084,12 @@ app.post(`/secret/${ADMIN_SECRET}/admin/events`, checkAdminIP, adminAuth, async 
       location: location || '',
       workload: workload || '',
       status: status || 'draft',
+      coordinator: coordinator || '',
+      department: department || '',
+      speakers: speakers || '',
+      participantRole: participantRole || 'PARTICIPANTE',
+      syllabus: syllabus || '',
+      activities: parsedActivities,
       registrations: [],
       audit: {}
   };
@@ -3083,13 +3101,30 @@ app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAut
     const event = await eventRepo.findById(req.params.id);
     if (!event) return res.status(404).send('Evento não encontrado');
 
-    const { title, description, date, location, workload, status } = req.body;
+    const { title, description, date, location, workload, status, coordinator, department, speakers, participantRole, syllabus, activities } = req.body;
+    
+    // Parse activities JSON if it's a string
+    let parsedActivities = [];
+    if (activities) {
+      try {
+        parsedActivities = typeof activities === 'string' ? JSON.parse(activities) : activities;
+      } catch (e) {
+        parsedActivities = event.activities || [];
+      }
+    }
+    
     if (title) event.title = title;
     event.description = description;
     if (date) event.date = date;
     event.location = location;
     event.workload = workload;
     if (status) event.status = status;
+    event.coordinator = coordinator || '';
+    event.department = department || '';
+    event.speakers = speakers || '';
+    event.participantRole = participantRole || 'PARTICIPANTE';
+    event.syllabus = syllabus || '';
+    event.activities = parsedActivities;
 
     await eventRepo.save(event);
     res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);
@@ -3098,6 +3133,116 @@ app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAut
 app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/delete`, checkAdminIP, adminAuth, async (req, res) => {
     await eventRepo.delete(req.params.id);
     res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);
+});
+
+// Visualizar inscritos de um evento
+app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, adminAuth, async (req, res) => {
+    const event = await eventRepo.findById(req.params.id);
+    if (!event) return res.status(404).send('Evento não encontrado');
+    
+    const registrationsHtml = (event.registrations || []).map((r, idx) => `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(r.nome)}</td>
+        <td>${escapeHtml(r.cpf)}</td>
+        <td>${escapeHtml(r.email)}</td>
+        <td>${escapeHtml(r.role || event.participantRole || 'PARTICIPANTE')}</td>
+        <td>${new Date(r.registeredAt).toLocaleDateString('pt-BR')}</td>
+        <td>
+          <form method="POST" action="/secret/${ADMIN_SECRET}/admin/events/${event.id}/certificate/${idx}" target="_blank" style="display:inline;">
+            <button class="btn-primary" type="submit">Gerar Certificado</button>
+          </form>
+        </td>
+      </tr>
+    `).join('');
+    
+    res.send(`
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Inscritos - ${escapeHtml(event.title)}</title>
+        <link rel="stylesheet" href="/theme.css" />
+      </head>
+      <body>
+        <div class="container">
+          <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <h1>Inscritos no Evento</h1>
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+            </div>
+          </header>
+          <section class="panel">
+            <div class="panel-header"><h2>${escapeHtml(event.title)}</h2></div>
+            <div class="panel-body">
+              <p><strong>Data:</strong> ${new Date(event.date).toLocaleDateString('pt-BR')}</p>
+              <p><strong>Local:</strong> ${escapeHtml(event.location)}</p>
+              <p><strong>Carga Horária:</strong> ${escapeHtml(event.workload)}</p>
+              <p><strong>Total de Inscritos:</strong> ${event.registrations.length}</p>
+              
+              <div class="admin-actions">
+                <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/events">← Voltar aos Eventos</a>
+              </div>
+              
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>Email</th>
+                    <th>Função</th>
+                    <th>Data de Inscrição</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${registrationsHtml || '<tr><td colspan="7" style="text-align:center;">Nenhum inscrito</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </body>
+      </html>
+    `);
+});
+
+// Gerar certificado para um inscrito
+app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/certificate/:index`, checkAdminIP, adminAuth, async (req, res) => {
+    const event = await eventRepo.findById(req.params.id);
+    if (!event) return res.status(404).send('Evento não encontrado');
+    
+    const index = parseInt(req.params.index);
+    const registration = event.registrations[index];
+    if (!registration) return res.status(404).send('Inscrição não encontrada');
+    
+    const auditInfo = {
+      ip: getClientIP(req),
+      user: { username: req.session.user || 'admin' },
+      createdAt: new Date()
+    };
+    
+    const pdfBuffer = await pdfService.generateCertificatePdf({
+      nome: registration.nome,
+      cpf: registration.cpf,
+      curso: event.title,
+      data: new Date(event.date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
+      cargaHoraria: event.workload,
+      coordinator: event.coordinator,
+      department: event.department,
+      speakers: event.speakers,
+      role: registration.role || event.participantRole || 'PARTICIPANTE',
+      syllabus: event.syllabus,
+      activities: event.activities,
+      textoLivre: ''
+    }, auditInfo);
+    
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="certificado-${registration.nome.replace(/\s+/g, '_')}.pdf"`);
+    res.send(pdfBuffer);
 });
 
 app.get(`/secret/${ADMIN_SECRET}/admin/appeals`, checkAdminIP, adminAuth, async (req, res) => {
@@ -3997,23 +4142,43 @@ app.get(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminA
             <div class="panel-body">
               <div class="form-group">
                 <label>Nome do Participante</label>
-                <input type="text" name="nome" value="Fulano de Tal" required />
+                <input type="text" name="nome" value="LUIZ DIEGO VIDAL SANTOS" required />
               </div>
               <div class="form-group">
-                <label>Nome do Evento/Curso</label>
-                <input type="text" name="curso" value="Workshop de Inovação" required />
+                <label>CPF</label>
+                <input type="text" name="cpf" value="033.281.915-93" required />
+              </div>
+              <div class="form-group">
+                <label>Nome do Evento/Atividade de Extensão</label>
+                <input type="text" name="curso" value="BIOSPECKLE LASER APLICADO A BIOSSISTEMAS" required />
+              </div>
+              <div class="form-group">
+                <label>Coordenador(a)</label>
+                <input type="text" name="coordinator" value="Professor(a) ADILSON MACHADO ENES" />
+              </div>
+              <div class="form-group">
+                <label>Departamento/Órgão Promotor</label>
+                <input type="text" name="department" value="DEPARTAMENTO DE ENGENHARIA AGRÍCOLA" />
+              </div>
+              <div class="form-group">
+                <label>Palestrante(s)/Ministrante(s) (Opcional)</label>
+                <input type="text" name="speakers" value="" />
+              </div>
+              <div class="form-group">
+                <label>Função do Participante</label>
+                <input type="text" name="role" value="COLABORADOR (A)" />
               </div>
               <div class="form-group">
                 <label>Data de Realização</label>
-                <input type="text" name="data" value="20 de Dezembro de 2025" />
+                <input type="text" name="data" value="19 de Agosto de 2025" />
               </div>
               <div class="form-group">
                 <label>Carga Horária</label>
-                <input type="text" name="cargaHoraria" value="8 horas" />
+                <input type="text" name="cargaHoraria" value="1 hora(s)" />
               </div>
               <div class="form-group">
                 <label>Texto Livre (Opcional)</label>
-                <textarea name="textoLivre" rows="3">Este certificado é concedido em reconhecimento à participação ativa e contribuição para o sucesso do evento.</textarea>
+                <textarea name="textoLivre" rows="3"></textarea>
               </div>
               <button type="submit" class="btn-primary">Gerar PDF</button>
             </div>
@@ -4027,7 +4192,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminA
 
 app.post(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminAuth, async (req, res) => {
   try {
-    const { nome, curso, data, cargaHoraria, textoLivre } = req.body;
+    const { nome, cpf, curso, data, cargaHoraria, textoLivre, coordinator, department, speakers, role } = req.body;
     
     const auditInfo = {
       ip: getClientIP(req),
@@ -4035,8 +4200,24 @@ app.post(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, admin
       createdAt: new Date()
     };
 
+    // Exemplo de atividades para teste
+    const exampleActivities = [
+      { name: 'Workshop Redação de Patentes, Além dos Guias + Oficinas Práticas', role: 'PARTICIPANTE', workload: 12 }
+    ];
+
     const pdfBuffer = await pdfService.generateCertificatePdf({
-      nome, curso, data, cargaHoraria, textoLivre
+      nome, 
+      cpf, 
+      curso, 
+      data, 
+      cargaHoraria, 
+      textoLivre,
+      coordinator,
+      department,
+      speakers,
+      role,
+      syllabus: 'Curso de extensão focado em propriedade intelectual e redação de patentes.',
+      activities: exampleActivities
     }, auditInfo);
 
     res.setHeader('Content-Type', 'application/pdf');
