@@ -498,6 +498,7 @@ class PdfService {
       // Marca d'água da logo UEFS (se existir)
       const hasUefs = fs.existsSync(this.uefsLogoPath);
       if (hasUefs) {
+                const savedY = doc.y;
         // Marca d'água grande, ATRÁS do texto (desenhada primeiro)
         const watermarkSize = Math.min(width, height) * 0.78;
         const watermarkX = (width - watermarkSize) / 2;
@@ -520,6 +521,7 @@ class PdfService {
         doc.restore();
         // Reset explícito (garante que nada fique “lavado” ou em estado incorreto)
         doc.opacity(1);
+              doc.y = savedY;
       }
 
       // Logos no topo (versão menor)
