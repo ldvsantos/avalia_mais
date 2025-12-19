@@ -497,7 +497,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Admin - Calendário do Edital</title>
       <link rel="stylesheet" href="/theme.css" />
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css" />
       <style>
         .hint { color: #003366; font-size: 11px; }
         .success { background:#e6f4ea; border:1px solid #b7e1c1; padding:10px; border-radius:6px; color:#1b5e20; }
@@ -626,8 +626,8 @@ function renderCalendarEditPage({ year, values, saved, error }) {
         </form>
       </div>
 
-      <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.js"></script>
-      <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/l10n/pt.min.js"></script>
       <script>
         (function () {
           const $ = (id) => document.getElementById(id);
