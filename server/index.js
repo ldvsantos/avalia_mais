@@ -988,7 +988,13 @@ function renderCalendarEditPage({ year, values, saved, error }) {
 
           const computeConflicts = () => {
             const { global, inscr, prova, recInsc, recProj, recEnt, recLing, proj, ent } = getAllIntervals();
-            if (!global) return { conflicts: ['Selecione o Período Global.'], globalMissing: true };
+            const errors = [];
+            const warnings = [];
+
+            if (!global) {
+              errors.push('Selecione o Período Global.');
+              return { errors, warnings, globalMissing: true };
+            }
 
             const phases = [];
             if (inscr) phases.push({ label: 'Inscrições', ...inscr });
@@ -1000,22 +1006,20 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             if (recEnt) phases.push({ label: 'Recurso Entrevista', ...recEnt });
             if (recLing) phases.push({ label: 'Recurso Língua', ...recLing });
 
-            const conflicts = [];
-
-            // Contenção no global (Apenas aviso, não bloqueio)
+            // Contenção no global (Aviso)
             for (const ph of phases) {
-              if (ph.start < global.start) conflicts.push(ph.label + ': início fora do Período Global');
-              if (ph.endExcl > global.endExcl) conflicts.push(ph.label + ': fim fora do Período Global');
+              if (ph.start < global.start) warnings.push(ph.label + ': início fora do Período Global');
+              if (ph.endExcl > global.endExcl) warnings.push(ph.label + ': fim fora do Período Global');
             }
 
-            // Regra específica: Inscrição não pode ter Prova (Exclusão Mútua)
+            // Regra específica: Inscrição não pode ter Prova (Exclusão Mútua) - Mantendo como Aviso
             if (inscr && prova) {
               if (overlap(inscr, prova)) {
-                conflicts.push('Conflito: Inscrição x Prova (não podem coincidir)');
+                warnings.push('Inscrição x Prova coincidem');
               }
             }
 
-            // Sobreposição genérica (Aviso apenas, exceto regras acima)
+            // Sobreposição genérica (Aviso)
             for (let a = 0; a < phases.length; a++) {
               for (let b = a + 1; b < phases.length; b++) {
                 const labelA = phases[a].label;
@@ -1027,12 +1031,12 @@ function renderCalendarEditPage({ year, values, saved, error }) {
                 }
 
                 if (overlap(phases[a], phases[b])) {
-                   conflicts.push('Aviso de Sobreposição: ' + labelA + ' x ' + labelB);
+                   warnings.push('Sobreposição: ' + labelA + ' x ' + labelB);
                 }
               }
             }
 
-            return { conflicts, globalMissing: false };
+            return { errors, warnings, globalMissing: false };
           };
 
           const buildOnDayCreate = (selfKey) => {
@@ -1129,7 +1133,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             if (recEnt) phases.push({ key: 'recursos', label: 'Recurso Entrevista', cls: 'seg-recursos', ...recEnt });
             if (recLing) phases.push({ key: 'recursos', label: 'Recurso Língua', cls: 'seg-recursos', ...recLing });
 
-            const { conflicts } = computeConflicts();
+            const { errors, warnings } = computeConflicts();
 
             for (const ph of phases) {
               const offset = ((ph.start.getTime() - global.start.getTime()) / total) * 100;
@@ -1143,12 +1147,20 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               bar.appendChild(seg);
             }
 
-            if (conflicts.length > 0) {
+            if (errors && errors.length > 0) {
               bar.classList.add('conflict');
-              warn.textContent = 'Conflito Detectado: ' + conflicts.join(' | ');
+              warn.textContent = 'Erro: ' + errors.join(' | ');
               warn.classList.add('show');
+              warn.style.color = '#b71c1c';
               submit.disabled = true;
-              submit.title = 'Resolva os conflitos antes de salvar.';
+              submit.title = 'Corrija os erros antes de salvar.';
+            } else if (warnings && warnings.length > 0) {
+              bar.classList.remove('conflict');
+              warn.textContent = 'Aviso: ' + warnings.join(' | ');
+              warn.classList.add('show');
+              warn.style.color = '#e65100'; // Laranja escuro
+              submit.disabled = false;
+              submit.title = '';
             }
           };
 
