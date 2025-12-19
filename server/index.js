@@ -4624,6 +4624,15 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
           </div>
         </section>
 
+        <div style="margin: 40px 0 20px 0; text-align: center; border-top: 2px dashed #86A3C2; position: relative;">
+           <span style="background: #f4f7fa; padding: 0 15px; position: relative; top: -12px; font-weight: bold; color: #003366; font-size: 1.1rem;">
+             ÁREA DE AVALIAÇÃO (PREENCHIMENTO)
+           </span>
+           <p style="margin-top: -5px; color: #555; font-size: 0.9rem;">
+             Abaixo iniciam-se os campos para atribuição de notas.
+           </p>
+        </div>
+
         <form method="POST" action="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/evaluate/${encodeURIComponent(protocol)}" style="margin-top: 10px;">
           <section class="panel">
             <div class="panel-header"><h2>1. Projeto de Pesquisa</h2></div>
