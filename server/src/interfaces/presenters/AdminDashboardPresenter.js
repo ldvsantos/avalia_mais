@@ -229,6 +229,7 @@ class AdminDashboardPresenter {
     const rows = (events || []).map(e => {
       const date = e.date ? new Date(e.date).toLocaleDateString('pt-BR') : '';
       const registrationCount = (e.registrations || []).length;
+      const publicUrl = `/eventos/${e.id}`;
       return `
         <tr>
           <td>${escapeHtml(e.title)}</td>
@@ -238,6 +239,7 @@ class AdminDashboardPresenter {
           <td>${escapeHtml(e.status)}</td>
           <td>${registrationCount}</td>
           <td>
+            <a class="btn-secondary" href="${publicUrl}" target="_blank" rel="noopener noreferrer">Link público</a>
             <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/events/${e.id}/edit">Editar</a>
             <a class="btn-primary" href="/secret/${this.adminSecret}/admin/events/${e.id}/registrations">Inscritos</a>
             <form method="POST" action="/secret/${this.adminSecret}/admin/events/${e.id}/delete" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
