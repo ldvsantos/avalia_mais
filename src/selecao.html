@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal do Candidato - Seleção (PLANTERR 2026)</title>
+    <link rel="stylesheet" href="style.css?v=20251219-1">
+    <link rel="stylesheet" href="theme.css?v=20251219-1">
+    <style>
+        .home-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .menu-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .menu-card h3 {
+            color: #003366;
+            margin-top: 0;
+        }
+        .menu-card p {
+            color: #666;
+            font-size: 0.9em;
+            flex-grow: 1;
+        }
+        .menu-card .btn-primary, .menu-card .btn-secondary {
+            width: 100%;
+            margin-top: 15px;
+            display: block;
+            box-sizing: border-box;
+            text-decoration: none;
+            padding: 10px;
+        }
+        .section-title {
+            border-bottom: 2px solid #003366;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            color: #003366;
+            margin-top: 40px;
+        }
+        .doc-list {
+            list-style: none;
+            padding: 0;
+        }
+        .doc-list li {
+            background: #f9f9f9;
+            border-bottom: 1px solid #eee;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .doc-list li:last-child {
+            border-bottom: none;
+        }
+        .doc-list a {
+            color: #003366;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .doc-list a:hover {
+            text-decoration: underline;
+        }
+        .badge-new {
+            background-color: #2e7d32;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+                    <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                </a>
+                <div>
+                    <h1 style="margin:0; font-size: 1.5em;">Processo Seletivo 2026</h1>
+                    <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Mestrado Profissional em Planejamento Territorial</p>
+                </div>
+                <img src="img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-body">
+                <p>Bem-vindo ao portal do Processo Seletivo para Aluno Regular do Programa de Pós-Graduação em Planejamento Territorial (PLANTERR).</p>
+                <p>Utilize as opções abaixo para realizar sua inscrição, acompanhar sua situação ou acessar os documentos oficiais.</p>
+            </div>
+        </section>
+
+        <div class="home-menu">
+            <div class="menu-card">
+                <h3>Nova Inscrição</h3>
+                <p>Preencha o formulário de anteprojeto e realize sua inscrição no processo seletivo.</p>
+                <a href="inscricao.html" class="btn-primary">Inscrever-se</a>
+            </div>
+            <div class="menu-card">
+                <h3>Consultar Inscrição</h3>
+                <p>Verifique a autenticidade e o status da sua inscrição utilizando seu número de protocolo.</p>
+                <a href="/consulta" class="btn-secondary">Consultar</a>
+            </div>
+            <div class="menu-card">
+                <h3>Recursos</h3>
+                <p>Interposição de recursos contra resultados ou etapas do processo seletivo.</p>
+                <a href="recurso.html" class="btn-secondary">Interpor Recurso</a>
+            </div>
+        </div>
+
+        <h2 class="section-title">Documentos e Editais</h2>
+        <section class="panel">
+            <div class="panel-body" style="padding: 0;">
+                <ul class="doc-list">
+                    <li>
+                        <div>
+                            <span style="font-size: 1.2em;">📄</span>
+                            <a href="docs/edital_2026.pdf" target="_blank">Edital de Seleção PLANTERR 2026 - Versão Final</a>
+                            <span class="badge-new">Novo</span>
+                        </div>
+                        <span style="color: #888; font-size: 0.9em;">PDF</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <h2 class="section-title">Resultados e Comunicados</h2>
+        <section class="panel">
+            <div class="panel-body" id="public-results-container" style="padding: 0;">
+                <p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Carregando resultados...</p>
+            </div>
+        </section>
+
+        <script>
+            fetch('/api/public-files')
+                .then(response => response.json())
+                .then(files => {
+                    const container = document.getElementById('public-results-container');
+                    if (!Array.isArray(files) || files.length === 0) {
+                        container.innerHTML =
+                            '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">' +
+                            'Nenhum resultado divulgado até o momento. Acompanhe o cronograma no Edital.' +
+                            '</p>';
+                        return;
+                    }
+
+                    const list = document.createElement('ul');
+                    list.className = 'doc-list';
+
+                    files.forEach(file => {
+                        const li = document.createElement('li');
+                        const date = file && file.date ? new Date(file.date).toLocaleDateString('pt-BR') : '';
+                        const filename = file && file.filename ? String(file.filename) : '';
+                        const title = file && file.title ? String(file.title) : 'Documento';
+                        li.innerHTML =
+                            '<div>' +
+                            '<span style="font-size: 1.2em;">📄</span> ' +
+                            '<a href="/results/' + encodeURIComponent(filename) + '" target="_blank">' +
+                            title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+                            '</a>' +
+                            (date ? '<span style="color: #666; font-size: 0.8em; margin-left: 10px;">(' + date + ')</span>' : '') +
+                            '</div>' +
+                            '<span style="color: #888; font-size: 0.9em;">PDF</span>';
+                        list.appendChild(li);
+                    });
+
+                    container.innerHTML = '';
+                    container.appendChild(list);
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('public-results-container').innerHTML =
+                        '<p style="color: red; text-align: center; padding: 20px;">Erro ao carregar resultados.</p>';
+                });
+        </script>
+
+        <footer style="text-align: center; margin-top: 40px; color: #777; font-size: 0.9em;">
+            <p>&copy; 2025 PLANTERR. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+</html>

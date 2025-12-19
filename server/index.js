@@ -1805,6 +1805,33 @@ app.get('/api/public-files', (req, res) => {
   res.json(files);
 });
 
+// Lista pública de eventos/cursos abertos (para a página de cursos)
+app.get('/api/public-events', async (req, res) => {
+  try {
+    const events = await eventRepo.findAll();
+    const safe = (events || [])
+      .filter((e) => e && e.status === 'open')
+      .map((e) => ({
+        id: String(e.id || ''),
+        title: String(e.title || ''),
+        date: e.date || null,
+        location: String(e.location || ''),
+        workload: String(e.workload || ''),
+        description: String(e.description || ''),
+      }))
+      .sort((a, b) => {
+        const da = a.date ? new Date(a.date).getTime() : 0;
+        const db = b.date ? new Date(b.date).getTime() : 0;
+        return da - db;
+      });
+
+    return res.json(safe);
+  } catch (err) {
+    console.error('Falha ao listar eventos públicos', err);
+    return res.status(500).json({ error: 'Falha ao listar eventos' });
+  }
+});
+
 app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, uploadPublic.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).send('Nenhum arquivo enviado');
@@ -1956,6 +1983,47 @@ app.use(`/secret/${ADMIN_SECRET}/logout`, (req, res) => {
 app.get('/eventos/:id', async (req, res) => {
   const event = await eventRepo.findById(req.params.id);
   if (!event || event.status !== 'open') return res.status(404).send('Evento não encontrado ou inscrições encerradas.');
+
+  const syllabus = String(event.syllabus || '').trim();
+  const activities = Array.isArray(event.activities) ? event.activities : [];
+
+  const syllabusHtml = syllabus
+    ? `
+        <hr />
+        <h3>Ementa do Curso</h3>
+        <div style="margin: 12px 0; white-space: pre-wrap;">${escapeHtml(syllabus)}</div>
+      `
+    : '';
+
+  const activitiesHtml = activities.length
+    ? (() => {
+        const rows = activities.map((a) => {
+          const name = escapeHtml(a && a.name ? a.name : '');
+          const role = escapeHtml(a && a.role ? a.role : '');
+          const workload = escapeHtml(a && a.workload != null ? String(a.workload) : '');
+          return `<tr><td>${name}</td><td>${role}</td><td style="text-align:right;">${workload}</td></tr>`;
+        }).join('');
+
+        return `
+          <hr />
+          <h3>Atividades do Evento</h3>
+          <div style="overflow-x:auto;">
+            <table style="width:100%; border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th style="text-align:left; border-bottom: 1px solid #ddd; padding: 8px;">Atividade</th>
+                  <th style="text-align:left; border-bottom: 1px solid #ddd; padding: 8px;">Função</th>
+                  <th style="text-align:right; border-bottom: 1px solid #ddd; padding: 8px;">Carga (h)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        `;
+      })()
+    : '';
   
   res.send(`
     <!doctype html>
@@ -1982,7 +2050,10 @@ app.get('/eventos/:id', async (req, res) => {
             <p><strong>Data:</strong> ${new Date(event.date).toLocaleDateString('pt-BR')}</p>
             <p><strong>Local:</strong> ${escapeHtml(event.location)}</p>
             <p><strong>Carga Horária:</strong> ${escapeHtml(event.workload)}</p>
-            <div style="margin: 20px 0; white-space: pre-wrap;">${escapeHtml(event.description)}</div>
+            <h3>Descrição</h3>
+            <div style="margin: 12px 0; white-space: pre-wrap;">${escapeHtml(event.description)}</div>
+            ${syllabusHtml}
+            ${activitiesHtml}
             
             <hr />
             <h3>Inscreva-se</h3>
