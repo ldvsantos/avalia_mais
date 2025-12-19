@@ -878,6 +878,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             locale: (window.flatpickr && window.flatpickr.l10ns && window.flatpickr.l10ns.pt) ? window.flatpickr.l10ns.pt : 'pt',
             allowInput: true,
             disableMobile: true,
+            clickOpens: true,
           };
 
           let fpGlobal = null;
@@ -1374,9 +1375,21 @@ function renderCalendarEditPage({ year, values, saved, error }) {
           };
 
           if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', bootstrap);
+            document.addEventListener('DOMContentLoaded', () => {
+              try {
+                bootstrap();
+              } catch (err) {
+                console.error(err);
+                alert('Erro ao carregar calendário: ' + err.message);
+              }
+            });
           } else {
-            bootstrap();
+            try {
+              bootstrap();
+            } catch (err) {
+              console.error(err);
+              alert('Erro ao carregar calendário: ' + err.message);
+            }
           }
         })();
       </script>
