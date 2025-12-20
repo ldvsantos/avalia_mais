@@ -2925,6 +2925,10 @@ app.get('/candidato/status', async (req, res) => {
             </div>
             <div class="panel-body">
               <ul class="doc-list">
+                <li class="doc-item">
+                  <span class="doc-name">📄 Comprovante de Inscrição</span>
+                  <a href="/candidato/comprovante.pdf" class="doc-link" target="_blank" rel="noopener noreferrer">Visualizar PDF</a>
+                </li>
                 ${submission.pdfProjeto ? `
                 <li class="doc-item">
                   <span class="doc-name">📄 Projeto de Pesquisa</span>
@@ -2937,7 +2941,7 @@ app.get('/candidato/status', async (req, res) => {
                   <a href="/candidato/documento/idioma" class="doc-link">Visualizar PDF</a>
                 </li>
                 ` : ''}
-                ${!submission.pdfProjeto && !submission.pdfIdioma ? '<li class="doc-item"><span class="doc-name">Nenhum documento disponível</span></li>' : ''}
+                ${!submission.pdfProjeto && !submission.pdfIdioma ? '' : ''}
               </ul>
             </div>
           </div>
@@ -2996,6 +3000,49 @@ app.get('/candidato/sair', (req, res) => {
   req.session.candidateProtocol = null;
   req.session.candidateCpf = null;
   res.redirect('/consulta');
+});
+
+// Download do comprovante (PDF) da inscrição do candidato (template oficial)
+app.get('/candidato/comprovante.pdf', async (req, res) => {
+  // Verificar autenticação
+  if (!req.session.candidateProtocol || !req.session.candidateCpf) {
+    return res.status(401).send('Não autorizado. Faça login novamente.');
+  }
+
+  try {
+    const protocol = req.session.candidateProtocol;
+    const submission = await Promise.resolve(submissionRepo.findByProtocol(protocol));
+
+    if (!submission) {
+      return res.status(404).send('Inscrição não encontrada.');
+    }
+
+    // Verificar CPF
+    const submissionCpf = String(submission.identified?.cpf || '').replace(/\D/g, '');
+    if (submissionCpf !== req.session.candidateCpf) {
+      req.session.candidateProtocol = null;
+      req.session.candidateCpf = null;
+      return res.status(403).send('Acesso negado.');
+    }
+
+    const auditInfo = {
+      ip: getClientIP(req),
+      user: { username: 'candidato' },
+      userAgent: req.get('User-Agent') || 'unknown',
+      createdAt: submission.createdAt ? new Date(submission.createdAt) : new Date(),
+      hash: submission.hash,
+    };
+
+    const pdfBuffer = await pdfService.generateSubmissionPdf(submission, auditInfo);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="inscricao-${protocol}.pdf"`);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Erro ao gerar comprovante (candidato):', err);
+    return res.status(500).send('Erro ao gerar comprovante.');
+  }
 });
 
 // Download de documentos do candidato
