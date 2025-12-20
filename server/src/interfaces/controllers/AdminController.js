@@ -25,12 +25,20 @@ class AdminController {
     const toStr = String(req.query.to ?? '');
     const { from, to } = parseDateRange(fromStr, toStr);
 
-    const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ q, status, from, to }));
+    const activeEditalYear = storage.getActiveEditalYear();
+    const yearParam = String(req.query.year ?? '').trim();
+    const selectedYear = (() => {
+      if (!yearParam) return activeEditalYear;
+      const y = Number(yearParam);
+      if (Number.isFinite(y) && y >= 2000 && y <= 2100) return y;
+      return activeEditalYear;
+    })();
+
+    const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ q, status, from, to, editalYear: selectedYear }));
     const evaluations = await Promise.resolve(this.listEvaluationsUseCase.execute());
     const publicFiles = this.publicFileRepo ? await Promise.resolve(this.publicFileRepo.getAll()) : [];
 
-    const editalYear = new Date().getFullYear();
-    const cal = this.calendarRepo.getOrCreateYear(editalYear, { seedRegistrationWindow: storage.getRegistrationWindow() });
+    const cal = this.calendarRepo.getOrCreateYear(selectedYear, { seedRegistrationWindow: storage.getRegistrationWindow() });
     
     // Usar período global do calendário em vez da janela de inscrição
     const window = cal?.global || storage.getRegistrationWindow();
@@ -47,7 +55,8 @@ class AdminController {
       adminStatusOptions: ['Recebida', 'Em Análise', 'Em recurso', 'Aprovada', 'Indeferida'],
       registrationWindow: window,
       registrationOpen: open,
-      editalYear,
+      editalYear: selectedYear,
+      activeEditalYear,
       publicFiles,
     });
 
@@ -61,7 +70,16 @@ class AdminController {
     const toStr = String(req.query.to ?? '');
     const { from, to } = parseDateRange(fromStr, toStr);
 
-    const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ q, status, from, to }));
+    const activeEditalYear = storage.getActiveEditalYear();
+    const yearParam = String(req.query.year ?? '').trim();
+    const selectedYear = (() => {
+      if (!yearParam) return activeEditalYear;
+      const y = Number(yearParam);
+      if (Number.isFinite(y) && y >= 2000 && y <= 2100) return y;
+      return activeEditalYear;
+    })();
+
+    const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ q, status, from, to, editalYear: selectedYear }));
     const evals = await Promise.resolve(this.listEvaluationsUseCase.execute());
     const evalMap = new Map(evals.map(e => [e.protocol, e]));
 

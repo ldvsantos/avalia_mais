@@ -24,7 +24,8 @@ class SubmissionController {
       const result = await this.registerSubmissionUseCase.execute(req.body, {
         ip: req.ip,
         user: req.user,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
+        activeEditalYear: storage.getActiveEditalYear(),
       });
       return res.json(result);
     } catch (error) {

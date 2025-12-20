@@ -40,6 +40,7 @@ function ensureFile() {
   if (!fs.existsSync(CONFIG_FILE)) {
     const defaultConfig = {
       registrationWindow: { startISO: null, endISO: null },
+      activeEditalYear: new Date().getFullYear(),
       updatedAt: new Date().toISOString()
     };
     fs.writeFileSync(CONFIG_FILE, JSON.stringify(defaultConfig, null, 2), 'utf8');
@@ -280,11 +281,16 @@ function readConfig() {
   try {
     const raw = fs.readFileSync(CONFIG_FILE, 'utf8');
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') return { registrationWindow: { startISO: null, endISO: null } };
+    if (!parsed || typeof parsed !== 'object') {
+      return { registrationWindow: { startISO: null, endISO: null }, activeEditalYear: new Date().getFullYear() };
+    }
     const rw = parsed.registrationWindow || { startISO: null, endISO: null };
-    return { registrationWindow: rw };
+    const yearRaw = parsed.activeEditalYear;
+    const year = Number(yearRaw);
+    const activeEditalYear = Number.isFinite(year) && year >= 2000 && year <= 2100 ? year : new Date().getFullYear();
+    return { ...parsed, registrationWindow: rw, activeEditalYear };
   } catch {
-    return { registrationWindow: { startISO: null, endISO: null } };
+    return { registrationWindow: { startISO: null, endISO: null }, activeEditalYear: new Date().getFullYear() };
   }
 }
 
@@ -312,6 +318,21 @@ function writeConfig(config) {
 function getRegistrationWindow() {
   const { registrationWindow } = readConfig();
   return registrationWindow || { startISO: null, endISO: null };
+}
+
+function getActiveEditalYear() {
+  const { activeEditalYear } = readConfig();
+  const y = Number(activeEditalYear);
+  return Number.isFinite(y) && y >= 2000 && y <= 2100 ? y : new Date().getFullYear();
+}
+
+function setActiveEditalYear(year) {
+  const y = Number(year);
+  if (!Number.isFinite(y) || y < 2000 || y > 2100) {
+    throw new Error('Ano inválido');
+  }
+  const config = writeConfig({ activeEditalYear: y });
+  return config.activeEditalYear;
 }
 
 function setRegistrationWindow({ startDateStr, endDateStr }) {
@@ -362,5 +383,7 @@ module.exports = {
   writeConfig,
   getRegistrationWindow,
   setRegistrationWindow,
+  getActiveEditalYear,
+  setActiveEditalYear,
   isRegistrationOpen,
 };

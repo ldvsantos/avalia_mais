@@ -609,7 +609,7 @@ class AdminDashboardPresenter {
   }
 
   render(submissions, evaluations, filters) {
-    const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen, editalYear, publicFiles } = filters;
+    const { q, status, fromStr, toStr, adminStatusOptions, registrationWindow, registrationOpen, editalYear, activeEditalYear, publicFiles } = filters;
     const evalMap = new Map(evaluations.map(e => [e.protocol, e]));
 
     const WEIGHTS = { project: 4, interview: 5, language: 1 };
@@ -681,7 +681,7 @@ class AdminDashboardPresenter {
         <link rel="stylesheet" href="/theme.css" />
         <style>
           .hint { color: #003366; font-size: 11px; }
-          .filters-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px; align-items: end; }
+          .filters-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr; gap: 8px; align-items: end; }
           .filters-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 8px; }
           .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
           @media (max-width: 900px) { .filters-grid { grid-template-columns: 1fr; } }
@@ -706,8 +706,19 @@ class AdminDashboardPresenter {
                 <span class="admin-badge" style="background:${registrationOpen ? '#2e7d32' : '#b71c1c'}; color:white;">Status: ${registrationOpen ? 'ABERTO' : 'FECHADO'}</span>
                 <span class="admin-badge" id="reg-countdown" data-start-iso="${escapeHtml(String(registrationWindow?.startISO || ''))}" data-end-iso="${escapeHtml(String(registrationWindow?.endISO || ''))}">Cronômetro: —</span>
               </div>
+              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; margin-top: 8px;">
+                <span class="admin-badge" style="background:#0b4b86; color:white;">Ano ativo: ${escapeHtml(String(activeEditalYear ?? '—'))}</span>
+                <span class="admin-badge" style="background:#6b7280; color:white;">Visualizando: ${escapeHtml(String(editalYear ?? '—'))}</span>
+              </div>
+              <form method="POST" action="/secret/${this.adminSecret}/admin/active-year" style="margin-top: 10px; display:flex; gap:8px; justify-content:center; align-items:end; flex-wrap:wrap;">
+                <div class="form-group" style="margin-bottom: 0; max-width: 200px;">
+                  <label for="activeYear">Definir ano ativo</label>
+                  <input id="activeYear" name="year" type="number" min="2000" max="2100" value="${escapeHtml(String(activeEditalYear ?? editalYear ?? ''))}" required />
+                </div>
+                <button type="submit" class="btn-primary">Salvar</button>
+              </form>
               <div class="admin-actions" style="justify-content:center; margin-top: 10px;">
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/edital/${encodeURIComponent(String(editalYear || new Date().getFullYear()))}/calendar/edit">Calendário do Edital (todas as fases)</a>
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/edital/${encodeURIComponent(String(editalYear ?? activeEditalYear ?? ''))}/calendar/edit">Calendário do Edital (todas as fases)</a>
               </div>
               <p class="hint" style="text-align:center; margin-top: 6px;">Use esta tela para configurar também as janelas de recursos e etapas (projeto/entrevista/língua).</p>
             </div>
@@ -780,11 +791,15 @@ class AdminDashboardPresenter {
                     <label for="to">Até</label>
                     <input id="to" name="to" type="date" value="${escapeHtml(toStr)}" />
                   </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label for="year">Ano</label>
+                    <input id="year" name="year" type="number" min="2000" max="2100" value="${escapeHtml(String(editalYear ?? activeEditalYear ?? ''))}" />
+                  </div>
                 </div>
                 <div class="filters-actions">
                   <button class="btn-primary" type="submit">Filtrar</button>
-                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/selection">Limpar Filtros</a>
-                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/export.csv?${new URLSearchParams({ q, status, from: fromStr, to: toStr }).toString()}">Exportar CSV</a>
+                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/selection?${new URLSearchParams({ year: String(editalYear ?? activeEditalYear ?? '') }).toString()}">Limpar Filtros</a>
+                  <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/export.csv?${new URLSearchParams({ q, status, from: fromStr, to: toStr, year: String(editalYear ?? activeEditalYear ?? '') }).toString()}">Exportar CSV</a>
                 </div>
               </form>
             </div>

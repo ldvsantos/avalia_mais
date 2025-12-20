@@ -14,9 +14,11 @@ class RegisterSubmission {
   }
 
   async execute(data, ctx) {
-    console.log('RegisterSubmission.execute called with ctx:', ctx);
     // 1. Generate Protocol
-    const year = new Date().getFullYear();
+    const yearFromCtx = Number(ctx && ctx.activeEditalYear);
+    const year = Number.isFinite(yearFromCtx) && yearFromCtx >= 2000 && yearFromCtx <= 2100
+      ? yearFromCtx
+      : new Date().getFullYear();
     const randomPart = crypto.randomBytes(2).toString('hex').toUpperCase();
     const protocol = `PLANTERR-${year}-${randomPart}`;
 
@@ -100,6 +102,7 @@ class RegisterSubmission {
     // 5. Create Entity
     const submission = new Submission({
       protocol,
+      editalYear: year,
       hash,
       createdAt,
       status: 'Recebido',

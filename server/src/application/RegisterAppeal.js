@@ -41,7 +41,14 @@ class RegisterAppeal {
       throw new Error('Selecione a etapa do processo.');
     }
 
-    const year = new Date().getFullYear();
+    const year = (() => {
+      const m = String(submissionProtocol || '').match(/\b(20\d{2})\b/);
+      const y = m ? Number(m[1]) : NaN;
+      if (Number.isFinite(y) && y >= 2000 && y <= 2100) return y;
+      const ctxY = Number(ctx && ctx.activeEditalYear);
+      if (Number.isFinite(ctxY) && ctxY >= 2000 && ctxY <= 2100) return ctxY;
+      return new Date().getFullYear();
+    })();
     const randomPart = crypto.randomBytes(2).toString('hex').toUpperCase();
     const protocol = `REC-${year}-${randomPart}`;
     const createdAt = new Date().toISOString();
@@ -52,6 +59,7 @@ class RegisterAppeal {
 
     const appeal = new Appeal({
       protocol,
+      editalYear: year,
       submissionProtocol,
       createdAt,
       cpf: data.cpf,

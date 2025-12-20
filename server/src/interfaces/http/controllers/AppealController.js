@@ -1,3 +1,5 @@
+const storage = require('../../../../storage');
+
 class AppealController {
   constructor(registerAppealUseCase, workflowService) {
     this.registerAppealUseCase = registerAppealUseCase;
@@ -20,7 +22,8 @@ class AppealController {
       const result = await this.registerAppealUseCase.execute(req.body, {
         ip: req.ip,
         user: req.user,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get('User-Agent'),
+        activeEditalYear: storage.getActiveEditalYear(),
       });
       return res.json(result);
     } catch (error) {

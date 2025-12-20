@@ -91,6 +91,18 @@ class WorkflowService {
     this.storageCompat = storageCompat;
   }
 
+  getActiveEditalYear(now = new Date()) {
+    try {
+      if (this.storageCompat && typeof this.storageCompat.getActiveEditalYear === 'function') {
+        const y = Number(this.storageCompat.getActiveEditalYear());
+        if (Number.isFinite(y) && y >= 2000 && y <= 2100) return y;
+      }
+    } catch {
+      // ignore
+    }
+    return now.getFullYear();
+  }
+
   getEditalYearForSubmission(submissionProtocol) {
     return parseYearFromSubmissionProtocol(submissionProtocol);
   }
@@ -214,7 +226,7 @@ class WorkflowService {
   }
 
   assertCanRegisterSubmission(now) {
-    const year = now.getFullYear();
+    const year = this.getActiveEditalYear(now);
     this.assertWithinGlobal(year, now);
     this.assertWithinPhase(year, PHASE.INSCRICAO, now);
   }

@@ -317,7 +317,7 @@ const adminController = new AdminController(listSubmissionsUseCase, listEvaluati
 if (require.main === module) {
   setInterval(() => {
     try {
-      const year = new Date().getFullYear();
+      const year = storage.getActiveEditalYear();
       Promise.resolve(workflowService.reconcileDefinitiveFailures({ year, now: new Date() }))
         .catch((err) => {
           console.error('Workflow job failed', err);
@@ -434,8 +434,15 @@ app.get('/api/qrcode', async (req, res) => {
 // Estado do calendário de inscrições (público) — usado também como healthcheck de deploy
 app.get('/api/registration-window', (req, res) => {
   try {
-    const year = new Date().getFullYear();
-    const cal = calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
+    const activeEditalYear = storage.getActiveEditalYear();
+    const yearRaw = String(req.query?.year || '').trim();
+    const requestedYear = (() => {
+      if (!yearRaw) return activeEditalYear;
+      const y = Number(yearRaw);
+      return Number.isFinite(y) && y >= 2000 && y <= 2100 ? y : activeEditalYear;
+    })();
+
+    const cal = calendarRepo.getOrCreateYear(requestedYear, { seedRegistrationWindow: storage.getRegistrationWindow() });
     const window = cal?.phases?.[PHASE.INSCRICAO] || storage.getRegistrationWindow();
 
     const now = new Date();
@@ -448,7 +455,7 @@ app.get('/api/registration-window', (req, res) => {
       }
     })();
 
-    return res.json({ editalYear: year, registrationWindow: window, open, now: now.toISOString() });
+    return res.json({ activeEditalYear, editalYear: requestedYear, registrationWindow: window, open, now: now.toISOString() });
   } catch (err) {
     return res.status(500).json({ error: 'Falha ao obter calendário' });
   }
@@ -469,8 +476,9 @@ function formatSaoPauloDateBr(isoString) {
 
 app.get('/api/public-calendar', (req, res) => {
   try {
+    const activeEditalYear = storage.getActiveEditalYear();
     const yearRaw = String(req.query?.year || '').trim();
-    const year = yearRaw ? Number(yearRaw) : new Date().getFullYear();
+    const year = yearRaw ? Number(yearRaw) : activeEditalYear;
     if (!Number.isFinite(year) || year < 2000 || year > 2100) {
       return res.status(400).json({ error: 'Ano inválido' });
     }
@@ -531,7 +539,7 @@ app.get('/api/public-calendar', (req, res) => {
     });
 
     res.setHeader('Cache-Control', 'no-store');
-    return res.json({ editalYear: year, items, now: new Date().toISOString() });
+    return res.json({ activeEditalYear, editalYear: year, items, now: new Date().toISOString() });
   } catch (err) {
     return res.status(500).json({ error: 'Falha ao obter calendário público' });
   }
@@ -4019,6 +4027,24 @@ app.get(`/secret/${ADMIN_SECRET}/admin`, checkAdminIP, adminAuth, async (req, re
 
 app.get(`/secret/${ADMIN_SECRET}/admin/selection`, checkAdminIP, adminAuth, async (req, res) => {
   return adminController.dashboard(req, res);
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/active-year`, checkAdminIP, adminAuth, (req, res) => {
+  try {
+    const yearRaw = String(req.body?.year || '').trim();
+    const year = Number(yearRaw);
+    if (!Number.isFinite(year) || year < 2000 || year > 2100) {
+      return res.status(400).send('Ano inválido');
+    }
+
+    storage.setActiveEditalYear(year);
+    // Garante que o calendário do ano exista (sem necessidade de pré-seed manual)
+    calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
+
+    return res.redirect(`/secret/${ADMIN_SECRET}/admin/selection?year=${encodeURIComponent(String(year))}`);
+  } catch (err) {
+    return res.status(500).send('Falha ao salvar ano ativo');
+  }
 });
 
 // --- GESTÃO DE EVENTOS ---
