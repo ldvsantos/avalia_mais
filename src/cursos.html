@@ -133,8 +133,8 @@
                         const id = e && e.id ? String(e.id) : '';
                         const imageUrl = e.imageUrl ? escapeHtml(e.imageUrl) : '/img/post_padrao.png';
 
-                        // Aspect ratio 3:4 = 133.33% padding-top
-                        const imageHtml = '<div class="course-image" style="width:100%; padding-top:133.33%; position:relative; background:#f0f0f0; border-radius:4px; overflow:hidden; margin-bottom:10px;">' +
+                        // Aspect ratio 1:1 = 100% padding-top (Square)
+                        const imageHtml = '<div class="course-image" style="width:100%; padding-top:100%; position:relative; background:#f0f0f0; border-radius:4px; overflow:hidden; margin-bottom:10px;">' +
                             '<img src="' + imageUrl + '" alt="' + title + '" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">' +
                             '</div>';
 
