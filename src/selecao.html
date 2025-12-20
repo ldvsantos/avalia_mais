@@ -176,7 +176,7 @@
             </div>
         </section>
 
-        <h2 class="section-title">Calendário do Edital</h2>
+        <h2 class="section-title">Calendário do Edital <span id="public-calendar-year" style="color:#555; font-weight: normal;"></span></h2>
         <section class="panel">
             <div class="panel-body" id="public-calendar-container" style="padding: 0;">
                 <p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Carregando calendário...</p>
@@ -227,10 +227,39 @@
         </script>
 
         <script>
-            // Processo Seletivo 2026 pode ter datas em 2025/2026; o "ano do edital" é 2026.
-            const EDITAL_YEAR = 2026;
+            function getQueryParam(name) {
+                try {
+                    const u = new URL(window.location.href);
+                    return u.searchParams.get(name);
+                } catch {
+                    return null;
+                }
+            }
 
-            fetch('/api/public-calendar?year=' + encodeURIComponent(String(EDITAL_YEAR)))
+            function resolveEditalYear() {
+                const yearParam = (getQueryParam('year') || '').trim();
+                if (yearParam) {
+                    const y = Number(yearParam);
+                    if (Number.isFinite(y) && y >= 2000 && y <= 2100) return Promise.resolve(y);
+                }
+
+                return fetch('/api/registration-window')
+                    .then(r => r.json())
+                    .then(d => {
+                        const y = Number(d && d.editalYear);
+                        if (Number.isFinite(y) && y >= 2000 && y <= 2100) return y;
+                        return new Date().getFullYear();
+                    })
+                    .catch(() => new Date().getFullYear());
+            }
+
+            resolveEditalYear()
+                .then((EDITAL_YEAR) => {
+                    const yearEl = document.getElementById('public-calendar-year');
+                    if (yearEl) yearEl.textContent = '(' + String(EDITAL_YEAR) + ')';
+
+                    return fetch('/api/public-calendar?year=' + encodeURIComponent(String(EDITAL_YEAR)));
+                })
                 .then(response => response.json())
                 .then(data => {
                     const container = document.getElementById('public-calendar-container');
