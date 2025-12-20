@@ -246,8 +246,8 @@ class AdminDashboardPresenter {
             <a class="btn-secondary" href="${publicUrl}" target="_blank" rel="noopener noreferrer">Link público</a>
             <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/events/${e.id}/edit">Editar</a>
             <a class="btn-primary" href="/secret/${this.adminSecret}/admin/events/${e.id}/registrations">Inscritos</a>
-            <form method="POST" action="/secret/${this.adminSecret}/admin/events/${e.id}/delete" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita.');">
-              <button class="btn-secondary" style="background-color:#d9534f; border-color:#d43f3a; color:white;" type="submit">Excluir</button>
+            <form method="POST" action="/secret/${this.adminSecret}/admin/events/${e.id}/delete" style="display:inline;">
+              <button class="btn-secondary" style="background-color:#d9534f; border-color:#d43f3a; color:white;" type="submit" onclick="return confirm('ATENÇÃO: Tem certeza que deseja excluir este evento?\n\nEsta ação apagará permanentemente o evento e todas as inscrições associadas.\n\nClique em OK para confirmar a exclusão.');">Excluir</button>
             </form>
           </td>
         </tr>
