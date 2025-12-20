@@ -394,7 +394,9 @@ fi
 
 # Reinicia app
 cd "$REMOTE_DIR/server"
-sudo -u "$APP_USER" -H pm2 restart "$PM2_NAME" || sudo -u "$APP_USER" -H pm2 start index.js --name "$PM2_NAME"
+# Importante: o PM2 mantém env no processo. Para garantir que alterações em server/.env
+# (ex.: ADMIN_PASS/HMAC_SECRET) tenham efeito, atualiza o env do processo no restart.
+sudo -u "$APP_USER" -H bash -lc "set -e; envf='$REMOTE_DIR/server/.env'; if [ -f \"\$envf\" ]; then ADMIN_USER=\$(grep -m1 '^ADMIN_USER=' \"\$envf\" | cut -d= -f2- || true); ADMIN_PASS=\$(grep -m1 '^ADMIN_PASS=' \"\$envf\" | cut -d= -f2- || true); HMAC_SECRET=\$(grep -m1 '^HMAC_SECRET=' \"\$envf\" | cut -d= -f2- || true); export ADMIN_USER ADMIN_PASS HMAC_SECRET; fi; pm2 restart '$PM2_NAME' --update-env || pm2 start index.js --name '$PM2_NAME'"
 sudo -u "$APP_USER" -H pm2 save
 
 # Healthcheck local (pode levar alguns segundos após restart)

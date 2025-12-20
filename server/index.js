@@ -1,9 +1,11 @@
 const path = require('path');
 const fs = require('fs');
 const dotenv = require('dotenv');
-// Suporta `.env` na raiz do projeto e também em `server/.env`
+// Suporta `.env` em `server/.env` e também na raiz do projeto.
+// Importante: o `.env` de `server/` deve ter prioridade para evitar que
+// um `.env` antigo na raiz sobrescreva credenciais atuais em produção.
+dotenv.config({ path: path.join(__dirname, '.env') });
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
-dotenv.config();
 const express = require('express');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');

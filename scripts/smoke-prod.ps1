@@ -7,6 +7,12 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+# Evita acentuação quebrada no Windows PowerShell
+try {
+  [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+  $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+} catch {}
+
 function Step([string]$label) {
   Write-Host ("[smoke-prod] {0}" -f $label)
 }
