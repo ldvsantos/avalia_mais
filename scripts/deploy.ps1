@@ -371,6 +371,19 @@ if [ -d "$REMOTE_DIR" ]; then
 fi
 mv "$STAGING" "$REMOTE_DIR"
 
+# Ajusta Nginx para permitir uploads maiores (10MB)
+NGINX_CONF="/etc/nginx/sites-available/default"
+if [ -f "$NGINX_CONF" ]; then
+  echo "Verificando configuracao do Nginx..."
+  if grep -q "client_max_body_size" "$NGINX_CONF"; then
+    sudo sed -i "s/client_max_body_size .*/client_max_body_size 10M;/g" "$NGINX_CONF"
+  else
+    # Insere no bloco server
+    sudo sed -i "/server {/a \    client_max_body_size 10M;" "$NGINX_CONF"
+  fi
+  sudo nginx -t && sudo systemctl reload nginx
+fi
+
 # Reinicia app
 cd "$REMOTE_DIR/server"
 sudo -u "$APP_USER" -H pm2 restart "$PM2_NAME" || sudo -u "$APP_USER" -H pm2 start index.js --name "$PM2_NAME"
