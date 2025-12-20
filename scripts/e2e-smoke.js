@@ -151,7 +151,10 @@ function makeClient(baseUrl) {
       if (!loc) return res;
       const nextPath = loc.startsWith('http') ? loc : loc;
       console.log(`[e2e-smoke] HTTP ~~ redirect ${res.status} ${maskSecretPath(pathname)} -> ${maskSecretPath(nextPath)}`);
-      const nextMethod = res.status === 303 ? 'GET' : method;
+      // Compat com navegadores: após POST, 301/302 normalmente viram GET.
+      // Sem isso, ocorre loop (POST -> 302 -> POST -> 302 ...).
+      const isPostLike = String(method || '').toUpperCase() !== 'GET' && String(method || '').toUpperCase() !== 'HEAD';
+      const nextMethod = (res.status === 303 || (isPostLike && (res.status === 301 || res.status === 302))) ? 'GET' : method;
       return requestFollow(nextMethod, nextPath, undefined);
     }
     return res;
