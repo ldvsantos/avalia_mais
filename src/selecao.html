@@ -286,8 +286,24 @@
                         const label = it && it.label ? String(it.label) : 'Etapa';
                         const display = it && it.display ? String(it.display) : 'A definir';
 
+                        const key = it && it.key ? String(it.key) : '';
+                        const PRIMARY_KEYS = {
+                            'INSCRICAO': true,
+                            'PROJETO': true,
+                            'ENTREVISTA': true,
+                            'LINGUA': true,
+                            'RESULTADO_FINAL': true,
+                            'INICIO_SEMESTRE': true,
+                        };
+
                         const td1 = document.createElement('td');
-                        td1.textContent = label;
+                        if (PRIMARY_KEYS[key]) {
+                            const strong = document.createElement('strong');
+                            strong.textContent = label;
+                            td1.appendChild(strong);
+                        } else {
+                            td1.textContent = label;
+                        }
                         const td2 = document.createElement('td');
                         td2.textContent = display;
 
