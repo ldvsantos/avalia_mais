@@ -299,28 +299,7 @@ class AdminDashboardPresenter {
           </section>
         </div>
 
-        <script>
-          // CSP pode bloquear handlers inline (onclick/onsubmit). Por isso, confirm via addEventListener.
-          document.addEventListener('submit', function (ev) {
-            try {
-              const form = ev.target;
-              if (!form || !form.getAttribute) return;
-              if (form.getAttribute('data-confirm') !== 'delete-event') return;
-
-              const msg = 'ATENÇÃO: Tem certeza que deseja excluir este evento?\n\n' +
-                'Esta ação apagará permanentemente o evento e todas as inscrições associadas.\n\n' +
-                'Clique em OK para confirmar a exclusão.';
-
-              if (!window.confirm(msg)) {
-                ev.preventDefault();
-              }
-            } catch (e) {
-              // Em caso de erro no JS, por segurança bloqueia o submit
-              ev.preventDefault();
-              alert('Não foi possível confirmar a exclusão. Atualize a página e tente novamente.');
-            }
-          }, true);
-        </script>
+        <script src="/admin-events-confirm.js"></script>
       </body>
       </html>
     `;
