@@ -454,6 +454,89 @@ app.get('/api/registration-window', (req, res) => {
   }
 });
 
+function formatSaoPauloDateBr(isoString) {
+  if (!isoString) return '';
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+app.get('/api/public-calendar', (req, res) => {
+  try {
+    const yearRaw = String(req.query?.year || '').trim();
+    const year = yearRaw ? Number(yearRaw) : new Date().getFullYear();
+    if (!Number.isFinite(year) || year < 2000 || year > 2100) {
+      return res.status(400).json({ error: 'Ano inválido' });
+    }
+
+    const cal = calendarRepo.getOrCreateYear(year, { seedRegistrationWindow: storage.getRegistrationWindow() });
+
+    const PHASES_FOR_TABLE = [
+      { key: 'INSCRICAO', label: 'Inscrições', kind: 'range' },
+      { key: 'HOMOLOGACAO_INSCRICOES', label: 'Homologação das inscrições', kind: 'date' },
+      { key: 'RECURSO_INSCRICAO', label: 'Recurso (inscrições)', kind: 'range' },
+      { key: 'RESULTADO_RECURSO_INSCRICAO', label: 'Resultado do recurso (inscrições)', kind: 'date' },
+
+      { key: 'PROJETO', label: 'Avaliação do anteprojeto', kind: 'range' },
+      { key: 'RESULTADO_PROJETO', label: 'Resultado da avaliação do anteprojeto', kind: 'date' },
+      { key: 'RECURSO_PROJETO', label: 'Recurso (anteprojeto)', kind: 'range' },
+      { key: 'RESULTADO_RECURSO_PROJETO', label: 'Resultado do recurso (anteprojeto)', kind: 'date' },
+
+      { key: 'ENTREVISTA', label: 'Entrevistas', kind: 'range' },
+      { key: 'RESULTADO_ENTREVISTA', label: 'Resultado da entrevista', kind: 'date' },
+      { key: 'RECURSO_ENTREVISTA', label: 'Recurso (entrevista)', kind: 'range' },
+      { key: 'RESULTADO_RECURSO_ENTREVISTA', label: 'Resultado do recurso (entrevista)', kind: 'date' },
+
+      { key: 'LINGUA', label: 'Prova de Língua Estrangeira', kind: 'date' },
+      { key: 'RESULTADO_LINGUA', label: 'Resultado da prova de Língua Estrangeira', kind: 'date' },
+      { key: 'RECURSO_LINGUA', label: 'Recurso (Língua Estrangeira)', kind: 'range' },
+      { key: 'RESULTADO_RECURSO_LINGUA', label: 'Resultado do recurso (Língua Estrangeira)', kind: 'date' },
+
+      { key: 'RESULTADO_FINAL', label: 'Resultado final', kind: 'date' },
+
+      { key: 'HETERO_DOCS_SUBMISSAO', label: 'Heteroidentificação: submissão de documentos', kind: 'range' },
+      { key: 'HETERO_PROCEDIMENTO', label: 'Heteroidentificação: procedimento (atividade interna)', kind: 'range' },
+      { key: 'HETERO_RESULTADO', label: 'Heteroidentificação: resultado do procedimento', kind: 'date' },
+      { key: 'HETERO_RECURSO', label: 'Heteroidentificação: período de recurso', kind: 'range' },
+      { key: 'HETERO_BANCA_RECURSAL', label: 'Heteroidentificação: banca recursal (presencial)', kind: 'date' },
+      { key: 'HETERO_RESULTADO_FINAL', label: 'Heteroidentificação: resultado final', kind: 'date' },
+
+      { key: 'PRE_MATRICULA_ENVIO', label: 'Pré-matrícula: envio da documentação', kind: 'range' },
+      { key: 'INTERNO_ENVIO_DAA', label: 'Envio à DAA (etapa interna)', kind: 'date' },
+      { key: 'INTERNO_CADASTRO_MATRICULA', label: 'Cadastro discente e matrícula (etapa interna)', kind: 'range' },
+      { key: 'INICIO_SEMESTRE', label: 'Início do semestre', kind: 'date' },
+    ];
+
+    const items = PHASES_FOR_TABLE.map(({ key, label, kind }) => {
+      const w = cal?.phases?.[key] || null;
+      const start = w?.startISO ? formatSaoPauloDateBr(w.startISO) : '';
+      const end = w?.endISO ? formatSaoPauloDateBr(w.endISO) : '';
+
+      let display = '';
+      if (!start || !end) {
+        display = 'A definir';
+      } else if (kind === 'date') {
+        display = start;
+      } else {
+        display = start === end ? start : (start + ' a ' + end);
+      }
+
+      return { key, label, kind, start, end, display };
+    });
+
+    res.setHeader('Cache-Control', 'no-store');
+    return res.json({ editalYear: year, items, now: new Date().toISOString() });
+  } catch (err) {
+    return res.status(500).json({ error: 'Falha ao obter calendário público' });
+  }
+});
+
 function toSaoPauloDateInput(isoString) {
   if (!isoString) return '';
   const date = new Date(isoString);
@@ -644,6 +727,162 @@ function renderCalendarEditPage({ year, values, saved, error }) {
 
               <div class="admin-actions" style="justify-content:center; margin-top: 10px;">
                 <button class="btn-primary" id="calendar-submit" type="submit">Salvar Calendário</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Publicações / Resultados (opcional)</h2></div>
+            <div class="panel-body">
+              <div class="hint">Use estas datas para registrar publicações/resultado no calendário do edital. Não afeta bloqueios do workflow, mas fica documentado e pode ser consultado/ajustado a qualquer momento.</div>
+              <div class="calendar-macro-grid" style="margin-top:10px;">
+                <div class="calendar-macro">
+                  <label for="HOMOLOGACAO_INSCRICOES_date">Homologação das inscrições (data única)</label>
+                  <input id="HOMOLOGACAO_INSCRICOES_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="HOMOLOGACAO_INSCRICOES_start" name="HOMOLOGACAO_INSCRICOES_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HOMOLOGACAO_INSCRICOES_start'))}" />
+                  <input id="HOMOLOGACAO_INSCRICOES_end" name="HOMOLOGACAO_INSCRICOES_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HOMOLOGACAO_INSCRICOES_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RESULTADO_RECURSO_INSCRICAO_date">Resultado do recurso (Inscrição) (data única)</label>
+                  <input id="RESULTADO_RECURSO_INSCRICAO_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="RESULTADO_RECURSO_INSCRICAO_start" name="RESULTADO_RECURSO_INSCRICAO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_RECURSO_INSCRICAO_start'))}" />
+                  <input id="RESULTADO_RECURSO_INSCRICAO_end" name="RESULTADO_RECURSO_INSCRICAO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_RECURSO_INSCRICAO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RESULTADO_PROJETO_date">Resultado da avaliação do projeto (data única)</label>
+                  <input id="RESULTADO_PROJETO_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="RESULTADO_PROJETO_start" name="RESULTADO_PROJETO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_PROJETO_start'))}" />
+                  <input id="RESULTADO_PROJETO_end" name="RESULTADO_PROJETO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_PROJETO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RESULTADO_RECURSO_PROJETO_date">Resultado do recurso (Projeto) (data única)</label>
+                  <input id="RESULTADO_RECURSO_PROJETO_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="RESULTADO_RECURSO_PROJETO_start" name="RESULTADO_RECURSO_PROJETO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_RECURSO_PROJETO_start'))}" />
+                  <input id="RESULTADO_RECURSO_PROJETO_end" name="RESULTADO_RECURSO_PROJETO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_RECURSO_PROJETO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RESULTADO_ENTREVISTA_date">Resultado da entrevista (data única)</label>
+                  <input id="RESULTADO_ENTREVISTA_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="RESULTADO_ENTREVISTA_start" name="RESULTADO_ENTREVISTA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_ENTREVISTA_start'))}" />
+                  <input id="RESULTADO_ENTREVISTA_end" name="RESULTADO_ENTREVISTA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_ENTREVISTA_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RESULTADO_RECURSO_ENTREVISTA_date">Resultado do recurso (Entrevista) (data única)</label>
+                  <input id="RESULTADO_RECURSO_ENTREVISTA_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="RESULTADO_RECURSO_ENTREVISTA_start" name="RESULTADO_RECURSO_ENTREVISTA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_RECURSO_ENTREVISTA_start'))}" />
+                  <input id="RESULTADO_RECURSO_ENTREVISTA_end" name="RESULTADO_RECURSO_ENTREVISTA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_RECURSO_ENTREVISTA_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RESULTADO_LINGUA_date">Resultado da prova de língua (data única)</label>
+                  <input id="RESULTADO_LINGUA_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="RESULTADO_LINGUA_start" name="RESULTADO_LINGUA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_LINGUA_start'))}" />
+                  <input id="RESULTADO_LINGUA_end" name="RESULTADO_LINGUA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_LINGUA_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RESULTADO_RECURSO_LINGUA_date">Resultado do recurso (Língua) (data única)</label>
+                  <input id="RESULTADO_RECURSO_LINGUA_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="RESULTADO_RECURSO_LINGUA_start" name="RESULTADO_RECURSO_LINGUA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_RECURSO_LINGUA_start'))}" />
+                  <input id="RESULTADO_RECURSO_LINGUA_end" name="RESULTADO_RECURSO_LINGUA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_RECURSO_LINGUA_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="RESULTADO_FINAL_date">Resultado final (data única)</label>
+                  <input id="RESULTADO_FINAL_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="RESULTADO_FINAL_start" name="RESULTADO_FINAL_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_FINAL_start'))}" />
+                  <input id="RESULTADO_FINAL_end" name="RESULTADO_FINAL_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('RESULTADO_FINAL_end'))}" />
+                </div>
+              </div>
+              <p class="hint" style="text-align:center; margin-top: 10px;">Obs.: o sistema salva datas por dia (não controla horário, ex.: 17:00).</p>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Heteroidentificação (opcional)</h2></div>
+            <div class="panel-body">
+              <div class="calendar-macro-grid">
+                <div class="calendar-macro">
+                  <label for="HETERO_DOCS_SUBMISSAO_range">Submissão de documentos (intervalo)</label>
+                  <input id="HETERO_DOCS_SUBMISSAO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
+                  <input id="HETERO_DOCS_SUBMISSAO_start" name="HETERO_DOCS_SUBMISSAO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_DOCS_SUBMISSAO_start'))}" />
+                  <input id="HETERO_DOCS_SUBMISSAO_end" name="HETERO_DOCS_SUBMISSAO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_DOCS_SUBMISSAO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="HETERO_PROCEDIMENTO_range">Procedimento (atividade interna) (intervalo)</label>
+                  <input id="HETERO_PROCEDIMENTO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
+                  <input id="HETERO_PROCEDIMENTO_start" name="HETERO_PROCEDIMENTO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_PROCEDIMENTO_start'))}" />
+                  <input id="HETERO_PROCEDIMENTO_end" name="HETERO_PROCEDIMENTO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_PROCEDIMENTO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="HETERO_RESULTADO_date">Resultado do procedimento (data única)</label>
+                  <input id="HETERO_RESULTADO_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="HETERO_RESULTADO_start" name="HETERO_RESULTADO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_RESULTADO_start'))}" />
+                  <input id="HETERO_RESULTADO_end" name="HETERO_RESULTADO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_RESULTADO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="HETERO_RECURSO_range">Recurso (intervalo)</label>
+                  <input id="HETERO_RECURSO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
+                  <input id="HETERO_RECURSO_start" name="HETERO_RECURSO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_RECURSO_start'))}" />
+                  <input id="HETERO_RECURSO_end" name="HETERO_RECURSO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_RECURSO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="HETERO_BANCA_RECURSAL_date">Banca recursal (data única)</label>
+                  <input id="HETERO_BANCA_RECURSAL_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="HETERO_BANCA_RECURSAL_start" name="HETERO_BANCA_RECURSAL_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_BANCA_RECURSAL_start'))}" />
+                  <input id="HETERO_BANCA_RECURSAL_end" name="HETERO_BANCA_RECURSAL_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_BANCA_RECURSAL_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="HETERO_RESULTADO_FINAL_date">Resultado final (heteroidentificação) (data única)</label>
+                  <input id="HETERO_RESULTADO_FINAL_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="HETERO_RESULTADO_FINAL_start" name="HETERO_RESULTADO_FINAL_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_RESULTADO_FINAL_start'))}" />
+                  <input id="HETERO_RESULTADO_FINAL_end" name="HETERO_RESULTADO_FINAL_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('HETERO_RESULTADO_FINAL_end'))}" />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Matrícula / Etapas internas (opcional)</h2></div>
+            <div class="panel-body">
+              <div class="calendar-macro-grid">
+                <div class="calendar-macro">
+                  <label for="PRE_MATRICULA_ENVIO_range">Envio de documentação (pré-matrícula) (intervalo)</label>
+                  <input id="PRE_MATRICULA_ENVIO_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
+                  <input id="PRE_MATRICULA_ENVIO_start" name="PRE_MATRICULA_ENVIO_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('PRE_MATRICULA_ENVIO_start'))}" />
+                  <input id="PRE_MATRICULA_ENVIO_end" name="PRE_MATRICULA_ENVIO_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('PRE_MATRICULA_ENVIO_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="INTERNO_ENVIO_DAA_date">Envio para DAA (interno) (data única)</label>
+                  <input id="INTERNO_ENVIO_DAA_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="INTERNO_ENVIO_DAA_start" name="INTERNO_ENVIO_DAA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('INTERNO_ENVIO_DAA_start'))}" />
+                  <input id="INTERNO_ENVIO_DAA_end" name="INTERNO_ENVIO_DAA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('INTERNO_ENVIO_DAA_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="INTERNO_CADASTRO_MATRICULA_range">Cadastro discente e matrícula (interno) (intervalo)</label>
+                  <input id="INTERNO_CADASTRO_MATRICULA_range" type="text" placeholder="Selecione um intervalo" autocomplete="off" />
+                  <input id="INTERNO_CADASTRO_MATRICULA_start" name="INTERNO_CADASTRO_MATRICULA_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('INTERNO_CADASTRO_MATRICULA_start'))}" />
+                  <input id="INTERNO_CADASTRO_MATRICULA_end" name="INTERNO_CADASTRO_MATRICULA_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('INTERNO_CADASTRO_MATRICULA_end'))}" />
+                </div>
+
+                <div class="calendar-macro">
+                  <label for="INICIO_SEMESTRE_date">Início do semestre (data única)</label>
+                  <input id="INICIO_SEMESTRE_date" type="text" placeholder="Selecione uma data" autocomplete="off" />
+                  <input id="INICIO_SEMESTRE_start" name="INICIO_SEMESTRE_start" type="hidden" class="calendar-hidden" value="${escapeHtml(field('INICIO_SEMESTRE_start'))}" />
+                  <input id="INICIO_SEMESTRE_end" name="INICIO_SEMESTRE_end" type="hidden" class="calendar-hidden" value="${escapeHtml(field('INICIO_SEMESTRE_end'))}" />
+                </div>
               </div>
             </div>
           </section>
@@ -915,6 +1154,27 @@ function renderCalendarEditPage({ year, values, saved, error }) {
           let fpRecursoLingua = null;
           let fpProva = null;
 
+          // Etapas opcionais
+          let fpHomologInscricoes = null;
+          let fpResultadoRecursoInscricao = null;
+          let fpResultadoProjeto = null;
+          let fpResultadoRecursoProjeto = null;
+          let fpResultadoEntrevista = null;
+          let fpResultadoRecursoEntrevista = null;
+          let fpResultadoLingua = null;
+          let fpResultadoRecursoLingua = null;
+          let fpResultadoFinal = null;
+          let fpHeteroDocs = null;
+          let fpHeteroProcedimento = null;
+          let fpHeteroResultado = null;
+          let fpHeteroRecurso = null;
+          let fpHeteroBanca = null;
+          let fpHeteroResultadoFinal = null;
+          let fpPreMatricula = null;
+          let fpInternoDaa = null;
+          let fpInternoCadastro = null;
+          let fpInicioSemestre = null;
+
           const setPickerEnabled = (fp, enabled) => {
             if (!fp) return;
             fp.set('clickOpens', !!enabled);
@@ -951,6 +1211,63 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             if (p.length === 1) {
               setHiddenRange('LINGUA_start', 'LINGUA_end', p[0], p[0]);
             }
+
+            const hom = fpHomologInscricoes?.selectedDates || [];
+            if (hom.length === 1) setHiddenRange('HOMOLOGACAO_INSCRICOES_start', 'HOMOLOGACAO_INSCRICOES_end', hom[0], hom[0]);
+
+            const rri = fpResultadoRecursoInscricao?.selectedDates || [];
+            if (rri.length === 1) setHiddenRange('RESULTADO_RECURSO_INSCRICAO_start', 'RESULTADO_RECURSO_INSCRICAO_end', rri[0], rri[0]);
+
+            const rpj = fpResultadoProjeto?.selectedDates || [];
+            if (rpj.length === 1) setHiddenRange('RESULTADO_PROJETO_start', 'RESULTADO_PROJETO_end', rpj[0], rpj[0]);
+
+            const rrpj = fpResultadoRecursoProjeto?.selectedDates || [];
+            if (rrpj.length === 1) setHiddenRange('RESULTADO_RECURSO_PROJETO_start', 'RESULTADO_RECURSO_PROJETO_end', rrpj[0], rrpj[0]);
+
+            const rent = fpResultadoEntrevista?.selectedDates || [];
+            if (rent.length === 1) setHiddenRange('RESULTADO_ENTREVISTA_start', 'RESULTADO_ENTREVISTA_end', rent[0], rent[0]);
+
+            const rrent = fpResultadoRecursoEntrevista?.selectedDates || [];
+            if (rrent.length === 1) setHiddenRange('RESULTADO_RECURSO_ENTREVISTA_start', 'RESULTADO_RECURSO_ENTREVISTA_end', rrent[0], rrent[0]);
+
+            const rlin = fpResultadoLingua?.selectedDates || [];
+            if (rlin.length === 1) setHiddenRange('RESULTADO_LINGUA_start', 'RESULTADO_LINGUA_end', rlin[0], rlin[0]);
+
+            const rrlin = fpResultadoRecursoLingua?.selectedDates || [];
+            if (rrlin.length === 1) setHiddenRange('RESULTADO_RECURSO_LINGUA_start', 'RESULTADO_RECURSO_LINGUA_end', rrlin[0], rrlin[0]);
+
+            const rf = fpResultadoFinal?.selectedDates || [];
+            if (rf.length === 1) setHiddenRange('RESULTADO_FINAL_start', 'RESULTADO_FINAL_end', rf[0], rf[0]);
+
+            const hd = fpHeteroDocs?.selectedDates || [];
+            if (hd.length === 2) setHiddenRange('HETERO_DOCS_SUBMISSAO_start', 'HETERO_DOCS_SUBMISSAO_end', hd[0], hd[1]);
+
+            const hp = fpHeteroProcedimento?.selectedDates || [];
+            if (hp.length === 2) setHiddenRange('HETERO_PROCEDIMENTO_start', 'HETERO_PROCEDIMENTO_end', hp[0], hp[1]);
+
+            const hr = fpHeteroResultado?.selectedDates || [];
+            if (hr.length === 1) setHiddenRange('HETERO_RESULTADO_start', 'HETERO_RESULTADO_end', hr[0], hr[0]);
+
+            const hrec = fpHeteroRecurso?.selectedDates || [];
+            if (hrec.length === 2) setHiddenRange('HETERO_RECURSO_start', 'HETERO_RECURSO_end', hrec[0], hrec[1]);
+
+            const hb = fpHeteroBanca?.selectedDates || [];
+            if (hb.length === 1) setHiddenRange('HETERO_BANCA_RECURSAL_start', 'HETERO_BANCA_RECURSAL_end', hb[0], hb[0]);
+
+            const hrf = fpHeteroResultadoFinal?.selectedDates || [];
+            if (hrf.length === 1) setHiddenRange('HETERO_RESULTADO_FINAL_start', 'HETERO_RESULTADO_FINAL_end', hrf[0], hrf[0]);
+
+            const pm = fpPreMatricula?.selectedDates || [];
+            if (pm.length === 2) setHiddenRange('PRE_MATRICULA_ENVIO_start', 'PRE_MATRICULA_ENVIO_end', pm[0], pm[1]);
+
+            const ida = fpInternoDaa?.selectedDates || [];
+            if (ida.length === 1) setHiddenRange('INTERNO_ENVIO_DAA_start', 'INTERNO_ENVIO_DAA_end', ida[0], ida[0]);
+
+            const icm = fpInternoCadastro?.selectedDates || [];
+            if (icm.length === 2) setHiddenRange('INTERNO_CADASTRO_MATRICULA_start', 'INTERNO_CADASTRO_MATRICULA_end', icm[0], icm[1]);
+
+            const ins = fpInicioSemestre?.selectedDates || [];
+            if (ins.length === 1) setHiddenRange('INICIO_SEMESTRE_start', 'INICIO_SEMESTRE_end', ins[0], ins[0]);
           };
 
           const intervalFromIds = (startId, endId, { singleDay = false } = {}) => {
@@ -975,27 +1292,60 @@ function renderCalendarEditPage({ year, values, saved, error }) {
 
           const dateInInterval = (date, interval) => {
             if (!date || !interval) return false;
-            const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const d = asLocalNoon(date);
             return interval.start <= d && d < interval.endExcl;
           };
 
           const getGlobalInterval = () => intervalFromIds('GLOBAL_start', 'GLOBAL_end');
 
+          const PHASE_META = [
+            { key: 'INSCRICAO', label: 'Inscrições', startId: 'INSCRICAO_start', endId: 'INSCRICAO_end', singleDay: false },
+            { key: 'PROJETO', label: 'Avaliação do Projeto', startId: 'PROJETO_start', endId: 'PROJETO_end', singleDay: false },
+            { key: 'ENTREVISTA', label: 'Entrevista', startId: 'ENTREVISTA_start', endId: 'ENTREVISTA_end', singleDay: false },
+            { key: 'LINGUA', label: 'Prova', startId: 'LINGUA_start', endId: 'LINGUA_end', singleDay: true },
+            { key: 'RECURSO_INSCRICAO', label: 'Recurso Inscrição', startId: 'RECURSO_INSCRICAO_start', endId: 'RECURSO_INSCRICAO_end', singleDay: false },
+            { key: 'RECURSO_PROJETO', label: 'Recurso Projeto', startId: 'RECURSO_PROJETO_start', endId: 'RECURSO_PROJETO_end', singleDay: false },
+            { key: 'RECURSO_ENTREVISTA', label: 'Recurso Entrevista', startId: 'RECURSO_ENTREVISTA_start', endId: 'RECURSO_ENTREVISTA_end', singleDay: false },
+            { key: 'RECURSO_LINGUA', label: 'Recurso Língua', startId: 'RECURSO_LINGUA_start', endId: 'RECURSO_LINGUA_end', singleDay: false },
+
+            // Publicações/Resultados
+            { key: 'HOMOLOGACAO_INSCRICOES', label: 'Homologação das inscrições', startId: 'HOMOLOGACAO_INSCRICOES_start', endId: 'HOMOLOGACAO_INSCRICOES_end', singleDay: true },
+            { key: 'RESULTADO_RECURSO_INSCRICAO', label: 'Resultado recurso (Inscrição)', startId: 'RESULTADO_RECURSO_INSCRICAO_start', endId: 'RESULTADO_RECURSO_INSCRICAO_end', singleDay: true },
+            { key: 'RESULTADO_PROJETO', label: 'Resultado do Projeto', startId: 'RESULTADO_PROJETO_start', endId: 'RESULTADO_PROJETO_end', singleDay: true },
+            { key: 'RESULTADO_RECURSO_PROJETO', label: 'Resultado recurso (Projeto)', startId: 'RESULTADO_RECURSO_PROJETO_start', endId: 'RESULTADO_RECURSO_PROJETO_end', singleDay: true },
+            { key: 'RESULTADO_ENTREVISTA', label: 'Resultado da Entrevista', startId: 'RESULTADO_ENTREVISTA_start', endId: 'RESULTADO_ENTREVISTA_end', singleDay: true },
+            { key: 'RESULTADO_RECURSO_ENTREVISTA', label: 'Resultado recurso (Entrevista)', startId: 'RESULTADO_RECURSO_ENTREVISTA_start', endId: 'RESULTADO_RECURSO_ENTREVISTA_end', singleDay: true },
+            { key: 'RESULTADO_LINGUA', label: 'Resultado da Língua', startId: 'RESULTADO_LINGUA_start', endId: 'RESULTADO_LINGUA_end', singleDay: true },
+            { key: 'RESULTADO_RECURSO_LINGUA', label: 'Resultado recurso (Língua)', startId: 'RESULTADO_RECURSO_LINGUA_start', endId: 'RESULTADO_RECURSO_LINGUA_end', singleDay: true },
+            { key: 'RESULTADO_FINAL', label: 'Resultado Final', startId: 'RESULTADO_FINAL_start', endId: 'RESULTADO_FINAL_end', singleDay: true },
+
+            // Heteroidentificação
+            { key: 'HETERO_DOCS_SUBMISSAO', label: 'Hetero: submissão de documentos', startId: 'HETERO_DOCS_SUBMISSAO_start', endId: 'HETERO_DOCS_SUBMISSAO_end', singleDay: false },
+            { key: 'HETERO_PROCEDIMENTO', label: 'Hetero: procedimento', startId: 'HETERO_PROCEDIMENTO_start', endId: 'HETERO_PROCEDIMENTO_end', singleDay: false },
+            { key: 'HETERO_RESULTADO', label: 'Hetero: resultado', startId: 'HETERO_RESULTADO_start', endId: 'HETERO_RESULTADO_end', singleDay: true },
+            { key: 'HETERO_RECURSO', label: 'Hetero: recurso', startId: 'HETERO_RECURSO_start', endId: 'HETERO_RECURSO_end', singleDay: false },
+            { key: 'HETERO_BANCA_RECURSAL', label: 'Hetero: banca recursal', startId: 'HETERO_BANCA_RECURSAL_start', endId: 'HETERO_BANCA_RECURSAL_end', singleDay: true },
+            { key: 'HETERO_RESULTADO_FINAL', label: 'Hetero: resultado final', startId: 'HETERO_RESULTADO_FINAL_start', endId: 'HETERO_RESULTADO_FINAL_end', singleDay: true },
+
+            // Matrícula / interno
+            { key: 'PRE_MATRICULA_ENVIO', label: 'Pré-matrícula: envio de documentos', startId: 'PRE_MATRICULA_ENVIO_start', endId: 'PRE_MATRICULA_ENVIO_end', singleDay: false },
+            { key: 'INTERNO_ENVIO_DAA', label: 'Interno: envio para DAA', startId: 'INTERNO_ENVIO_DAA_start', endId: 'INTERNO_ENVIO_DAA_end', singleDay: true },
+            { key: 'INTERNO_CADASTRO_MATRICULA', label: 'Interno: cadastro e matrícula', startId: 'INTERNO_CADASTRO_MATRICULA_start', endId: 'INTERNO_CADASTRO_MATRICULA_end', singleDay: false },
+            { key: 'INICIO_SEMESTRE', label: 'Início do semestre', startId: 'INICIO_SEMESTRE_start', endId: 'INICIO_SEMESTRE_end', singleDay: true },
+          ];
+
           const getAllIntervals = () => {
             const global = getGlobalInterval();
-            const inscr = intervalFromIds('INSCRICAO_start', 'INSCRICAO_end');
-            const prova = intervalFromIds('LINGUA_start', 'LINGUA_end', { singleDay: true });
-            const recInsc = intervalFromIds('RECURSO_INSCRICAO_start', 'RECURSO_INSCRICAO_end');
-            const recProj = intervalFromIds('RECURSO_PROJETO_start', 'RECURSO_PROJETO_end');
-            const recEnt = intervalFromIds('RECURSO_ENTREVISTA_start', 'RECURSO_ENTREVISTA_end');
-            const recLing = intervalFromIds('RECURSO_LINGUA_start', 'RECURSO_LINGUA_end');
-            const proj = intervalFromIds('PROJETO_start', 'PROJETO_end');
-            const ent = intervalFromIds('ENTREVISTA_start', 'ENTREVISTA_end');
-            return { global, inscr, prova, recInsc, recProj, recEnt, recLing, proj, ent };
+            const out = { global };
+            for (const meta of PHASE_META) {
+              out[meta.key] = intervalFromIds(meta.startId, meta.endId, { singleDay: !!meta.singleDay });
+            }
+            return out;
           };
 
           const computeConflicts = () => {
-            const { global, inscr, prova, recInsc, recProj, recEnt, recLing, proj, ent } = getAllIntervals();
+            const intervals = getAllIntervals();
+            const global = intervals.global;
             const errors = [];
             const warnings = [];
 
@@ -1005,39 +1355,22 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             }
 
             const phases = [];
-            if (inscr) phases.push({ label: 'Inscrições', ...inscr });
-            if (proj) phases.push({ label: 'Avaliação do Projeto', ...proj });
-            if (ent) phases.push({ label: 'Entrevista', ...ent });
-            if (prova) phases.push({ label: 'Prova', ...prova });
-            if (recInsc) phases.push({ label: 'Recurso Inscrição', ...recInsc });
-            if (recProj) phases.push({ label: 'Recurso Projeto', ...recProj });
-            if (recEnt) phases.push({ label: 'Recurso Entrevista', ...recEnt });
-            if (recLing) phases.push({ label: 'Recurso Língua', ...recLing });
+            for (const meta of PHASE_META) {
+              const itv = intervals[meta.key];
+              if (itv) phases.push({ label: meta.label, key: meta.key, ...itv });
+            }
 
-            // Contenção no global (Aviso)
+            // Contenção no global (Erro: o backend exige isso para salvar)
             for (const ph of phases) {
-              if (ph.start < global.start) warnings.push(ph.label + ': início fora do Período Global');
-              if (ph.endExcl > global.endExcl) warnings.push(ph.label + ': fim fora do Período Global');
+              if (ph.start < global.start) errors.push(ph.label + ': início fora do Período Global');
+              if (ph.endExcl > global.endExcl) errors.push(ph.label + ': fim fora do Período Global');
             }
 
-            // Regra específica: Inscrição não pode ter Prova (Exclusão Mútua) - Mantendo como Aviso
-            if (inscr && prova) {
-              if (overlap(inscr, prova)) {
-                warnings.push('Inscrição x Prova coincidem');
-              }
-            }
-
-            // Sobreposição genérica (Aviso)
+            // Sobreposição genérica (Aviso: permitido, mas recomendado evitar)
             for (let a = 0; a < phases.length; a++) {
               for (let b = a + 1; b < phases.length; b++) {
                 const labelA = phases[a].label;
                 const labelB = phases[b].label;
-                
-                // Ignora par Inscrição x Prova pois já tratamos acima
-                if ((labelA === 'Inscrições' && labelB === 'Prova') || (labelB === 'Inscrições' && labelA === 'Prova')) {
-                   continue;
-                }
-
                 if (overlap(phases[a], phases[b])) {
                    warnings.push('Sobreposição: ' + labelA + ' x ' + labelB);
                 }
@@ -1055,8 +1388,11 @@ function renderCalendarEditPage({ year, values, saved, error }) {
 
           const buildDisableFn = (selfKey, fpInstance) => {
             return (date) => {
-              // Removemos todos os bloqueios rígidos entre fases.
-              return false; 
+              const d = asLocalNoon(date);
+              const intervals = getAllIntervals();
+              const global = intervals.global;
+              if (global && !dateInInterval(d, global)) return true;
+              return false;
             };
           };
 
@@ -1066,34 +1402,30 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             const globalDefined = !!global;
             if (globalFirstHint) globalFirstHint.style.display = globalDefined ? 'none' : 'block';
 
-            setPickerEnabled(fpInscricao, globalDefined);
-            setPickerEnabled(fpProjeto, globalDefined);
-            setPickerEnabled(fpEntrevista, globalDefined);
-            setPickerEnabled(fpProva, globalDefined);
-            setPickerEnabled(fpRecursoInscricao, globalDefined);
-            setPickerEnabled(fpRecursoProjeto, globalDefined);
-            setPickerEnabled(fpRecursoEntrevista, globalDefined);
-            setPickerEnabled(fpRecursoLingua, globalDefined);
+            const globalMin = global ? global.start : null;
+            const globalMax = global ? addDays(global.endExcl, -1) : null;
 
-            // Removemos a imposição de minDate/maxDate baseada no Global
-            if (fpInscricao) { fpInscricao.set('minDate', null); fpInscricao.set('maxDate', null); }
-            if (fpProjeto) { fpProjeto.set('minDate', null); fpProjeto.set('maxDate', null); }
-            if (fpEntrevista) { fpEntrevista.set('minDate', null); fpEntrevista.set('maxDate', null); }
-            if (fpProva) { fpProva.set('minDate', null); fpProva.set('maxDate', null); }
-            if (fpRecursoInscricao) { fpRecursoInscricao.set('minDate', null); fpRecursoInscricao.set('maxDate', null); }
-            if (fpRecursoProjeto) { fpRecursoProjeto.set('minDate', null); fpRecursoProjeto.set('maxDate', null); }
-            if (fpRecursoEntrevista) { fpRecursoEntrevista.set('minDate', null); fpRecursoEntrevista.set('maxDate', null); }
-            if (fpRecursoLingua) { fpRecursoLingua.set('minDate', null); fpRecursoLingua.set('maxDate', null); }
+            const setMinMax = (fp) => {
+              if (!fp) return;
+              fp.set('minDate', globalMin);
+              fp.set('maxDate', globalMax);
+            };
 
-            // Força redesenho
-            if (fpInscricao) fpInscricao.redraw();
-            if (fpProjeto) fpProjeto.redraw();
-            if (fpEntrevista) fpEntrevista.redraw();
-            if (fpProva) fpProva.redraw();
-            if (fpRecursoInscricao) fpRecursoInscricao.redraw();
-            if (fpRecursoProjeto) fpRecursoProjeto.redraw();
-            if (fpRecursoEntrevista) fpRecursoEntrevista.redraw();
-            if (fpRecursoLingua) fpRecursoLingua.redraw();
+            const pickers = [
+              fpInscricao, fpProjeto, fpEntrevista, fpProva,
+              fpRecursoInscricao, fpRecursoProjeto, fpRecursoEntrevista, fpRecursoLingua,
+              fpHomologInscricoes, fpResultadoRecursoInscricao, fpResultadoProjeto, fpResultadoRecursoProjeto,
+              fpResultadoEntrevista, fpResultadoRecursoEntrevista, fpResultadoLingua, fpResultadoRecursoLingua,
+              fpResultadoFinal, fpHeteroDocs, fpHeteroProcedimento, fpHeteroResultado, fpHeteroRecurso, fpHeteroBanca,
+              fpHeteroResultadoFinal, fpPreMatricula, fpInternoDaa, fpInternoCadastro, fpInicioSemestre,
+            ];
+
+            for (const fp of pickers) {
+              setPickerEnabled(fp, globalDefined);
+              setMinMax(fp);
+              if (fp) fp.redraw();
+            }
+
           };
 
           const updateTimeline = () => {
@@ -1129,7 +1461,15 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               return;
             }
 
-            const { inscr, prova, recInsc, recProj, recEnt, recLing, proj, ent } = getAllIntervals();
+            const intervals = getAllIntervals();
+            const inscr = intervals.INSCRICAO;
+            const proj = intervals.PROJETO;
+            const ent = intervals.ENTREVISTA;
+            const prova = intervals.LINGUA;
+            const recInsc = intervals.RECURSO_INSCRICAO;
+            const recProj = intervals.RECURSO_PROJETO;
+            const recEnt = intervals.RECURSO_ENTREVISTA;
+            const recLing = intervals.RECURSO_LINGUA;
 
             const phases = [];
             if (inscr) phases.push({ key: 'inscricoes', label: 'Inscrições', cls: 'seg-inscricoes', ...inscr });
@@ -1183,6 +1523,28 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             const rp0 = readRangeFromHidden('RECURSO_PROJETO_start', 'RECURSO_PROJETO_end');
             const re0 = readRangeFromHidden('RECURSO_ENTREVISTA_start', 'RECURSO_ENTREVISTA_end');
             const rl0 = readRangeFromHidden('RECURSO_LINGUA_start', 'RECURSO_LINGUA_end');
+
+            const h0 = parseInputDate($('HOMOLOGACAO_INSCRICOES_start')?.value);
+            const rri0 = parseInputDate($('RESULTADO_RECURSO_INSCRICAO_start')?.value);
+            const rproj0 = parseInputDate($('RESULTADO_PROJETO_start')?.value);
+            const rrproj0 = parseInputDate($('RESULTADO_RECURSO_PROJETO_start')?.value);
+            const rent0 = parseInputDate($('RESULTADO_ENTREVISTA_start')?.value);
+            const rrent0 = parseInputDate($('RESULTADO_RECURSO_ENTREVISTA_start')?.value);
+            const rlin0 = parseInputDate($('RESULTADO_LINGUA_start')?.value);
+            const rrlin0 = parseInputDate($('RESULTADO_RECURSO_LINGUA_start')?.value);
+            const rf0 = parseInputDate($('RESULTADO_FINAL_start')?.value);
+
+            const hd0 = readRangeFromHidden('HETERO_DOCS_SUBMISSAO_start', 'HETERO_DOCS_SUBMISSAO_end');
+            const hp0 = readRangeFromHidden('HETERO_PROCEDIMENTO_start', 'HETERO_PROCEDIMENTO_end');
+            const hr0 = parseInputDate($('HETERO_RESULTADO_start')?.value);
+            const hrec0 = readRangeFromHidden('HETERO_RECURSO_start', 'HETERO_RECURSO_end');
+            const hb0 = parseInputDate($('HETERO_BANCA_RECURSAL_start')?.value);
+            const hrf0 = parseInputDate($('HETERO_RESULTADO_FINAL_start')?.value);
+
+            const pm0 = readRangeFromHidden('PRE_MATRICULA_ENVIO_start', 'PRE_MATRICULA_ENVIO_end');
+            const ida0 = parseInputDate($('INTERNO_ENVIO_DAA_start')?.value);
+            const icm0 = readRangeFromHidden('INTERNO_CADASTRO_MATRICULA_start', 'INTERNO_CADASTRO_MATRICULA_end');
+            const ins0 = parseInputDate($('INICIO_SEMESTRE_start')?.value);
 
             const prova0 = parseInputDate($('LINGUA_start')?.value);
 
@@ -1302,6 +1664,158 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               },
             });
 
+            fpHomologInscricoes = flatpickr('#HOMOLOGACAO_INSCRICOES_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: h0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpResultadoRecursoInscricao = flatpickr('#RESULTADO_RECURSO_INSCRICAO_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: rri0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpResultadoProjeto = flatpickr('#RESULTADO_PROJETO_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: rproj0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpResultadoRecursoProjeto = flatpickr('#RESULTADO_RECURSO_PROJETO_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: rrproj0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpResultadoEntrevista = flatpickr('#RESULTADO_ENTREVISTA_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: rent0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpResultadoRecursoEntrevista = flatpickr('#RESULTADO_RECURSO_ENTREVISTA_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: rrent0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpResultadoLingua = flatpickr('#RESULTADO_LINGUA_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: rlin0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpResultadoRecursoLingua = flatpickr('#RESULTADO_RECURSO_LINGUA_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: rrlin0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpResultadoFinal = flatpickr('#RESULTADO_FINAL_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: rf0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpHeteroDocs = flatpickr('#HETERO_DOCS_SUBMISSAO_range', {
+              ...fpCommon,
+              mode: 'range',
+              defaultDate: (hd0.start && hd0.end) ? [hd0.start, hd0.end] : null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpHeteroProcedimento = flatpickr('#HETERO_PROCEDIMENTO_range', {
+              ...fpCommon,
+              mode: 'range',
+              defaultDate: (hp0.start && hp0.end) ? [hp0.start, hp0.end] : null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpHeteroResultado = flatpickr('#HETERO_RESULTADO_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: hr0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpHeteroRecurso = flatpickr('#HETERO_RECURSO_range', {
+              ...fpCommon,
+              mode: 'range',
+              defaultDate: (hrec0.start && hrec0.end) ? [hrec0.start, hrec0.end] : null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpHeteroBanca = flatpickr('#HETERO_BANCA_RECURSAL_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: hb0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpHeteroResultadoFinal = flatpickr('#HETERO_RESULTADO_FINAL_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: hrf0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpPreMatricula = flatpickr('#PRE_MATRICULA_ENVIO_range', {
+              ...fpCommon,
+              mode: 'range',
+              defaultDate: (pm0.start && pm0.end) ? [pm0.start, pm0.end] : null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpInternoDaa = flatpickr('#INTERNO_ENVIO_DAA_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: ida0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpInternoCadastro = flatpickr('#INTERNO_CADASTRO_MATRICULA_range', {
+              ...fpCommon,
+              mode: 'range',
+              defaultDate: (icm0.start && icm0.end) ? [icm0.start, icm0.end] : null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
+            fpInicioSemestre = flatpickr('#INICIO_SEMESTRE_date', {
+              ...fpCommon,
+              mode: 'single',
+              defaultDate: ins0 || null,
+              disable: [],
+              onChange: () => { syncFromPickers(); applyConstraints(); updateTimeline(); },
+            });
+
             // Disable dinâmico (usa funções, para bloquear fases ocupadas)
             fpInscricao.set('disable', [buildDisableFn('INSCRICAO', fpInscricao)]);
             fpProjeto.set('disable', [buildDisableFn('PROJETO', fpProjeto)]);
@@ -1311,6 +1825,27 @@ function renderCalendarEditPage({ year, values, saved, error }) {
             fpRecursoProjeto.set('disable', [buildDisableFn('RECURSO_PROJETO', fpRecursoProjeto)]);
             fpRecursoEntrevista.set('disable', [buildDisableFn('RECURSO_ENTREVISTA', fpRecursoEntrevista)]);
             fpRecursoLingua.set('disable', [buildDisableFn('RECURSO_LINGUA', fpRecursoLingua)]);
+
+            // Opcionais
+            fpHomologInscricoes.set('disable', [buildDisableFn('HOMOLOGACAO_INSCRICOES', fpHomologInscricoes)]);
+            fpResultadoRecursoInscricao.set('disable', [buildDisableFn('RESULTADO_RECURSO_INSCRICAO', fpResultadoRecursoInscricao)]);
+            fpResultadoProjeto.set('disable', [buildDisableFn('RESULTADO_PROJETO', fpResultadoProjeto)]);
+            fpResultadoRecursoProjeto.set('disable', [buildDisableFn('RESULTADO_RECURSO_PROJETO', fpResultadoRecursoProjeto)]);
+            fpResultadoEntrevista.set('disable', [buildDisableFn('RESULTADO_ENTREVISTA', fpResultadoEntrevista)]);
+            fpResultadoRecursoEntrevista.set('disable', [buildDisableFn('RESULTADO_RECURSO_ENTREVISTA', fpResultadoRecursoEntrevista)]);
+            fpResultadoLingua.set('disable', [buildDisableFn('RESULTADO_LINGUA', fpResultadoLingua)]);
+            fpResultadoRecursoLingua.set('disable', [buildDisableFn('RESULTADO_RECURSO_LINGUA', fpResultadoRecursoLingua)]);
+            fpResultadoFinal.set('disable', [buildDisableFn('RESULTADO_FINAL', fpResultadoFinal)]);
+            fpHeteroDocs.set('disable', [buildDisableFn('HETERO_DOCS_SUBMISSAO', fpHeteroDocs)]);
+            fpHeteroProcedimento.set('disable', [buildDisableFn('HETERO_PROCEDIMENTO', fpHeteroProcedimento)]);
+            fpHeteroResultado.set('disable', [buildDisableFn('HETERO_RESULTADO', fpHeteroResultado)]);
+            fpHeteroRecurso.set('disable', [buildDisableFn('HETERO_RECURSO', fpHeteroRecurso)]);
+            fpHeteroBanca.set('disable', [buildDisableFn('HETERO_BANCA_RECURSAL', fpHeteroBanca)]);
+            fpHeteroResultadoFinal.set('disable', [buildDisableFn('HETERO_RESULTADO_FINAL', fpHeteroResultadoFinal)]);
+            fpPreMatricula.set('disable', [buildDisableFn('PRE_MATRICULA_ENVIO', fpPreMatricula)]);
+            fpInternoDaa.set('disable', [buildDisableFn('INTERNO_ENVIO_DAA', fpInternoDaa)]);
+            fpInternoCadastro.set('disable', [buildDisableFn('INTERNO_CADASTRO_MATRICULA', fpInternoCadastro)]);
+            fpInicioSemestre.set('disable', [buildDisableFn('INICIO_SEMESTRE', fpInicioSemestre)]);
 
             // Garantir sync inicial (útil quando os campos hidden já vieram preenchidos)
             syncFromPickers();
@@ -1367,6 +1902,50 @@ app.get(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar/edit`, checkAdminIP
       LINGUA_end: toSaoPauloDateInput(cal?.phases?.LINGUA?.endISO),
       RECURSO_LINGUA_start: toSaoPauloDateInput(cal?.phases?.RECURSO_LINGUA?.startISO),
       RECURSO_LINGUA_end: toSaoPauloDateInput(cal?.phases?.RECURSO_LINGUA?.endISO),
+
+      // Opcionais: Publicações / Resultados
+      HOMOLOGACAO_INSCRICOES_start: toSaoPauloDateInput(cal?.phases?.HOMOLOGACAO_INSCRICOES?.startISO),
+      HOMOLOGACAO_INSCRICOES_end: toSaoPauloDateInput(cal?.phases?.HOMOLOGACAO_INSCRICOES?.endISO),
+      RESULTADO_RECURSO_INSCRICAO_start: toSaoPauloDateInput(cal?.phases?.RESULTADO_RECURSO_INSCRICAO?.startISO),
+      RESULTADO_RECURSO_INSCRICAO_end: toSaoPauloDateInput(cal?.phases?.RESULTADO_RECURSO_INSCRICAO?.endISO),
+      RESULTADO_PROJETO_start: toSaoPauloDateInput(cal?.phases?.RESULTADO_PROJETO?.startISO),
+      RESULTADO_PROJETO_end: toSaoPauloDateInput(cal?.phases?.RESULTADO_PROJETO?.endISO),
+      RESULTADO_RECURSO_PROJETO_start: toSaoPauloDateInput(cal?.phases?.RESULTADO_RECURSO_PROJETO?.startISO),
+      RESULTADO_RECURSO_PROJETO_end: toSaoPauloDateInput(cal?.phases?.RESULTADO_RECURSO_PROJETO?.endISO),
+      RESULTADO_ENTREVISTA_start: toSaoPauloDateInput(cal?.phases?.RESULTADO_ENTREVISTA?.startISO),
+      RESULTADO_ENTREVISTA_end: toSaoPauloDateInput(cal?.phases?.RESULTADO_ENTREVISTA?.endISO),
+      RESULTADO_RECURSO_ENTREVISTA_start: toSaoPauloDateInput(cal?.phases?.RESULTADO_RECURSO_ENTREVISTA?.startISO),
+      RESULTADO_RECURSO_ENTREVISTA_end: toSaoPauloDateInput(cal?.phases?.RESULTADO_RECURSO_ENTREVISTA?.endISO),
+      RESULTADO_LINGUA_start: toSaoPauloDateInput(cal?.phases?.RESULTADO_LINGUA?.startISO),
+      RESULTADO_LINGUA_end: toSaoPauloDateInput(cal?.phases?.RESULTADO_LINGUA?.endISO),
+      RESULTADO_RECURSO_LINGUA_start: toSaoPauloDateInput(cal?.phases?.RESULTADO_RECURSO_LINGUA?.startISO),
+      RESULTADO_RECURSO_LINGUA_end: toSaoPauloDateInput(cal?.phases?.RESULTADO_RECURSO_LINGUA?.endISO),
+      RESULTADO_FINAL_start: toSaoPauloDateInput(cal?.phases?.RESULTADO_FINAL?.startISO),
+      RESULTADO_FINAL_end: toSaoPauloDateInput(cal?.phases?.RESULTADO_FINAL?.endISO),
+
+      // Opcionais: Heteroidentificação
+      HETERO_DOCS_SUBMISSAO_start: toSaoPauloDateInput(cal?.phases?.HETERO_DOCS_SUBMISSAO?.startISO),
+      HETERO_DOCS_SUBMISSAO_end: toSaoPauloDateInput(cal?.phases?.HETERO_DOCS_SUBMISSAO?.endISO),
+      HETERO_PROCEDIMENTO_start: toSaoPauloDateInput(cal?.phases?.HETERO_PROCEDIMENTO?.startISO),
+      HETERO_PROCEDIMENTO_end: toSaoPauloDateInput(cal?.phases?.HETERO_PROCEDIMENTO?.endISO),
+      HETERO_RESULTADO_start: toSaoPauloDateInput(cal?.phases?.HETERO_RESULTADO?.startISO),
+      HETERO_RESULTADO_end: toSaoPauloDateInput(cal?.phases?.HETERO_RESULTADO?.endISO),
+      HETERO_RECURSO_start: toSaoPauloDateInput(cal?.phases?.HETERO_RECURSO?.startISO),
+      HETERO_RECURSO_end: toSaoPauloDateInput(cal?.phases?.HETERO_RECURSO?.endISO),
+      HETERO_BANCA_RECURSAL_start: toSaoPauloDateInput(cal?.phases?.HETERO_BANCA_RECURSAL?.startISO),
+      HETERO_BANCA_RECURSAL_end: toSaoPauloDateInput(cal?.phases?.HETERO_BANCA_RECURSAL?.endISO),
+      HETERO_RESULTADO_FINAL_start: toSaoPauloDateInput(cal?.phases?.HETERO_RESULTADO_FINAL?.startISO),
+      HETERO_RESULTADO_FINAL_end: toSaoPauloDateInput(cal?.phases?.HETERO_RESULTADO_FINAL?.endISO),
+
+      // Opcionais: Matrícula / interno
+      PRE_MATRICULA_ENVIO_start: toSaoPauloDateInput(cal?.phases?.PRE_MATRICULA_ENVIO?.startISO),
+      PRE_MATRICULA_ENVIO_end: toSaoPauloDateInput(cal?.phases?.PRE_MATRICULA_ENVIO?.endISO),
+      INTERNO_ENVIO_DAA_start: toSaoPauloDateInput(cal?.phases?.INTERNO_ENVIO_DAA?.startISO),
+      INTERNO_ENVIO_DAA_end: toSaoPauloDateInput(cal?.phases?.INTERNO_ENVIO_DAA?.endISO),
+      INTERNO_CADASTRO_MATRICULA_start: toSaoPauloDateInput(cal?.phases?.INTERNO_CADASTRO_MATRICULA?.startISO),
+      INTERNO_CADASTRO_MATRICULA_end: toSaoPauloDateInput(cal?.phases?.INTERNO_CADASTRO_MATRICULA?.endISO),
+      INICIO_SEMESTRE_start: toSaoPauloDateInput(cal?.phases?.INICIO_SEMESTRE?.startISO),
+      INICIO_SEMESTRE_end: toSaoPauloDateInput(cal?.phases?.INICIO_SEMESTRE?.endISO),
     };
 
     res.type('html').send(renderCalendarEditPage({ year, values, saved, error: '' }));
@@ -1397,6 +1976,47 @@ app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar/edit`, checkAdminI
       LINGUA_end: String(req.body?.LINGUA_end || ''),
       RECURSO_LINGUA_start: String(req.body?.RECURSO_LINGUA_start || ''),
       RECURSO_LINGUA_end: String(req.body?.RECURSO_LINGUA_end || ''),
+
+      HOMOLOGACAO_INSCRICOES_start: String(req.body?.HOMOLOGACAO_INSCRICOES_start || ''),
+      HOMOLOGACAO_INSCRICOES_end: String(req.body?.HOMOLOGACAO_INSCRICOES_end || ''),
+      RESULTADO_RECURSO_INSCRICAO_start: String(req.body?.RESULTADO_RECURSO_INSCRICAO_start || ''),
+      RESULTADO_RECURSO_INSCRICAO_end: String(req.body?.RESULTADO_RECURSO_INSCRICAO_end || ''),
+      RESULTADO_PROJETO_start: String(req.body?.RESULTADO_PROJETO_start || ''),
+      RESULTADO_PROJETO_end: String(req.body?.RESULTADO_PROJETO_end || ''),
+      RESULTADO_RECURSO_PROJETO_start: String(req.body?.RESULTADO_RECURSO_PROJETO_start || ''),
+      RESULTADO_RECURSO_PROJETO_end: String(req.body?.RESULTADO_RECURSO_PROJETO_end || ''),
+      RESULTADO_ENTREVISTA_start: String(req.body?.RESULTADO_ENTREVISTA_start || ''),
+      RESULTADO_ENTREVISTA_end: String(req.body?.RESULTADO_ENTREVISTA_end || ''),
+      RESULTADO_RECURSO_ENTREVISTA_start: String(req.body?.RESULTADO_RECURSO_ENTREVISTA_start || ''),
+      RESULTADO_RECURSO_ENTREVISTA_end: String(req.body?.RESULTADO_RECURSO_ENTREVISTA_end || ''),
+      RESULTADO_LINGUA_start: String(req.body?.RESULTADO_LINGUA_start || ''),
+      RESULTADO_LINGUA_end: String(req.body?.RESULTADO_LINGUA_end || ''),
+      RESULTADO_RECURSO_LINGUA_start: String(req.body?.RESULTADO_RECURSO_LINGUA_start || ''),
+      RESULTADO_RECURSO_LINGUA_end: String(req.body?.RESULTADO_RECURSO_LINGUA_end || ''),
+      RESULTADO_FINAL_start: String(req.body?.RESULTADO_FINAL_start || ''),
+      RESULTADO_FINAL_end: String(req.body?.RESULTADO_FINAL_end || ''),
+
+      HETERO_DOCS_SUBMISSAO_start: String(req.body?.HETERO_DOCS_SUBMISSAO_start || ''),
+      HETERO_DOCS_SUBMISSAO_end: String(req.body?.HETERO_DOCS_SUBMISSAO_end || ''),
+      HETERO_PROCEDIMENTO_start: String(req.body?.HETERO_PROCEDIMENTO_start || ''),
+      HETERO_PROCEDIMENTO_end: String(req.body?.HETERO_PROCEDIMENTO_end || ''),
+      HETERO_RESULTADO_start: String(req.body?.HETERO_RESULTADO_start || ''),
+      HETERO_RESULTADO_end: String(req.body?.HETERO_RESULTADO_end || ''),
+      HETERO_RECURSO_start: String(req.body?.HETERO_RECURSO_start || ''),
+      HETERO_RECURSO_end: String(req.body?.HETERO_RECURSO_end || ''),
+      HETERO_BANCA_RECURSAL_start: String(req.body?.HETERO_BANCA_RECURSAL_start || ''),
+      HETERO_BANCA_RECURSAL_end: String(req.body?.HETERO_BANCA_RECURSAL_end || ''),
+      HETERO_RESULTADO_FINAL_start: String(req.body?.HETERO_RESULTADO_FINAL_start || ''),
+      HETERO_RESULTADO_FINAL_end: String(req.body?.HETERO_RESULTADO_FINAL_end || ''),
+
+      PRE_MATRICULA_ENVIO_start: String(req.body?.PRE_MATRICULA_ENVIO_start || ''),
+      PRE_MATRICULA_ENVIO_end: String(req.body?.PRE_MATRICULA_ENVIO_end || ''),
+      INTERNO_ENVIO_DAA_start: String(req.body?.INTERNO_ENVIO_DAA_start || ''),
+      INTERNO_ENVIO_DAA_end: String(req.body?.INTERNO_ENVIO_DAA_end || ''),
+      INTERNO_CADASTRO_MATRICULA_start: String(req.body?.INTERNO_CADASTRO_MATRICULA_start || ''),
+      INTERNO_CADASTRO_MATRICULA_end: String(req.body?.INTERNO_CADASTRO_MATRICULA_end || ''),
+      INICIO_SEMESTRE_start: String(req.body?.INICIO_SEMESTRE_start || ''),
+      INICIO_SEMESTRE_end: String(req.body?.INICIO_SEMESTRE_end || ''),
     };
 
     // Validar período global primeiro
@@ -1408,7 +2028,26 @@ app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar/edit`, checkAdminI
     const phases = {};
     const phaseKeys = [
       'INSCRICAO', 'RECURSO_INSCRICAO', 'PROJETO', 'RECURSO_PROJETO',
-      'ENTREVISTA', 'RECURSO_ENTREVISTA', 'LINGUA', 'RECURSO_LINGUA'
+      'ENTREVISTA', 'RECURSO_ENTREVISTA', 'LINGUA', 'RECURSO_LINGUA',
+      'HOMOLOGACAO_INSCRICOES',
+      'RESULTADO_RECURSO_INSCRICAO',
+      'RESULTADO_PROJETO',
+      'RESULTADO_RECURSO_PROJETO',
+      'RESULTADO_ENTREVISTA',
+      'RESULTADO_RECURSO_ENTREVISTA',
+      'RESULTADO_LINGUA',
+      'RESULTADO_RECURSO_LINGUA',
+      'RESULTADO_FINAL',
+      'HETERO_DOCS_SUBMISSAO',
+      'HETERO_PROCEDIMENTO',
+      'HETERO_RESULTADO',
+      'HETERO_RECURSO',
+      'HETERO_BANCA_RECURSAL',
+      'HETERO_RESULTADO_FINAL',
+      'PRE_MATRICULA_ENVIO',
+      'INTERNO_ENVIO_DAA',
+      'INTERNO_CADASTRO_MATRICULA',
+      'INICIO_SEMESTRE'
     ];
 
     for (const key of phaseKeys) {
@@ -1456,6 +2095,47 @@ app.post(`/secret/${ADMIN_SECRET}/admin/edital/:year/calendar/edit`, checkAdminI
       LINGUA_end: String(req.body?.LINGUA_end || ''),
       RECURSO_LINGUA_start: String(req.body?.RECURSO_LINGUA_start || ''),
       RECURSO_LINGUA_end: String(req.body?.RECURSO_LINGUA_end || ''),
+
+      HOMOLOGACAO_INSCRICOES_start: String(req.body?.HOMOLOGACAO_INSCRICOES_start || ''),
+      HOMOLOGACAO_INSCRICOES_end: String(req.body?.HOMOLOGACAO_INSCRICOES_end || ''),
+      RESULTADO_RECURSO_INSCRICAO_start: String(req.body?.RESULTADO_RECURSO_INSCRICAO_start || ''),
+      RESULTADO_RECURSO_INSCRICAO_end: String(req.body?.RESULTADO_RECURSO_INSCRICAO_end || ''),
+      RESULTADO_PROJETO_start: String(req.body?.RESULTADO_PROJETO_start || ''),
+      RESULTADO_PROJETO_end: String(req.body?.RESULTADO_PROJETO_end || ''),
+      RESULTADO_RECURSO_PROJETO_start: String(req.body?.RESULTADO_RECURSO_PROJETO_start || ''),
+      RESULTADO_RECURSO_PROJETO_end: String(req.body?.RESULTADO_RECURSO_PROJETO_end || ''),
+      RESULTADO_ENTREVISTA_start: String(req.body?.RESULTADO_ENTREVISTA_start || ''),
+      RESULTADO_ENTREVISTA_end: String(req.body?.RESULTADO_ENTREVISTA_end || ''),
+      RESULTADO_RECURSO_ENTREVISTA_start: String(req.body?.RESULTADO_RECURSO_ENTREVISTA_start || ''),
+      RESULTADO_RECURSO_ENTREVISTA_end: String(req.body?.RESULTADO_RECURSO_ENTREVISTA_end || ''),
+      RESULTADO_LINGUA_start: String(req.body?.RESULTADO_LINGUA_start || ''),
+      RESULTADO_LINGUA_end: String(req.body?.RESULTADO_LINGUA_end || ''),
+      RESULTADO_RECURSO_LINGUA_start: String(req.body?.RESULTADO_RECURSO_LINGUA_start || ''),
+      RESULTADO_RECURSO_LINGUA_end: String(req.body?.RESULTADO_RECURSO_LINGUA_end || ''),
+      RESULTADO_FINAL_start: String(req.body?.RESULTADO_FINAL_start || ''),
+      RESULTADO_FINAL_end: String(req.body?.RESULTADO_FINAL_end || ''),
+
+      HETERO_DOCS_SUBMISSAO_start: String(req.body?.HETERO_DOCS_SUBMISSAO_start || ''),
+      HETERO_DOCS_SUBMISSAO_end: String(req.body?.HETERO_DOCS_SUBMISSAO_end || ''),
+      HETERO_PROCEDIMENTO_start: String(req.body?.HETERO_PROCEDIMENTO_start || ''),
+      HETERO_PROCEDIMENTO_end: String(req.body?.HETERO_PROCEDIMENTO_end || ''),
+      HETERO_RESULTADO_start: String(req.body?.HETERO_RESULTADO_start || ''),
+      HETERO_RESULTADO_end: String(req.body?.HETERO_RESULTADO_end || ''),
+      HETERO_RECURSO_start: String(req.body?.HETERO_RECURSO_start || ''),
+      HETERO_RECURSO_end: String(req.body?.HETERO_RECURSO_end || ''),
+      HETERO_BANCA_RECURSAL_start: String(req.body?.HETERO_BANCA_RECURSAL_start || ''),
+      HETERO_BANCA_RECURSAL_end: String(req.body?.HETERO_BANCA_RECURSAL_end || ''),
+      HETERO_RESULTADO_FINAL_start: String(req.body?.HETERO_RESULTADO_FINAL_start || ''),
+      HETERO_RESULTADO_FINAL_end: String(req.body?.HETERO_RESULTADO_FINAL_end || ''),
+
+      PRE_MATRICULA_ENVIO_start: String(req.body?.PRE_MATRICULA_ENVIO_start || ''),
+      PRE_MATRICULA_ENVIO_end: String(req.body?.PRE_MATRICULA_ENVIO_end || ''),
+      INTERNO_ENVIO_DAA_start: String(req.body?.INTERNO_ENVIO_DAA_start || ''),
+      INTERNO_ENVIO_DAA_end: String(req.body?.INTERNO_ENVIO_DAA_end || ''),
+      INTERNO_CADASTRO_MATRICULA_start: String(req.body?.INTERNO_CADASTRO_MATRICULA_start || ''),
+      INTERNO_CADASTRO_MATRICULA_end: String(req.body?.INTERNO_CADASTRO_MATRICULA_end || ''),
+      INICIO_SEMESTRE_start: String(req.body?.INICIO_SEMESTRE_start || ''),
+      INICIO_SEMESTRE_end: String(req.body?.INICIO_SEMESTRE_end || ''),
     };
     res.status(400).type('html').send(renderCalendarEditPage({
       year,

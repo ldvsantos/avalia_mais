@@ -84,6 +84,33 @@
             font-size: 0.7em;
             margin-left: 10px;
         }
+
+        .calendar-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+        .calendar-table th {
+            background: #D0E5F5;
+            color: #003366;
+            text-align: left;
+            padding: 10px;
+            border: 1px solid #86A3C2;
+            font-weight: bold;
+        }
+        .calendar-table td {
+            padding: 10px;
+            border: 1px solid #86A3C2;
+            background-color: #F4F9FD;
+            vertical-align: top;
+        }
+        .calendar-note {
+            color: #666;
+            font-style: italic;
+            text-align: center;
+            padding: 12px;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -149,6 +176,13 @@
             </div>
         </section>
 
+        <h2 class="section-title">Calendário do Edital</h2>
+        <section class="panel">
+            <div class="panel-body" id="public-calendar-container" style="padding: 0;">
+                <p style="color: #666; font-style: italic; text-align: center; padding: 20px;">Carregando calendário...</p>
+            </div>
+        </section>
+
         <script>
             fetch('/api/public-files')
                 .then(response => response.json())
@@ -189,6 +223,63 @@
                     console.error(err);
                     document.getElementById('public-results-container').innerHTML =
                         '<p style="color: red; text-align: center; padding: 20px;">Erro ao carregar resultados.</p>';
+                });
+        </script>
+
+        <script>
+            // Processo Seletivo 2026 pode ter datas em 2025/2026; o "ano do edital" é 2026.
+            const EDITAL_YEAR = 2026;
+
+            fetch('/api/public-calendar?year=' + encodeURIComponent(String(EDITAL_YEAR)))
+                .then(response => response.json())
+                .then(data => {
+                    const container = document.getElementById('public-calendar-container');
+                    const items = data && Array.isArray(data.items) ? data.items : [];
+
+                    if (items.length === 0) {
+                        container.innerHTML =
+                            '<p style="color: #666; font-style: italic; text-align: center; padding: 20px;">' +
+                            'Calendário indisponível no momento.' +
+                            '</p>';
+                        return;
+                    }
+
+                    const table = document.createElement('table');
+                    table.className = 'calendar-table';
+
+                    const thead = document.createElement('thead');
+                    thead.innerHTML = '<tr><th style="width:70%;">Etapa</th><th style="width:30%;">Data</th></tr>';
+                    table.appendChild(thead);
+
+                    const tbody = document.createElement('tbody');
+                    items.forEach(it => {
+                        const tr = document.createElement('tr');
+                        const label = it && it.label ? String(it.label) : 'Etapa';
+                        const display = it && it.display ? String(it.display) : 'A definir';
+
+                        const td1 = document.createElement('td');
+                        td1.textContent = label;
+                        const td2 = document.createElement('td');
+                        td2.textContent = display;
+
+                        tr.appendChild(td1);
+                        tr.appendChild(td2);
+                        tbody.appendChild(tr);
+                    });
+                    table.appendChild(tbody);
+
+                    const note = document.createElement('div');
+                    note.className = 'calendar-note';
+                    note.textContent = 'Obs.: esta tabela mostra apenas as datas (horários, quando existirem, seguem o Edital).';
+
+                    container.innerHTML = '';
+                    container.appendChild(table);
+                    container.appendChild(note);
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('public-calendar-container').innerHTML =
+                        '<p style="color: red; text-align: center; padding: 20px;">Erro ao carregar calendário.</p>';
                 });
         </script>
 
