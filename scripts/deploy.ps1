@@ -302,6 +302,7 @@ if [ -d "$REMOTE_DIR/server/certs" ]; then PERSIST_PATHS="$PERSIST_PATHS server/
 if [ -f "$REMOTE_DIR/server/.admin-secret" ]; then PERSIST_PATHS="$PERSIST_PATHS server/.admin-secret"; fi
 if [ -f "$REMOTE_DIR/server/.env" ]; then PERSIST_PATHS="$PERSIST_PATHS server/.env"; fi
 if [ -d "$REMOTE_DIR/src/results" ]; then PERSIST_PATHS="$PERSIST_PATHS src/results"; fi
+if [ -d "$REMOTE_DIR/img/events" ]; then PERSIST_PATHS="$PERSIST_PATHS img/events"; fi
 
 if [ -n "$PERSIST_PATHS" ]; then
   # shellcheck disable=SC2086
@@ -357,9 +358,16 @@ if [ -d "$REMOTE_DIR/src/results" ]; then
   cp -a "$REMOTE_DIR/src/results" "$STAGING/src/results"
 fi
 
+# Restaura imagens de eventos
+if [ -d "$REMOTE_DIR/img/events" ]; then
+  rm -rf "$STAGING/img/events"
+  mkdir -p "$STAGING/img"
+  cp -a "$REMOTE_DIR/img/events" "$STAGING/img/events"
+fi
+
 # Garante ownership/permissões após copiar persistência
-chown -R "$APP_USER:$APP_USER" "$STAGING/server" "$STAGING/src" || true
-chmod -R u+rwX "$STAGING/server" "$STAGING/src" || true
+chown -R "$APP_USER:$APP_USER" "$STAGING/server" "$STAGING/src" "$STAGING/img" || true
+chmod -R u+rwX "$STAGING/server" "$STAGING/src" "$STAGING/img" || true
 
 # Dependências do Node
 sudo -u "$APP_USER" -H bash -lc "cd '$STAGING/server' && if [ -f package-lock.json ]; then npm ci --omit=dev; else npm install --omit=dev; fi"
