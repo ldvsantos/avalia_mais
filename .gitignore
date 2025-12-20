@@ -54,6 +54,9 @@ server/data/*.json.old
 tmp/
 temp/
 
+# ===== Saídas geradas (demonstração) =====
+prints/demo/
+
 # ===== IDE específicas =====
 .idea/
 .vscode/
