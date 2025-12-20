@@ -1,0 +1,13 @@
+# allowed signers (Git SSH signing)
+#
+# Use este arquivo para permitir que o Git verifique assinaturas SSH.
+# Depois, aponte o Git para ele:
+#   git config --global gpg.ssh.allowedSignersFile <CAMINHO_COMPLETO_PARA_ESTE_ARQUIVO>
+#
+# Formato (principal + chave pública SSH):
+#   <principal> <chave_publica_ssh>
+#
+# Exemplo (substitua por seu e-mail e chave real):
+#   luiz.diego@uefs.br ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAI... comentario
+
+ldvsantos@uefs.br ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGIFRNugT+r8FQXVJ9CLJ0NG6ckc/w2AK9+KUYOyW6Rd ldvsantos@uefs.br

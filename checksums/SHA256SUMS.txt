@@ -1,0 +1,6 @@
+# SHA-256 checksums de releases
+# Formato sugerido:
+# <HASH_HEX>  <NOME_DO_ARQUIVO>
+#
+# Exemplo:
+# deadbeef...  planter-release-v1.0.0.zip
