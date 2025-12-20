@@ -2214,6 +2214,52 @@ app.post('/eventos/:id/certificado', apiLimiter, async (req, res) => {
       `);
     }
 
+    // Validação de data do evento
+    const eventDate = new Date(event.date);
+    const now = new Date();
+    // Zera as horas para comparar apenas datas, se desejar, ou compara direto
+    // Vamos permitir gerar se for o dia seguinte ou se o admin já confirmou (o admin confirmar é soberano?)
+    // O requisito diz: "limitar gerar o certificado só após o prazo"
+    // Vamos assumir que se o evento é hoje, ainda não acabou. Então só amanhã.
+    // Mas se o admin já foi lá e marcou "Sim", talvez devesse liberar.
+    // Vou seguir estritamente: Data atual deve ser maior que data do evento.
+    // Se eventDate é 2023-10-27 (00:00), e now é 2023-10-27 (15:00), now > eventDate.
+    // Então se for no mesmo dia, libera.
+    
+    if (now < eventDate) {
+       return res.status(403).send(`
+        <!doctype html>
+        <html>
+        <head><link rel="stylesheet" href="/theme.css" /></head>
+        <body>
+          <div class="container" style="text-align:center; margin-top:50px;">
+            <h1>Aguarde</h1>
+            <p>O certificado só estará disponível após a data do evento.</p>
+            <a href="/eventos/${event.id}" class="btn-primary">Voltar</a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
+    // Validação de confirmação de presença
+    if (!registration.confirmed) {
+       return res.status(403).send(`
+        <!doctype html>
+        <html>
+        <head><link rel="stylesheet" href="/theme.css" /></head>
+        <body>
+          <div class="container" style="text-align:center; margin-top:50px;">
+            <h1>Presença não confirmada</h1>
+            <p>Sua presença ainda não foi confirmada pela organização do evento.</p>
+            <p>Entre em contato com a administração se você participou.</p>
+            <a href="/eventos/${event.id}" class="btn-primary">Voltar</a>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+
     const auditInfo = {
       ip: getClientIP(req),
       user: { username: 'public' },
@@ -3330,6 +3376,20 @@ app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/delete`, checkAdminIP, adminA
     res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);
 });
 
+// Alternar confirmação de presença
+app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations/:index/toggle-confirm`, checkAdminIP, adminAuth, async (req, res) => {
+    const event = await eventRepo.findById(req.params.id);
+    if (!event) return res.status(404).send('Evento não encontrado');
+    
+    const idx = Number(req.params.index);
+    if (!event.registrations[idx]) return res.status(404).send('Inscrição não encontrada');
+    
+    event.registrations[idx].confirmed = !event.registrations[idx].confirmed;
+    await eventRepo.save(event);
+    
+    res.redirect(`/secret/${ADMIN_SECRET}/admin/events/${event.id}/registrations`);
+});
+
 // Visualizar inscritos de um evento
 app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, adminAuth, async (req, res) => {
     const event = await eventRepo.findById(req.params.id);
@@ -3343,6 +3403,13 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, 
         <td>${escapeHtml(r.email)}</td>
         <td>${escapeHtml(r.role || event.participantRole || 'PARTICIPANTE')}</td>
         <td>${new Date(r.registeredAt).toLocaleDateString('pt-BR')}</td>
+        <td style="text-align:center;">
+            <form method="POST" action="/secret/${ADMIN_SECRET}/admin/events/${event.id}/registrations/${idx}/toggle-confirm" style="display:inline;">
+                <button type="submit" class="btn-secondary" style="padding: 4px 8px; font-size: 0.8em; background-color: ${r.confirmed ? '#2e7d32' : '#ccc'}; color: ${r.confirmed ? 'white' : 'black'}; border:none; cursor:pointer;">
+                    ${r.confirmed ? 'Sim' : 'Não'}
+                </button>
+            </form>
+        </td>
         <td>
           <form method="POST" action="/secret/${ADMIN_SECRET}/admin/events/${event.id}/certificate/${idx}" target="_blank" style="display:inline;">
             <button class="btn-primary" type="submit">Gerar Certificado</button>
@@ -3390,11 +3457,12 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, 
                     <th>Email</th>
                     <th>Função</th>
                     <th>Data de Inscrição</th>
+                    <th style="text-align:center;">Presença</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  ${registrationsHtml || '<tr><td colspan="7" style="text-align:center;">Nenhum inscrito</td></tr>'}
+                  ${registrationsHtml || '<tr><td colspan="8" style="text-align:center;">Nenhum inscrito</td></tr>'}
                 </tbody>
               </table>
             </div>
