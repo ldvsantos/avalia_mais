@@ -4,9 +4,12 @@
       "year": 2025,
       "submissionProtocol": "PLANTERR-2025-3FAE",
       "phaseKey": "INSCRICAO",
-      "status": "REPROVADO_PRELIMINAR",
+      "status": "REPROVADO_DEFINITIVO",
       "score": null,
-      "updatedAt": "2025-12-18T14:10:48.653Z"
+      "updatedAt": "2025-12-20T11:56:08.320Z",
+      "meta": {
+        "reason": "recurso_nao_enviado"
+      }
     },
     {
       "year": 2025,

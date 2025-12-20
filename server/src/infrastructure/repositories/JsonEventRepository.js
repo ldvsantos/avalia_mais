@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getRequestContext } = require('../../../request-context');
+const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 
 function pickActor(ctx) {
   const a = ctx?.actor;
@@ -50,7 +51,7 @@ class JsonEventRepository {
 
   ensureFile() {
     if (!fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, '[]', 'utf8');
+      safeWriteFileUtf8Atomic(this.filePath, '[]');
     }
   }
 
@@ -90,7 +91,7 @@ class JsonEventRepository {
       all.push(event);
     }
 
-    fs.writeFileSync(this.filePath, JSON.stringify(all, null, 2), 'utf8');
+    safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(all, null, 2));
     return event;
   }
 
@@ -100,7 +101,7 @@ class JsonEventRepository {
     all = all.filter(e => e.id !== id);
     
     if (all.length !== initialLength) {
-      fs.writeFileSync(this.filePath, JSON.stringify(all, null, 2), 'utf8');
+      safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(all, null, 2));
       return true;
     }
     return false;

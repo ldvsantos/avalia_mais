@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 
 class JsonAppealRepository {
   constructor(dataDir) {
@@ -14,7 +15,7 @@ class JsonAppealRepository {
     try {
       if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
       if (!fs.existsSync(this.filePath)) {
-        fs.writeFileSync(this.filePath, JSON.stringify([], null, 2), 'utf8');
+        safeWriteFileUtf8Atomic(this.filePath, JSON.stringify([], null, 2));
       }
     } catch (err) {
       console.error('Error ensuring appeals file:', err);
@@ -43,7 +44,7 @@ class JsonAppealRepository {
   persist() {
     try {
       this.ensureFile();
-      fs.writeFileSync(this.filePath, JSON.stringify(this.appeals, null, 2), 'utf8');
+      safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(this.appeals, null, 2));
     } catch (err) {
       console.error('Error saving appeals:', err);
     }

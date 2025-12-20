@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 
 class JsonPublicFileRepository {
   constructor(dataDir) {
@@ -13,7 +14,7 @@ class JsonPublicFileRepository {
       fs.mkdirSync(this.dataDir, { recursive: true });
     }
     if (!fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, JSON.stringify([], null, 2));
+      safeWriteFileUtf8Atomic(this.filePath, JSON.stringify([], null, 2));
     }
   }
 
@@ -62,7 +63,7 @@ class JsonPublicFileRepository {
   }
 
   save(files) {
-    fs.writeFileSync(this.filePath, JSON.stringify(files, null, 2));
+    safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(files, null, 2));
   }
 }
 

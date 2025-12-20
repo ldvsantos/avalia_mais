@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const Evaluator = require('../../domain/Evaluator');
+const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 
 class JsonEvaluatorRepository {
   constructor(dataDir) {
@@ -23,7 +24,7 @@ class JsonEvaluatorRepository {
   ensureFile() {
     if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
     if (!fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, JSON.stringify(this.defaultEvaluators, null, 2), 'utf8');
+      safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(this.defaultEvaluators, null, 2));
     }
   }
 
@@ -58,7 +59,7 @@ class JsonEvaluatorRepository {
       num: evaluator.num
     };
 
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
+    safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(data, null, 2));
   }
   
   // Method to handle username changes (delete old, add new)
@@ -77,7 +78,7 @@ class JsonEvaluatorRepository {
       num: newEvaluator.num
     };
 
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
+    safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(data, null, 2));
   }
 }
 

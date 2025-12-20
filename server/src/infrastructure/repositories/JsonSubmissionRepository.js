@@ -3,6 +3,7 @@ const path = require('path');
 const Submission = require('../../domain/Submission');
 const { getRequestContext } = require('../../../request-context');
 const { logSubmissionCreated, logSubmissionModified } = require('../../../security-logger');
+const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 
 function pickActor(ctx) {
   const a = ctx?.actor;
@@ -53,7 +54,7 @@ class JsonSubmissionRepository {
   ensureFile() {
     if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
     if (!fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, JSON.stringify({ submissions: [] }, null, 2), 'utf8');
+      safeWriteFileUtf8Atomic(this.filePath, JSON.stringify({ submissions: [] }, null, 2));
     }
   }
 
@@ -70,7 +71,7 @@ class JsonSubmissionRepository {
 
   saveAll(submissions) {
     this.ensureFile();
-    fs.writeFileSync(this.filePath, JSON.stringify({ submissions }, null, 2), 'utf8');
+    safeWriteFileUtf8Atomic(this.filePath, JSON.stringify({ submissions }, null, 2));
   }
 
   findAll() {

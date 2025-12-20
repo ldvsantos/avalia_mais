@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 
 class JsonCandidatePhaseStatusRepository {
   constructor(dataDir) {
@@ -11,7 +12,7 @@ class JsonCandidatePhaseStatusRepository {
   ensureFile() {
     if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
     if (!fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, JSON.stringify({ statuses: [] }, null, 2), 'utf8');
+      safeWriteFileUtf8Atomic(this.filePath, JSON.stringify({ statuses: [] }, null, 2));
     }
   }
 
@@ -30,7 +31,7 @@ class JsonCandidatePhaseStatusRepository {
 
   writeAll(data) {
     this.ensureFile();
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
+    safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(data, null, 2));
   }
 
   find(year, submissionProtocol, phaseKey) {

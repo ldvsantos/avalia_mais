@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 
 function toIsoOrNull(value) {
   if (!value) return null;
@@ -62,7 +63,7 @@ class JsonProcessCalendarRepository {
     if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
     if (!fs.existsSync(this.filePath)) {
       const initial = { editais: {}, updatedAt: new Date().toISOString() };
-      fs.writeFileSync(this.filePath, JSON.stringify(initial, null, 2), 'utf8');
+      safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(initial, null, 2));
     }
   }
 
@@ -83,7 +84,7 @@ class JsonProcessCalendarRepository {
 
   writeAll(data) {
     this.ensureFile();
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
+    safeWriteFileUtf8Atomic(this.filePath, JSON.stringify(data, null, 2));
   }
 
   getOrCreateYear(year, { seedRegistrationWindow } = {}) {
