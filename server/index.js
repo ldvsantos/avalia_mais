@@ -538,7 +538,9 @@ function renderCalendarEditPage({ year, values, saved, error }) {
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            </a>
             <h1>Calendário do Edital (Workflow)</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -2076,7 +2078,9 @@ app.get('/eventos/:id', async (req, res) => {
       <div class="container">
         <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              </a>
               <h1>Inscrição em Evento</h1>
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
@@ -2407,7 +2411,9 @@ app.get('/consulta', (req, res) => {
     <body>
       <div class="auth-container">
         <div class="auth-header">
-          <img src="/img/logo_planter.png" alt="Logo PLANTERR">
+          <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+            <img src="/img/logo_planter.png" alt="Logo PLANTERR">
+          </a>
           <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+">
         </div>
         <h1 class="auth-title">Consultar Inscrição</h1>
@@ -2780,7 +2786,9 @@ app.get('/candidato/status', async (req, res) => {
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              </a>
               <div>
                 <h1 style="margin:0; font-size: 1.5em;">Portal do Candidato</h1>
                 <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Acompanhe sua inscrição no Processo Seletivo PLANTERR</p>
