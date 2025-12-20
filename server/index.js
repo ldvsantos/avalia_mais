@@ -2088,7 +2088,9 @@ app.get('/eventos/:id', async (req, res) => {
         <section class="panel">
           <div class="panel-header"><h2>${escapeHtml(event.title)}</h2></div>
           <div class="panel-body">
-            ${event.imageFilename ? `<div style="text-align:center; margin-bottom:20px;"><img src="/img/events/${event.imageFilename}" style="max-width:100%; max-height:400px; border-radius:8px;"></div>` : ''}
+            <div style="text-align:center; margin-bottom:20px;">
+                <img src="${event.imageFilename ? '/img/events/' + event.imageFilename : '/img/post_padrao.png'}" style="max-width:100%; max-height:400px; border-radius:8px;">
+            </div>
             <p><strong>Data:</strong> ${new Date(event.date).toLocaleDateString('pt-BR')}</p>
             <p><strong>Local:</strong> ${escapeHtml(event.location)}</p>
             <p><strong>Carga Horária:</strong> ${escapeHtml(event.workload)}</p>
