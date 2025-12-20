@@ -173,7 +173,7 @@ class AdminDashboardPresenter {
             <div class="panel-body">
               <div class="hint">Dica: use a busca por protocolo, nome, email, CPF ou título.</div>
               <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Voltar ao Admin</a>
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/selection">Voltar ao Admin</a>
                 <a class="btn-secondary" href="/secret/${this.adminSecret}/logout" style="background-color: #d9534f; border-color: #d43f3a;">Sair</a>
               </div>
               <form method="GET" action="/secret/${this.adminSecret}/admin/appeals">

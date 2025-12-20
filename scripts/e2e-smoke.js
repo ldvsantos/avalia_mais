@@ -75,6 +75,12 @@ function parseSetCookie(setCookie) {
 function makeClient(baseUrl) {
   const jar = new Map();
 
+  function maskSecretPath(p) {
+    const s = String(p || '');
+    // Evita imprimir o ADMIN_SECRET completo nos logs.
+    return s.replace(/\/secret\/[0-9a-f-]{10,}/gi, '/secret/{SECRET}');
+  }
+
   function cookieHeader() {
     const parts = [];
     for (const [k, v] of jar.entries()) parts.push(`${k}=${v}`);
@@ -94,6 +100,11 @@ function makeClient(baseUrl) {
 
   function request(method, pathname, { headers = {}, body, timeoutMs = REQUEST_TIMEOUT_MS } = {}) {
     return new Promise((resolve, reject) => {
+      const startedAt = Date.now();
+      const safePath = maskSecretPath(pathname);
+      const bodyInfo = body ? ` body=${Buffer.isBuffer(body) ? body.length : String(body).length}` : '';
+      console.log(`[e2e-smoke] HTTP -> ${method} ${safePath} timeout=${timeoutMs}ms${bodyInfo}`);
+
       const url = new URL(pathname, baseUrl);
       const reqHeaders = { ...headers };
       const ck = cookieHeader();
@@ -113,6 +124,8 @@ function makeClient(baseUrl) {
           res.on('end', () => {
             storeCookies(res.headers['set-cookie']);
             const buf = Buffer.concat(chunks);
+            const ms = Date.now() - startedAt;
+            console.log(`[e2e-smoke] HTTP <- ${method} ${safePath} status=${res.statusCode} bytes=${buf.length} (${ms}ms)`);
             resolve({
               status: res.statusCode,
               headers: res.headers,
@@ -137,6 +150,7 @@ function makeClient(baseUrl) {
       const loc = res.headers.location;
       if (!loc) return res;
       const nextPath = loc.startsWith('http') ? loc : loc;
+      console.log(`[e2e-smoke] HTTP ~~ redirect ${res.status} ${maskSecretPath(pathname)} -> ${maskSecretPath(nextPath)}`);
       const nextMethod = res.status === 303 ? 'GET' : method;
       return requestFollow(nextMethod, nextPath, undefined);
     }

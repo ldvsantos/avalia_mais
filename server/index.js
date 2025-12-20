@@ -549,7 +549,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
         </header>
 
         <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar ao Admin</a>
           <span class="admin-badge">Ano: ${escapeHtml(String(year))}</span>
         </div>
 
@@ -3197,6 +3197,13 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           display: none;
         }
         .error-msg.show { display: block; }
+
+        .auth-footer {
+          margin-top: 18px;
+          text-align: center;
+          font-size: 12px;
+          color: #666;
+        }
         @media (max-width: 480px) {
           .auth-container { padding: 32px 24px; }
           .auth-header img { max-height: 48px; }
@@ -3225,6 +3232,8 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           </div>
           <button class="btn-submit" type="submit" id="btn-submit">Entrar</button>
         </form>
+
+        <div class="auth-footer">&copy; ${new Date().getFullYear()} Avalia Mais. Todos os direitos reservados.</div>
       </div>
       <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -3617,7 +3626,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, async (req
           </div>
         </header>
         <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">Admin</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">Admin</a>
         </div>
         
         <section class="panel">
@@ -3745,7 +3754,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, as
           </div>
         </header>
         <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar</a>
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee/results/csv">Baixar CSV</a>
           <button class="btn-secondary" type="button" id="btn-print-ranking">Imprimir / PDF</button>
           <span class="admin-badge">Pesos: Projeto=4, Entrevista=5, Língua=1 (normalizados)</span>
@@ -4667,7 +4676,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
         </header>
 
         <div class="admin-actions" style="justify-content: center; margin-bottom: 10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar</a>
           <button class="btn-secondary" type="button" id="print-btn">Imprimir / Salvar em PDF</button>
           <span class="admin-badge">Protocolo: <span class="mono" id="protocol">${escapeHtml(protocol)}</span></span>
           <span class="admin-badge">Status integridade: ${hashValid ? 'Íntegra (hash confere)' : 'Atenção: hash não confere'}</span>
@@ -4901,7 +4910,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
           </div>
         </header>
         <div class="admin-actions" style="justify-content:center; margin-bottom:20px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar ao Admin</a>
         </div>
         
         <div class="panel">
