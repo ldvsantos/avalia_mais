@@ -724,10 +724,6 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               </div>
 
               <p class="hint" style="text-align:center; margin-top: 10px;">Datas são interpretadas como horário de Brasília (00:00 até 23:59).</p>
-
-              <div class="admin-actions" style="justify-content:center; margin-top: 10px;">
-                <button class="btn-primary" id="calendar-submit" type="submit">Salvar Calendário</button>
-              </div>
             </div>
           </section>
 
@@ -886,6 +882,10 @@ function renderCalendarEditPage({ year, values, saved, error }) {
               </div>
             </div>
           </section>
+
+          <div class="admin-actions" style="justify-content:center; margin: 14px 0 6px;">
+            <button class="btn-primary" id="calendar-submit" type="submit">Salvar Calendário</button>
+          </div>
         </form>
       </div>
 
