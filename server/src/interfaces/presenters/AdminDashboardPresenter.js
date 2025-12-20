@@ -368,7 +368,13 @@ class AdminDashboardPresenter {
           
           <section class="panel">
             <div class="panel-body">
-              <form method="POST" action="${action}" id="eventForm">
+              <form method="POST" action="${action}" id="eventForm" enctype="multipart/form-data">
+                <div class="form-group">
+                  <label>Imagem de Capa (Estilo Instagram 3:4)</label>
+                  ${event.imageFilename ? `<div style="margin-bottom:10px;"><img src="/img/events/${event.imageFilename}" style="max-width:150px; border-radius:4px; border:1px solid #ddd;"></div>` : ''}
+                  <input type="file" name="image" accept="image/*" />
+                  <small style="color:#666; font-size:11px;">Recomendado: Proporção 3:4 (ex: 1080x1440px)</small>
+                </div>
                 <div class="form-group">
                   <label>Título</label>
                   <input name="title" value="${escapeHtml(event.title)}" required />

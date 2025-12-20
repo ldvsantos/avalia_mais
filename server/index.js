@@ -1799,6 +1799,32 @@ const publicStorage = multer.diskStorage({
 });
 const uploadPublic = multer({ storage: publicStorage });
 
+const eventImageStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const dir = path.join(__dirname, '..', 'img', 'events');
+    if (!fs.existsSync(dir)){
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    cb(null, dir);
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const safeName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9.-]/g, '_');
+    cb(null, Date.now() + '-' + safeName + ext);
+  }
+});
+const uploadEventImage = multer({ 
+  storage: eventImageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Apenas imagens são permitidas'));
+    }
+  }
+});
+
 app.get('/api/public-files', (req, res) => {
   const files = publicFileRepo.getAll();
   files.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -1819,6 +1845,7 @@ app.get('/api/public-events', async (req, res) => {
         workload: String(e.workload || ''),
         description: String(e.description || ''),
         speakers: String(e.speakers || ''),
+        imageUrl: e.imageFilename ? '/img/events/' + e.imageFilename : null,
       }))
       .sort((a, b) => {
         const da = a.date ? new Date(a.date).getTime() : 0;
@@ -2057,6 +2084,7 @@ app.get('/eventos/:id', async (req, res) => {
         <section class="panel">
           <div class="panel-header"><h2>${escapeHtml(event.title)}</h2></div>
           <div class="panel-body">
+            ${event.imageFilename ? `<div style="text-align:center; margin-bottom:20px;"><img src="/img/events/${event.imageFilename}" style="max-width:100%; max-height:400px; border-radius:8px;"></div>` : ''}
             <p><strong>Data:</strong> ${new Date(event.date).toLocaleDateString('pt-BR')}</p>
             <p><strong>Local:</strong> ${escapeHtml(event.location)}</p>
             <p><strong>Carga Horária:</strong> ${escapeHtml(event.workload)}</p>
@@ -3216,7 +3244,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAuth
   res.send(adminDashboardPresenter.renderEventForm(event));
 });
 
-app.post(`/secret/${ADMIN_SECRET}/admin/events`, checkAdminIP, adminAuth, async (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/admin/events`, checkAdminIP, adminAuth, uploadEventImage.single('image'), async (req, res) => {
   const { title, description, date, location, workload, status, coordinator, department, speakers, participantRole, syllabus, activities } = req.body;
   const crypto = require('crypto');
   
@@ -3244,6 +3272,7 @@ app.post(`/secret/${ADMIN_SECRET}/admin/events`, checkAdminIP, adminAuth, async 
       participantRole: participantRole || 'PARTICIPANTE',
       syllabus: syllabus || '',
       activities: parsedActivities,
+      imageFilename: req.file ? req.file.filename : null,
       registrations: [],
       audit: {}
   };
@@ -3251,7 +3280,7 @@ app.post(`/secret/${ADMIN_SECRET}/admin/events`, checkAdminIP, adminAuth, async 
   res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);
 });
 
-app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAuth, async (req, res) => {
+app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAuth, uploadEventImage.single('image'), async (req, res) => {
     const event = await eventRepo.findById(req.params.id);
     if (!event) return res.status(404).send('Evento não encontrado');
 
@@ -3279,6 +3308,10 @@ app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAut
     event.participantRole = participantRole || 'PARTICIPANTE';
     event.syllabus = syllabus || '';
     event.activities = parsedActivities;
+
+    if (req.file) {
+      event.imageFilename = req.file.filename;
+    }
 
     await eventRepo.save(event);
     res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);

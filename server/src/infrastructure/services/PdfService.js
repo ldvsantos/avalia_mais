@@ -516,7 +516,7 @@ class PdfService {
       const workloadText = formatWorkload(cargaHoraria);
 
       doc.font('Helvetica').fontSize(13).fillColor('#000000');
-      const speakersText = speakers ? `, com Palestrante(s)/Ministrante(s): ${String(speakers).toUpperCase()}` : '';
+      const speakersText = speakers ? `, ministrado por ${String(speakers).toUpperCase()}` : '';
       const textoCompleto = `Certificamos que ${(nome || '').toUpperCase()}, CPF ${cpf || 'N/A'}, participou da Atividade de Extensão ${(curso || '').toUpperCase()}${speakersText}, na função de ${(role || 'PARTICIPANTE').toUpperCase()}, com ${workloadText} de atividades desenvolvidas. A atividade foi realizada ${dataEvento ? 'no dia ' + dataEvento : 'conforme programação'}.`;
       doc.text(textoCompleto, leftMargin, topStart, { align: 'left', width: textWidth, lineGap: 4 });
 
