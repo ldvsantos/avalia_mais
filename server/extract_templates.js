@@ -1,14 +1,43 @@
 const fs = require('fs');
 const path = require('path');
-const XLSX = require('xlsx');
+const ExcelJS = require('exceljs');
 const pdfParse = require('pdf-parse');
 
 const TEMPLATES_DIR = path.join(__dirname, '..', 'templates');
 
-function safeReadXlsx(file) {
+function normalizeCellValue(v) {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return v;
+  if (v instanceof Date) return v.toISOString();
+
+  // ExcelJS pode retornar objetos (richText, hyperlink, formula, etc.)
+  if (typeof v === 'object') {
+    if (typeof v.text === 'string') return v.text;
+    if (Array.isArray(v.richText)) return v.richText.map(t => t.text || '').join('');
+    if (typeof v.result === 'string' || typeof v.result === 'number') return v.result;
+    if (typeof v.hyperlink === 'string') return v.text || v.hyperlink;
+    if (typeof v.formula === 'string') return v.result != null ? v.result : v.formula;
+  }
+
+  return String(v);
+}
+
+async function safeReadXlsx(file) {
   try {
-    const wb = XLSX.readFile(file);
-    const sheets = wb.SheetNames.map(name => ({ name, rows: XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1 }) }));
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.readFile(file);
+
+    const sheets = (wb.worksheets || []).map(ws => {
+      const rows = [];
+      ws.eachRow({ includeEmpty: true }, (row) => {
+        // row.values é 1-based; remove o primeiro elemento vazio
+        const values = Array.isArray(row.values) ? row.values.slice(1) : [];
+        rows.push(values.map(normalizeCellValue));
+      });
+      return { name: ws.name, rows };
+    });
+
     return sheets;
   } catch (e) {
     return { error: String(e.message || e) };
@@ -100,14 +129,14 @@ async function main() {
   const editalPdf = path.join(TEMPLATES_DIR, 'EDITAL DE SELEÇÃO PARA ALUNO REGULAR PLANTERR 2026 - VF.pdf');
 
   if (fs.existsSync(fichaProjetoXlsx)) {
-    const sheets = safeReadXlsx(fichaProjetoXlsx);
+    const sheets = await safeReadXlsx(fichaProjetoXlsx);
     out.projectCriteria = extractFromFichaProjeto(sheets);
   } else {
     out.projectCriteria = { error: 'Arquivo não encontrado' };
   }
 
   if (fs.existsSync(demaisFasesXlsx)) {
-    const sheets = safeReadXlsx(demaisFasesXlsx);
+    const sheets = await safeReadXlsx(demaisFasesXlsx);
     out.otherPhases = extractFromDemaisFases(sheets);
   } else {
     out.otherPhases = { error: 'Arquivo não encontrado' };
