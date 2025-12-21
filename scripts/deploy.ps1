@@ -151,6 +151,23 @@ foreach ($cmd in @('ssh', 'scp', 'tar')) {
 
 Push-Location $repoRoot
 try {
+  # Testa SSH o quanto antes para evitar commits/push acidentais quando o servidor está inacessível.
+  Write-Host "Testando conectividade SSH: ${Server}:$SshPort ..." -ForegroundColor DarkGray
+  $timeoutMs = [Math]::Max(1000, $SshConnectTimeoutSeconds * 1000)
+  $canConnectEarly = TestTcpPort -ComputerName $Server -Port $SshPort -TimeoutMs $timeoutMs
+  if (-not $canConnectEarly) {
+    Fail (
+      "Não foi possível conectar em ${Server}:$SshPort (TCP). " +
+      "Isso normalmente é Security Group/NACL bloqueando a porta 22, IP público errado, instância desligada, ou rede local bloqueando SSH.\n\n" +
+      "Checklist rápido:\n" +
+      "- Confirme o IP público atual da EC2 (pode ter mudado)\n" +
+      "- AWS Security Group: inbound TCP 22 liberado para SEU IP\n" +
+      "- NACL/Firewall da VPC liberando TCP 22\n" +
+      "- Se estiver em rede corporativa, teste via 4G/VPN (algumas redes bloqueiam 22)\n\n" +
+      "Teste manual: Test-NetConnection -ComputerName ${Server} -Port $SshPort"
+    )
+  }
+
   if (-not $SkipGit) {
     if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
       Fail 'Git não encontrado. Instale o Git ou rode com -SkipGit.'
@@ -166,6 +183,11 @@ try {
 
     $statusPorcelain = git status --porcelain
     if ($statusPorcelain) {
+      # Nunca permitir commitar dados persistentes do servidor.
+      if ($statusPorcelain -match "\sserver/data/") {
+        Fail "Há alterações em 'server/data/'. Esses dados não devem ser commitados/deployados.\n\nPendências:\n$statusPorcelain\n\nDica: git checkout -- server/data"
+      }
+
       if ($AutoCommit) {
         if (-not $CommitMessage) {
           $CommitMessage = Read-Host 'Digite a mensagem do commit (obrigatório)'
@@ -250,22 +272,8 @@ try {
   $pkgSize = (Get-Item $archiveLocal).Length
   $pkgSizeMB = "{0:N2}" -f ($pkgSize / 1MB)
   Write-Host "Tamanho do pacote: $pkgSizeMB MB" -ForegroundColor Yellow
-
-  Write-Host "Testando conectividade SSH: ${Server}:$SshPort ..." -ForegroundColor DarkGray
-  $timeoutMs = [Math]::Max(1000, $SshConnectTimeoutSeconds * 1000)
-  $canConnect = TestTcpPort -ComputerName $Server -Port $SshPort -TimeoutMs $timeoutMs
-  if (-not $canConnect) {
-    Fail (
-      "Não foi possível conectar em ${Server}:$SshPort (TCP). " +
-      "Isso normalmente é Security Group/NACL bloqueando a porta 22, IP público errado, instância desligada, ou rede local bloqueando SSH.\n\n" +
-      "Checklist rápido:\n" +
-      "- Confirme o IP público atual da EC2 (pode ter mudado)\n" +
-      "- AWS Security Group: inbound TCP $SshPort liberado para SEU IP\n" +
-      "- NACL/Firewall da VPC liberando TCP $SshPort\n" +
-      "- Se estiver em rede corporativa, teste via 4G/VPN (algumas redes bloqueiam 22)\n\n" +
-      "Teste manual: Test-NetConnection -ComputerName $Server -Port $SshPort"
-    )
-  }
+  
+  # SSH já foi testado antes (antes de git/empacotar) para evitar commits quando offline.
 
   Write-Host "Iniciando upload para $Server..." -ForegroundColor Cyan
   $scpTime = Measure-Command {
