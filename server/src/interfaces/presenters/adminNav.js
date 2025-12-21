@@ -87,11 +87,36 @@ function renderAdminNav({ adminSecret, active } = {}) {
 
       /* Em telas pequenas */
       @media (max-width: 820px) {
-        /* Em mobile, evita sobrepor o cabeçalho (que pode quebrar linha) */
-        nav.admin-menu-wrap { height: 44px; margin: 8px 0 0; }
-        label.admin-menu-btn { position: absolute; top: 8px; right: 8px; }
-        label.admin-menu-btn .btn-secondary { padding: 10px 14px; }
-        .admin-drawer { top: 44px; z-index: 100; width: 320px; max-width: 92vw; }
+        nav.admin-menu-wrap { 
+          height: 50px; 
+          margin: 0 0 10px 0; 
+          background-color: #f8f9fa; 
+          border-bottom: 1px solid #dee2e6;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding-right: 10px;
+        }
+        label.admin-menu-btn { 
+          position: static; 
+          margin: 0;
+        }
+        label.admin-menu-btn .btn-secondary { 
+          padding: 8px 12px; 
+          background: white;
+          border: 1px solid #ced4da;
+        }
+        .admin-drawer { 
+          position: fixed;
+          top: 0; 
+          right: 0;
+          height: 100vh;
+          z-index: 9999; 
+          width: 280px; 
+          max-width: 85vw; 
+          border-radius: 0;
+          box-shadow: -2px 0 10px rgba(0,0,0,0.2);
+        }
       }
     </style>
     <nav class="admin-menu-wrap" aria-label="Menu administrativo">

@@ -47,7 +47,7 @@
       '.public-drawer-links { display: flex; flex-direction: column; gap: 8px; }' +
       '.public-drawer .btn-primary, .public-drawer .btn-secondary { max-width: 100%; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }' +
       '.public-menu-toggle:checked ~ .public-drawer { opacity: 1; visibility: visible; transform: translateX(0); pointer-events: auto; }' +
-      '@media (max-width: 820px) { nav.public-menu-wrap { height: 44px; margin: 8px 0 0; } label.public-menu-btn { position: absolute; top: 8px; right: 8px; } label.public-menu-btn .btn-secondary { padding: 10px 14px; } .public-drawer { top: 44px; z-index: 100; width: 320px; max-width: 92vw; } }' +
+      '@media (max-width: 820px) { nav.public-menu-wrap { height: 50px; margin: 0 0 10px 0; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; } label.public-menu-btn { position: static; margin: 0; } label.public-menu-btn .btn-secondary { padding: 8px 12px; background: white; border: 1px solid #ced4da; } .public-drawer { position: fixed; top: 0; right: 0; height: 100vh; z-index: 9999; width: 280px; max-width: 85vw; border-radius: 0; box-shadow: -2px 0 10px rgba(0,0,0,0.2); } }' +
       '</style>' +
       '<nav class="public-menu-wrap" aria-label="Menu">' +
       '<input class="public-menu-toggle" type="checkbox" id="' +
