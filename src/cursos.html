@@ -9,27 +9,27 @@
     <script src="nav-back.js?v=20251221-1" defer></script>
     <style>
         .course-list {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
             margin-top: 8px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            overflow: hidden;
+        }
+
+        @media (min-width: 600px) {
+            .course-list {
+                grid-template-columns: 1fr 1fr;
+            }
         }
 
         .course-item {
             background: white;
-            padding: 14px 16px;
             display: flex;
-            gap: 12px;
-            align-items: flex-start;
+            flex-direction: column;
             text-decoration: none;
             color: inherit;
-            border-bottom: 1px solid #eee;
-        }
-
-        .course-item:last-child {
-            border-bottom: none;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .course-item:hover {
@@ -37,11 +37,8 @@
         }
 
         .course-thumb {
-            width: 84px;
-            height: 84px;
-            flex: 0 0 auto;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
             overflow: hidden;
             background: #f0f0f0;
         }
@@ -54,6 +51,7 @@
         }
 
         .course-info {
+            padding: 12px 12px 14px;
             min-width: 0;
             flex: 1 1 auto;
         }
@@ -136,7 +134,7 @@
                         return;
                     }
 
-                    list.style.display = 'flex';
+                    list.style.display = 'grid';
                     list.innerHTML = '';
 
                     events.forEach(e => {
