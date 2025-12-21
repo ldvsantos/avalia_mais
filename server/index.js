@@ -50,6 +50,7 @@ const EventController = require('./src/interfaces/http/controllers/EventControll
 const AdminController = require('./src/interfaces/controllers/AdminController');
 const AdminDashboardPresenter = require('./src/interfaces/presenters/AdminDashboardPresenter');
 const { renderAdminNav } = require('./src/interfaces/presenters/adminNav');
+const { renderPublicNav } = require('./src/interfaces/presenters/publicNav');
 const ListSubmissions = require('./src/application/ListSubmissions');
 const ListEvaluations = require('./src/application/ListEvaluations');
 const ListAppeals = require('./src/application/ListAppeals');
@@ -2785,6 +2786,19 @@ app.get('/eventos/:id', async (req, res) => {
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
         </header>
+
+        ${renderPublicNav({
+          active: 'event',
+          toggleIdSuffix: `event-${event.id}`,
+          title: 'Menu do Evento',
+          ariaLabel: 'Menu do evento',
+          items: [
+            { key: 'home', href: '/', label: 'Início' },
+            { key: 'event', href: `/eventos/${event.id}`, label: 'Página do evento' },
+            { key: 'signup', href: '#inscricao', label: 'Inscrever-se' },
+            { key: 'cert', href: '#certificado', label: 'Gerar certificado' },
+          ],
+        })}
         <section class="panel">
           <div class="panel-header"><h2>${escapeHtml(event.title)}</h2></div>
           <div class="panel-body">
@@ -2801,7 +2815,7 @@ app.get('/eventos/:id', async (req, res) => {
             ${activitiesHtml}
             
             <hr />
-            <h3>Inscreva-se</h3>
+            <h3 id="inscricao">Inscreva-se</h3>
             <form method="POST" action="/eventos/${event.id}/inscrever">
               <div class="form-group">
                 <label>Nome Completo</label>
@@ -2820,7 +2834,7 @@ app.get('/eventos/:id', async (req, res) => {
             </form>
 
             <hr />
-            <h3>Gerar Certificado</h3>
+            <h3 id="certificado">Gerar Certificado</h3>
             <p>Digite o mesmo CPF usado na inscrição para gerar seu certificado.</p>
             <form method="POST" action="/eventos/${event.id}/certificado" target="_blank">
               <div class="form-group">
@@ -2855,6 +2869,17 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
         <head><link rel="stylesheet" href="/theme.css" /></head>
         <body>
           <div class="container" style="text-align:center; margin-top:50px;">
+            ${renderPublicNav({
+              active: 'event',
+              toggleIdSuffix: `event-dup-${event.id}`,
+              title: 'Menu do Evento',
+              ariaLabel: 'Menu do evento',
+              buttonOffsetTop: 10,
+              items: [
+                { key: 'home', href: '/', label: 'Início' },
+                { key: 'event', href: `/eventos/${event.id}`, label: 'Página do evento' },
+              ],
+            })}
             <h1>Atenção</h1>
             <p>O CPF <strong>${escapeHtml(cpf)}</strong> já está inscrito neste evento.</p>
             <a href="/eventos/${event.id}" class="btn-primary">Voltar</a>
@@ -2880,6 +2905,17 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
     <head><link rel="stylesheet" href="/theme.css" /></head>
     <body>
       <div class="container" style="text-align:center; margin-top:50px;">
+        ${renderPublicNav({
+          active: 'home',
+          toggleIdSuffix: `event-ok-${event.id}`,
+          title: 'Menu',
+          ariaLabel: 'Menu',
+          buttonOffsetTop: 10,
+          items: [
+            { key: 'home', href: '/', label: 'Início' },
+            { key: 'event', href: `/eventos/${event.id}`, label: 'Página do evento' },
+          ],
+        })}
         <h1>Inscrição Confirmada!</h1>
         <p>Obrigado, ${escapeHtml(nome)}. Sua inscrição no evento <strong>${escapeHtml(event.title)}</strong> foi realizada com sucesso.</p>
         <a href="/" class="btn-primary">Voltar ao Início</a>
@@ -2907,6 +2943,17 @@ app.post('/eventos/:id/certificado', apiLimiter, async (req, res) => {
         <head><link rel="stylesheet" href="/theme.css" /></head>
         <body>
           <div class="container" style="text-align:center; margin-top:50px;">
+            ${renderPublicNav({
+              active: 'event',
+              toggleIdSuffix: `event-nf-${event.id}`,
+              title: 'Menu do Evento',
+              ariaLabel: 'Menu do evento',
+              buttonOffsetTop: 10,
+              items: [
+                { key: 'home', href: '/', label: 'Início' },
+                { key: 'event', href: `/eventos/${event.id}`, label: 'Página do evento' },
+              ],
+            })}
             <h1>Não encontrado</h1>
             <p>Não encontramos inscrição para este CPF neste evento.</p>
             <a href="/eventos/${event.id}" class="btn-primary">Voltar</a>
@@ -2935,6 +2982,17 @@ app.post('/eventos/:id/certificado', apiLimiter, async (req, res) => {
         <head><link rel="stylesheet" href="/theme.css" /></head>
         <body>
           <div class="container" style="text-align:center; margin-top:50px;">
+            ${renderPublicNav({
+              active: 'event',
+              toggleIdSuffix: `event-wait-${event.id}`,
+              title: 'Menu do Evento',
+              ariaLabel: 'Menu do evento',
+              buttonOffsetTop: 10,
+              items: [
+                { key: 'home', href: '/', label: 'Início' },
+                { key: 'event', href: `/eventos/${event.id}`, label: 'Página do evento' },
+              ],
+            })}
             <h1>Aguarde</h1>
             <p>O certificado só estará disponível após a data do evento.</p>
             <a href="/eventos/${event.id}" class="btn-primary">Voltar</a>
@@ -2952,6 +3010,17 @@ app.post('/eventos/:id/certificado', apiLimiter, async (req, res) => {
         <head><link rel="stylesheet" href="/theme.css" /></head>
         <body>
           <div class="container" style="text-align:center; margin-top:50px;">
+            ${renderPublicNav({
+              active: 'event',
+              toggleIdSuffix: `event-pres-${event.id}`,
+              title: 'Menu do Evento',
+              ariaLabel: 'Menu do evento',
+              buttonOffsetTop: 10,
+              items: [
+                { key: 'home', href: '/', label: 'Início' },
+                { key: 'event', href: `/eventos/${event.id}`, label: 'Página do evento' },
+              ],
+            })}
             <h1>Presença não confirmada</h1>
             <p>Sua presença ainda não foi confirmada pela organização do evento.</p>
             <p>Entre em contato com a administração se você participou.</p>
@@ -3158,6 +3227,17 @@ app.get('/consulta', (req, res) => {
     </head>
     <body>
       <div class="auth-container">
+        ${renderPublicNav({
+          active: 'consulta',
+          toggleIdSuffix: 'consulta',
+          title: 'Menu',
+          ariaLabel: 'Menu',
+          buttonOffsetTop: 10,
+          items: [
+            { key: 'home', href: '/', label: 'Início' },
+            { key: 'consulta', href: '/consulta', label: 'Consultar inscrição' },
+          ],
+        })}
         <div class="auth-header">
           <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
             <img src="/img/logo_planter.png" alt="Logo PLANTERR">
@@ -3356,6 +3436,20 @@ app.get('/candidato/status', async (req, res) => {
       linha_pesquisa: submission.project?.area || '',
     });
 
+    const candidateMenuItems = [
+      { key: 'home', href: '/', label: 'Início' },
+      { key: 'consulta', href: '/consulta', label: 'Nova consulta' },
+      { key: 'status', href: '/candidato/status', label: 'Minha inscrição' },
+      { key: 'comprovante', href: '/candidato/comprovante.pdf', label: 'Comprovante (PDF)', target: '_blank' },
+      ...(submission.pdfProjeto
+        ? [{ key: 'projeto', href: '/candidato/documento/projeto', label: 'Projeto (PDF)' }]
+        : []),
+      ...(submission.pdfIdioma
+        ? [{ key: 'idioma', href: '/candidato/documento/idioma', label: 'Certificado de Idioma (PDF)' }]
+        : []),
+      { key: 'sair', href: '/candidato/sair', label: 'Sair' },
+    ];
+
     res.send(`
       <!DOCTYPE html>
       <html lang="pt-BR">
@@ -3545,11 +3639,13 @@ app.get('/candidato/status', async (req, res) => {
             </div>
           </header>
 
-          <section class="panel">
-            <div class="panel-body" style="text-align:right;">
-              <a href="/candidato/sair" class="btn-logout">Sair</a>
-            </div>
-          </section>
+          ${renderPublicNav({
+            active: 'status',
+            toggleIdSuffix: `candidato-${submission.protocol || 'status'}`,
+            title: 'Menu do Candidato',
+            ariaLabel: 'Menu do candidato',
+            items: candidateMenuItems,
+          })}
 
           <div class="panel">
             <div class="panel-header">
