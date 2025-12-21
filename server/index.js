@@ -5131,6 +5131,25 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
     finalScoreDisplay = Number.isFinite(finalScore) ? finalScore.toFixed(2) : '';
   }
 
+  function safeValue(value) {
+    const text = String(value ?? '').trim();
+    return text ? escapeHtml(text) : '<span class="muted">—</span>';
+  }
+
+  function safeMultiline(value) {
+    const text = String(value ?? '').trim();
+    if (!text) return '<span class="muted">—</span>';
+    return escapeHtml(text).replace(/\n/g, '<br>');
+  }
+
+  function coalesceProjectField(...values) {
+    for (const v of values) {
+      const text = String(v ?? '').trim();
+      if (text) return text;
+    }
+    return '';
+  }
+
   res.type('html').send(`
     <!doctype html>
     <html lang="pt-BR">
@@ -5140,6 +5159,12 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
       <title>Avaliação - ${escapeHtml(protocol)}</title>
       <link rel="stylesheet" href="/theme.css" />
       <style>
+        .muted { color: #003366; }
+        .sectionTitle { margin: 10px 0 6px; }
+        .box { border: 1px solid #86A3C2; background-color: #fff; padding: 8px; }
+        .kv { width: 100%; border-collapse: collapse; background-color: #fff; }
+        .kv th, .kv td { border: 1px solid #86A3C2; padding: 6px; vertical-align: top; }
+        .kv th { background-color: #D0E5F5; color: #003366; text-align: left; width: 34%; }
         .eval-input {
           width: 100%;
           padding: 6px;
@@ -5181,6 +5206,56 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
             <div><strong>Linha:</strong> ${escapeHtml(s.project?.area || '')}</div>
           </div>
         </section>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Projeto (blind review)</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            <table class="kv" role="table">
+              <tbody>
+                <tr><th>Título (PT)</th><td>${safeValue(s.project?.titulo_pt)}</td></tr>
+                <tr><th>Título (EN)</th><td>${safeValue(s.project?.titulo_en)}</td></tr>
+                <tr><th>Área</th><td>${safeValue(s.project?.area)}</td></tr>
+                <tr><th>Palavras-chave (PT)</th><td>${safeValue(s.project?.palavras_pt)}</td></tr>
+                <tr><th>Keywords (EN)</th><td>${safeValue(s.project?.palavras_en)}</td></tr>
+              </tbody>
+            </table>
+
+            <div class="sectionTitle"><strong>Justificativa para enquadramento na linha de pesquisa</strong></div>
+            <div class="box">${safeMultiline(s.project?.justificativa_enquadramento)}</div>
+
+            <div class="sectionTitle"><strong>Resumo</strong></div>
+            <div class="box">${safeMultiline(s.project?.resumo)}</div>
+
+            <div class="sectionTitle"><strong>1 – Introdução / Contextualização</strong></div>
+            <div class="box">${safeMultiline(s.project?.introducao)}</div>
+
+            <div class="sectionTitle"><strong>2 – Problema ou questão de pesquisa</strong></div>
+            <div class="box">${safeMultiline(s.project?.problema_pesquisa)}</div>
+
+            <div class="sectionTitle"><strong>3 – Justificativa (relevância do tema)</strong></div>
+            <div class="box">${safeMultiline(s.project?.justificativa_relevancia)}</div>
+
+            <div class="sectionTitle"><strong>4 – Objetivos</strong></div>
+            <div class="sectionTitle"><strong>Objetivo geral</strong></div>
+            <div class="box">${safeMultiline(coalesceProjectField(s.project?.objetivo_geral, s.project?.objetivos_geral_especificos, s.project?.objetivos))}</div>
+
+            <div class="sectionTitle"><strong>Objetivos específicos</strong></div>
+            <div class="box">${safeMultiline(coalesceProjectField(s.project?.objetivos_especificos))}</div>
+
+            <div class="sectionTitle"><strong>5 – Revisão da literatura</strong></div>
+            <div class="box">${safeMultiline(s.project?.revisao_literatura)}</div>
+
+            <div class="sectionTitle"><strong>6 – Procedimentos metodológicos</strong></div>
+            <div class="box">${safeMultiline(s.project?.procedimentos_metodologicos)}</div>
+
+            <div class="sectionTitle"><strong>7 – Cronograma</strong></div>
+            <div class="box">${safeMultiline(s.project?.cronograma)}</div>
+
+            <div class="sectionTitle"><strong>8 – Referências (ABNT)</strong></div>
+            <div class="box">${safeMultiline(s.project?.referencias)}</div>
+          </div>
+        </section>
+
         <section class="panel">
           <div class="panel-header"><h2>Avaliação</h2></div>
           <div class="panel-body">
