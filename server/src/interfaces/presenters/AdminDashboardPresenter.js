@@ -702,6 +702,8 @@ class AdminDashboardPresenter {
             </div>
           </header>
 
+          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'selection' })}
+
           <section class="panel">
             <div class="panel-header"><h2>Calendário de Inscrições</h2></div>
             <div class="panel-body">
@@ -763,8 +765,6 @@ class AdminDashboardPresenter {
             <div class="panel-header"><h2>Busca e filtros</h2></div>
             <div class="panel-body">
               <div class="hint">Dica: clique no protocolo para ver detalhes, status e verificação.</div>
-
-              ${renderAdminNav({ adminSecret: this.adminSecret, active: 'selection' })}
               <form method="GET" action="/secret/${this.adminSecret}/admin/selection">
                 <div class="filters-grid" style="margin-top: 8px;">
                   <div class="form-group" style="margin-bottom: 0;">
