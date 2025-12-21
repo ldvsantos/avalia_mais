@@ -34,6 +34,38 @@
       "status": "APROVADO",
       "score": null,
       "updatedAt": "2025-12-18T11:05:38.259Z"
+    },
+    {
+      "year": 2025,
+      "submissionProtocol": "PLANTERR-2025-927B",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-21T15:40:43.787Z"
+    },
+    {
+      "year": 2025,
+      "submissionProtocol": "PLANTERR-2025-A2EC",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-21T15:40:43.792Z"
+    },
+    {
+      "year": 2025,
+      "submissionProtocol": "PLANTERR-2025-9155",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-21T15:40:43.796Z"
+    },
+    {
+      "year": 2025,
+      "submissionProtocol": "PLANTERR-2025-EE39",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-21T15:40:43.801Z"
     }
   ]
 }
