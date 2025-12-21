@@ -34,7 +34,7 @@ function renderAdminNav({ adminSecret, active } = {}) {
       /* Botão do menu (hambúrguer) */
       label.admin-menu-btn { 
         position: absolute; 
-        left: 10px; 
+        right: 10px;
         top: -65px; /* Sobe para ficar na linha do header */
         z-index: 61; 
         cursor: pointer; 
@@ -45,18 +45,19 @@ function renderAdminNav({ adminSecret, active } = {}) {
       .admin-drawer { 
         position: absolute; 
         top: 0; 
-        left: 0; 
+        right: 0;
+        left: auto;
         width: 280px; 
         max-width: 85vw; 
         background: white;
         border: 1px solid #ddd;
         box-shadow: 4px 4px 12px rgba(0,0,0,0.15);
-        border-radius: 0 0 8px 0;
+        border-radius: 0 0 0 8px;
         
         /* Estado Fechado: invisível e levemente deslocado */
         opacity: 0;
         visibility: hidden;
-        transform: translateX(-20px);
+        transform: translateX(20px);
         transition: all 0.2s ease-in-out;
         pointer-events: none;
         box-sizing: border-box;
@@ -86,7 +87,7 @@ function renderAdminNav({ adminSecret, active } = {}) {
 
       /* Em telas pequenas */
       @media (max-width: 820px) {
-        nav.admin-menu-wrap { height: auto; margin: 10px 0; }
+        nav.admin-menu-wrap { height: auto; margin: 10px 0; display: flex; justify-content: flex-end; }
         label.admin-menu-btn { position: static; display: inline-block; margin-bottom: 0; }
         .admin-drawer { top: 10px; z-index: 100; }
       }
