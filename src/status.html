@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status do Sistema - PLANTERR</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        .status-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        .status-operational {
+            background-color: #28a745;
+            box-shadow: 0 0 10px #28a745;
+        }
+        .status-maintenance {
+            background-color: #ffc107;
+            box-shadow: 0 0 10px #ffc107;
+        }
+        .status-outage {
+            background-color: #dc3545;
+            box-shadow: 0 0 10px #dc3545;
+        }
+        .status-title {
+            font-size: 24px;
+            color: #003366;
+            margin-bottom: 20px;
+        }
+        .status-message {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .service-list {
+            list-style: none;
+            padding: 0;
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: left;
+        }
+        .service-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .service-item:last-child {
+            border-bottom: none;
+        }
+        .service-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .service-status {
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+            <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <h1>AVALIA+</h1>
+            <img src="img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="status-container">
+            <h1 class="status-title">Status do Sistema</h1>
+            
+            <!-- Alterar classe para status-maintenance ou status-outage conforme necessário -->
+            <div id="main-status-icon" class="status-indicator status-operational"></div>
+            <span id="main-status-text" style="font-size: 20px; font-weight: bold; vertical-align: middle;">Todos os sistemas operacionais</span>
+
+            <p class="status-message">
+                O sistema AVALIA+ está funcionando normalmente. Caso encontre algum problema, entre em contato com o suporte.
+            </p>
+
+            <div class="panel">
+                <div class="panel-header"><h2>Serviços</h2></div>
+                <div class="panel-body">
+                    <ul class="service-list">
+                        <li class="service-item">
+                            <span class="service-name">Inscrições</span>
+                            <span class="service-status" style="color: #28a745;">Operacional</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">Consulta de Protocolo</span>
+                            <span class="service-status" style="color: #28a745;">Operacional</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">Área do Avaliador</span>
+                            <span class="service-status" style="color: #28a745;">Operacional</span>
+                        </li>
+                        <li class="service-item">
+                            <span class="service-name">Banco de Dados</span>
+                            <span class="service-status" style="color: #28a745;">Operacional</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer style="text-align: center; margin-top: 40px; margin-bottom: 20px; color: #777; font-size: 0.9em;">
+        <p>&copy; 2025 PLANTERR/UEFS. Todos os direitos reservados.</p>
+    </footer>
+</body>
+</html>

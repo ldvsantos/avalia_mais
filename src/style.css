@@ -397,3 +397,45 @@ textarea {
         border-radius: 4px;
     }
 }
+
+/* Loading Spinner */
+.spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-loading {
+    opacity: 0.7;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+/* Success Message Highlight */
+.success-highlight {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 20px;
+    border: 1px solid transparent;
+    text-align: center;
+    font-size: 14px;
+}
+
+.success-highlight strong {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 10px;
+}

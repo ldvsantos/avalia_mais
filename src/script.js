@@ -1038,7 +1038,11 @@ async function generatePDF() {
     // Feedback visual imediato
     const btn = document.getElementById('btn-generate-pdf');
     const originalText = btn ? btn.innerText : 'Enviar Inscrição e Gerar PDF';
-    if (btn) { btn.disabled = true; btn.innerText = 'Registrando...'; }
+    if (btn) { 
+        btn.disabled = true; 
+        btn.classList.add('btn-loading');
+        btn.innerHTML = '<span class="spinner"></span> Registrando...'; 
+    }
 
     let serverReceipt;
     try {
@@ -1752,6 +1756,28 @@ document.addEventListener('DOMContentLoaded', () => {
         if (max) {
             updateCounter(textarea, parseInt(max));
         }
+    });
+
+    // Paste handling to remove formatting
+    document.querySelectorAll('textarea, input[type="text"]').forEach(el => {
+        el.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const text = (e.clipboardData || window.clipboardData).getData('text');
+            // Normaliza quebras de linha e remove caracteres estranhos se necessário
+            const cleanText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            
+            // Insert text at cursor position
+            const start = el.selectionStart;
+            const end = el.selectionEnd;
+            const value = el.value;
+            el.value = value.substring(0, start) + cleanText + value.substring(end);
+            
+            // Move cursor to end of pasted text
+            el.selectionStart = el.selectionEnd = start + cleanText.length;
+            
+            // Trigger input event for counters/validation
+            el.dispatchEvent(new Event('input'));
+        });
     });
 
     const cpfInput = document.getElementById('cpf');

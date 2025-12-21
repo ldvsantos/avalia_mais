@@ -6805,6 +6805,16 @@ app.get(['/admin', '/administrator', '/login', '/wp-admin', '/committee'], (req,
   }, 2000);
 });
 
+// Rota de Status
+app.get('/status', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'src', 'status.html'));
+});
+
+// 404 Handler - Deve ser o último
+app.use((req, res, next) => {
+    res.status(404).sendFile(path.join(__dirname, '..', 'src', '404.html'));
+});
+
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`\n🚀 Servidor rodando em http://localhost:${PORT}`);
