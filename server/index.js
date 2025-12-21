@@ -5855,7 +5855,8 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
 
         ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'selection' })}
 
-        <div class="admin-actions" style="justify-content: center; margin-bottom: 10px;">
+        <div class="admin-actions" style="justify-content: center; margin-bottom: 10px; gap: 8px;">
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar para Lista</a>
           <button class="btn-secondary" type="button" id="print-btn">Imprimir / Salvar em PDF</button>
           <span class="admin-badge">Protocolo: <span class="mono" id="protocol">${escapeHtml(protocol)}</span></span>
           <span class="admin-badge">Status integridade: ${hashValid ? 'Íntegra (hash confere)' : 'Atenção: hash não confere'}</span>
@@ -5990,6 +5991,18 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
 
           <div class="sectionTitle"><strong>Objetivos específicos</strong></div>
           <div class="box">${safeMultiline(coalesceProjectField(record.project?.objetivos_especificos))}</div>
+
+          <div class="sectionTitle"><strong>5 – Revisão da literatura</strong></div>
+          <div class="box">${safeMultiline(record.project?.revisao_literatura)}</div>
+
+          <div class="sectionTitle"><strong>6 – Procedimentos metodológicos</strong></div>
+          <div class="box">${safeMultiline(record.project?.procedimentos_metodologicos)}</div>
+
+          <div class="sectionTitle"><strong>7 – Cronograma</strong></div>
+          <div class="box">${safeMultiline(record.project?.cronograma)}</div>
+
+          <div class="sectionTitle"><strong>8 – Referências (ABNT)</strong></div>
+          <div class="box">${safeMultiline(record.project?.referencias)}</div>
             </div>
           </section>
         </div>
