@@ -5,7 +5,7 @@ const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 class JsonFaqRepository {
   constructor(dataDir) {
     this.dataDir = dataDir;
-    this.filePath = path.join(dataDir, 'faq.json');
+    this.filePath = path.join(dataDir, 'faq_v2.json');
     this.ensureFile();
   }
 
