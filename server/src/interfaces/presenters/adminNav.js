@@ -27,20 +27,23 @@ function renderAdminNav({ adminSecret, active } = {}) {
 
   return `
     <style>
-      /* Botão no topo-direita do header */
+      /* Menu dentro da caixa central (container) */
       nav.admin-menu-wrap { position: relative; height: 0; margin: 0; }
       .admin-menu-toggle { position: absolute; left: -9999px; }
-      label.admin-menu-btn { position: absolute; right: 12px; top: -64px; z-index: 60; cursor: pointer; }
+      label.admin-menu-btn { position: absolute; left: 12px; top: -64px; z-index: 60; cursor: pointer; }
       label.admin-menu-btn .btn-secondary { display: inline-flex; align-items: center; justify-content: center; }
 
       /* Drawer lateral */
-      .admin-drawer { position: fixed; top: 0; left: -340px; height: 100vh; width: 320px; max-width: 85vw; z-index: 70; transition: left 0.2s ease-in-out; }
+      .admin-drawer { position: absolute; top: 0; left: -340px; width: 320px; max-width: 85vw; z-index: 70; transition: left 0.2s ease-in-out; }
       .admin-drawer-inner { height: 100%; overflow: auto; padding: 12px; }
       .admin-drawer-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
       .admin-drawer-links { display: flex; flex-direction: column; gap: 8px; }
 
       /* Quando aberto */
       .admin-menu-toggle:checked ~ .admin-drawer { left: 0; }
+
+      /* Altura do drawer acompanhando a tela, mas dentro do container */
+      .admin-menu-wrap .admin-drawer { height: calc(100vh - 140px); }
 
       /* Em telas pequenas, evita sobreposição no header e coloca o botão no fluxo */
       @media (max-width: 820px) {
