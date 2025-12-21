@@ -25,16 +25,24 @@ function renderAdminNav({ adminSecret, active } = {}) {
 
   return `
     <style>
-      details.admin-menu > summary { list-style: none; }
-      details.admin-menu > summary::-webkit-details-marker { display: none; }
+      /* Menu hambúrguer no topo-direita (barra do cabeçalho) */
+      .container { position: relative; }
+      details.admin-menu-float { position: absolute; top: 12px; right: 12px; z-index: 50; }
+      details.admin-menu-float > summary { list-style: none; }
+      details.admin-menu-float > summary::-webkit-details-marker { display: none; }
+      details.admin-menu-float .admin-menu-trigger { display: inline-flex; align-items: center; gap: 6px; }
+      details.admin-menu-float .admin-menu-panel { margin-top: 8px; }
+      details.admin-menu-float .admin-menu-panel .admin-actions { justify-content: flex-end; }
     </style>
-    <details class="admin-box admin-menu" style="margin: 10px 0;" aria-label="Menu administrativo">
-      <summary class="admin-actions" style="justify-content:center; cursor:pointer;">
-        <span class="btn-secondary">\u2630 Menu</span>
+    <details class="admin-menu-float" aria-label="Menu administrativo">
+      <summary class="admin-menu-trigger">
+        <span class="btn-secondary" aria-label="Abrir menu">\u2630</span>
       </summary>
-      <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
-        ${linkHtml}
-        <a class="btn-secondary" href="${base}/logout">Sair</a>
+      <div class="admin-box admin-menu-panel">
+        <div class="admin-actions" style="justify-content:flex-end;">
+          ${linkHtml}
+          <a class="btn-secondary" href="${base}/logout">Sair</a>
+        </div>
       </div>
     </details>
   `;
