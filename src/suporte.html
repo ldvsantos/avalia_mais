@@ -128,113 +128,67 @@
         <h2 class="section-title">Problemas comuns</h2>
         <section class="panel">
             <div class="panel-body">
-                <div class="faq-accordion">
-                    <details class="faq">
-                        <summary>Não recebi o e-mail de confirmação</summary>
-                        <div class="faq-answer">
-                            <p>
-                                Verifique <strong>Spam/Lixo</strong> e a aba “Promoções”. Se você digitou o e-mail incorretamente, o sistema não consegue reenviar para outro endereço.
-                                Nesse caso, contate a comissão conforme Edital.
-                            </p>
-                        </div>
-                    </details>
-
-                    <details class="faq">
-                        <summary>Perdi meu protocolo</summary>
-                        <div class="faq-answer">
-                            <p>
-                                O protocolo fica no <strong>PDF gerado</strong> ao final da inscrição. Procure no download do navegador ou no histórico de arquivos do computador.
-                                Se não encontrar, contate a comissão conforme Edital.
-                            </p>
-                        </div>
-                    </details>
-
-                    <details class="faq">
-                        <summary>“Enviei e voltou para revisar”</summary>
-                        <div class="faq-answer">
-                            <p>
-                                Isso ocorre quando algum campo obrigatório está incompleto/ inválido.
-                                O formulário destaca o campo e leva o foco para o primeiro erro.
-                            </p>
-                        </div>
-                    </details>
-
-                    <details class="faq">
-                        <summary>Não consigo consultar minha inscrição</summary>
-                        <div class="faq-answer">
-                            <p>
-                                Use o <strong>protocolo</strong> exatamente como aparece no PDF. Se ainda assim falhar, tente novamente em outro navegador.
-                            </p>
-                        </div>
-                    </details>
-
-                    <details class="faq">
-                        <summary>O botão de enviar está desativado</summary>
-                        <div class="faq-answer">
-                            <p>
-                                As inscrições podem estar <strong>fora do prazo</strong>. Confira o calendário/cronograma no portal e no Edital.
-                            </p>
-                        </div>
-                    </details>
-
-                    <details class="faq">
-                        <summary>Erro ao enviar recurso</summary>
-                        <div class="faq-answer">
-                            <p>
-                                Confirme se o <strong>protocolo de inscrição</strong> está correto e se a etapa do recurso está <strong>em prazo</strong>.
-                                O sistema pode bloquear etapas fora do prazo.
-                            </p>
-                        </div>
-                    </details>
-                </div>
+                <p class="muted" id="faq-loading" style="margin:0; text-align:center;">Carregando perguntas...</p>
+                <div class="faq-accordion" id="faq-problems" style="display:none;"></div>
             </div>
         </section>
 
         <h2 class="section-title">Perguntas frequentes (FAQ)</h2>
         <section class="panel">
             <div class="panel-body">
-                <div class="faq-accordion">
-                    <details class="faq">
-                        <summary>Como sei que minha inscrição foi registrada?</summary>
-                        <div class="faq-answer">
-                            <p>
-                                Ao concluir, o sistema mostra um <strong>protocolo</strong> e um <strong>hash (SHA-256)</strong>, além de gerar um PDF com esses dados.
-                            </p>
-                        </div>
-                    </details>
-
-                    <details class="faq">
-                        <summary>O que é o hash?</summary>
-                        <div class="faq-answer">
-                            <p>
-                                É um código de verificação calculado a partir do registro da inscrição.
-                                Ele serve para dar integridade ao comprovante (não é senha).
-                            </p>
-                        </div>
-                    </details>
-
-                    <details class="faq">
-                        <summary>Posso editar a inscrição depois de enviar?</summary>
-                        <div class="faq-answer">
-                            <p>
-                                Em geral, não. Por isso existe a etapa de <strong>revisão</strong> antes do envio.
-                                Para exceções, siga o que o Edital permitir.
-                            </p>
-                        </div>
-                    </details>
-
-                    <details class="faq">
-                        <summary>O que devo anexar?</summary>
-                        <div class="faq-answer">
-                            <p>
-                                As exigências variam por perfil (vaga reservada, vínculo empregatício etc.).
-                                O formulário sinaliza os anexos condicionais, mas a regra final é a do Edital.
-                            </p>
-                        </div>
-                    </details>
-                </div>
+                <div class="faq-accordion" id="faq-faq" style="display:none;"></div>
             </div>
         </section>
+
+        <script>
+            function escapeHtml(s) {
+                return String(s || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function renderAccordion(container, items) {
+                container.innerHTML = '';
+                (items || []).forEach(it => {
+                    const q = escapeHtml(it && it.question ? it.question : '');
+                    const a = escapeHtml(it && it.answer ? it.answer : '');
+                    if (!q || !a) return;
+
+                    const details = document.createElement('details');
+                    details.className = 'faq';
+                    details.innerHTML =
+                        '<summary>' + q + '</summary>' +
+                        '<div class="faq-answer"><p>' + a.replace(/\n/g, '<br>') + '</p></div>';
+                    container.appendChild(details);
+                });
+            }
+
+            fetch('/api/public-faq')
+                .then(r => r.json())
+                .then(data => {
+                    const loading = document.getElementById('faq-loading');
+                    const problems = document.getElementById('faq-problems');
+                    const faq = document.getElementById('faq-faq');
+
+                    const sections = data && Array.isArray(data.sections) ? data.sections : [];
+                    const problemsSection = sections.find(s => s && s.id === 'problems') || null;
+                    const faqSection = sections.find(s => s && s.id === 'faq') || null;
+
+                    renderAccordion(problems, problemsSection && Array.isArray(problemsSection.items) ? problemsSection.items : []);
+                    renderAccordion(faq, faqSection && Array.isArray(faqSection.items) ? faqSection.items : []);
+
+                    if (loading) loading.style.display = 'none';
+                    problems.style.display = 'flex';
+                    faq.style.display = 'flex';
+                })
+                .catch(() => {
+                    const loading = document.getElementById('faq-loading');
+                    if (loading) loading.textContent = 'Não foi possível carregar as perguntas no momento.';
+                });
+        </script>
 
         <div style="text-align:center; margin-top:24px; margin-bottom:24px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
             <a href="selecao.html" class="btn-primary">Voltar ao Portal da Seleção</a>

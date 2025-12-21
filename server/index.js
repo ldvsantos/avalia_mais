@@ -30,6 +30,7 @@ const JsonCandidatePhaseStatusRepository = require('./src/infrastructure/reposit
 const SqlCandidatePhaseStatusRepository = require('./src/infrastructure/repositories/SqlCandidatePhaseStatusRepository');
 const JsonPublicFileRepository = require('./src/infrastructure/repositories/JsonPublicFileRepository');
 const JsonEventRepository = require('./src/infrastructure/repositories/JsonEventRepository');
+const JsonFaqRepository = require('./src/infrastructure/repositories/JsonFaqRepository');
 const { getPgPool } = require('./src/infrastructure/db/postgres');
 const JwtService = require('./src/infrastructure/security/JwtService');
 const EmailService = require('./src/infrastructure/services/EmailService');
@@ -155,6 +156,7 @@ const phaseStatusRepo = USE_POSTGRES
   : new JsonCandidatePhaseStatusRepository(dataDir);
 const publicFileRepo = new JsonPublicFileRepository(dataDir);
 const eventRepo = new JsonEventRepository(dataDir);
+const faqRepo = new JsonFaqRepository(dataDir);
 const jwtService = new JwtService(JWT_SECRET);
 const emailService = new EmailService();
 const emailTemplateService = new EmailTemplateService();
@@ -2523,6 +2525,12 @@ app.get('/api/public-files', (req, res) => {
   res.json(files);
 });
 
+// FAQ público (Ajuda e Perguntas Frequentes)
+app.get('/api/public-faq', (req, res) => {
+  const faq = faqRepo.get();
+  return res.json(faq);
+});
+
 // Lista pública de eventos/cursos abertos (para a página de cursos)
 app.get('/api/public-events', async (req, res) => {
   try {
@@ -4140,6 +4148,326 @@ app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/edit`, checkAdminIP, adminAut
 app.post(`/secret/${ADMIN_SECRET}/admin/events/:id/delete`, checkAdminIP, adminAuth, async (req, res) => {
     await eventRepo.delete(req.params.id);
     res.redirect(`/secret/${ADMIN_SECRET}/admin/events`);
+});
+
+// --- FAQ / AJUDA ---
+app.get(`/secret/${ADMIN_SECRET}/admin/faq`, checkAdminIP, adminAuth, (req, res) => {
+  const faq = faqRepo.get();
+  const saved = String(req.query.saved || '') === '1';
+
+  const payload = {
+    updatedAt: faq?.updatedAt || null,
+    sections: Array.isArray(faq?.sections) ? faq.sections : [],
+  };
+
+  const html = `
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Admin - FAQ / Ajuda</title>
+      <link rel="stylesheet" href="/style.css" />
+      <link rel="stylesheet" href="/theme.css" />
+      <style>
+        .hint { color: #003366; font-size: 11px; }
+        .faq-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .faq-item { border: 1px solid #86A3C2; background: #fff; padding: 10px; }
+        .faq-row { display: grid; grid-template-columns: 1fr; gap: 6px; }
+        .faq-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+        .btn-danger { background-color:#d9534f; border-color:#d43f3a; color:white; }
+        .ok { text-align:center; color:#2e7d32; font-weight: bold; margin: 6px 0 0; }
+        textarea { min-height: 90px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <header class="main-header">
+          <div style="display:flex; align-items:center; justify-content:center; gap:15px; flex-wrap:wrap;">
+            <a href="/secret/${ADMIN_SECRET}/admin" aria-label="Voltar ao admin" style="display:inline-block;">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            </a>
+            <div style="text-align:center;">
+              <h1 style="margin:0; font-size: 1.5em;">FAQ / Ajuda</h1>
+              <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Edite as perguntas e respostas do site</p>
+            </div>
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+          </div>
+        </header>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Configuração</h2></div>
+          <div class="panel-body">
+            <div class="hint">
+              - O conteúdo é salvo no servidor (persistente) e aparece em <strong>/suporte.html</strong> automaticamente.<br/>
+              - Evite colar HTML; use texto simples (quebras de linha serão mantidas).
+            </div>
+            ${saved ? '<div class="ok">Salvo com sucesso.</div>' : ''}
+            <div class="admin-actions" style="justify-content:center; margin-top: 10px;">
+              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
+              <a class="btn-secondary" href="/suporte.html" target="_blank" rel="noopener noreferrer">Ver Ajuda (público)</a>
+              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/logout" style="background-color: #d9534f; border-color: #d43f3a; color:white;">Sair</a>
+            </div>
+          </div>
+        </section>
+
+        <form id="faq-form" method="POST" action="/secret/${ADMIN_SECRET}/admin/faq">
+          <input type="hidden" name="payload" id="payload" />
+
+          <section class="panel">
+            <div class="panel-header"><h2>Seções</h2></div>
+            <div class="panel-body">
+              <div class="hint" id="last-updated"></div>
+              <div id="sections" class="faq-grid" style="margin-top: 8px;"></div>
+              <div class="faq-actions">
+                <button class="btn-secondary" type="button" id="add-section">Adicionar seção</button>
+                <button class="btn-primary" type="submit">Salvar</button>
+              </div>
+            </div>
+          </section>
+        </form>
+
+        <script>
+          const initial = ${JSON.stringify(payload)};
+
+          function escapeHtml(s) {
+            return String(s || '')
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;');
+          }
+
+          function el(tag, attrs, html) {
+            const n = document.createElement(tag);
+            if (attrs) {
+              Object.keys(attrs).forEach(k => {
+                if (k === 'class') n.className = attrs[k];
+                else if (k === 'text') n.textContent = attrs[k];
+                else n.setAttribute(k, attrs[k]);
+              });
+            }
+            if (html != null) n.innerHTML = html;
+            return n;
+          }
+
+          const state = {
+            updatedAt: initial.updatedAt || null,
+            sections: Array.isArray(initial.sections) ? initial.sections.map(s => ({
+              id: String(s.id || ''),
+              title: String(s.title || ''),
+              items: Array.isArray(s.items) ? s.items.map(i => ({ question: String(i.question || ''), answer: String(i.answer || '') })) : []
+            })) : []
+          };
+
+          function render() {
+            const container = document.getElementById('sections');
+            container.innerHTML = '';
+
+            const last = document.getElementById('last-updated');
+            if (state.updatedAt) {
+              try {
+                const d = new Date(state.updatedAt);
+                last.textContent = 'Última atualização: ' + d.toLocaleString('pt-BR');
+              } catch {
+                last.textContent = '';
+              }
+            } else {
+              last.textContent = '';
+            }
+
+            state.sections.forEach((section, sectionIndex) => {
+              const box = el('div', { class: 'faq-item' });
+              const head = el('div', { class: 'faq-row' });
+              head.appendChild(el('div', { class: 'form-group', style: 'margin-bottom:0;' },
+                '<label>Título da seção</label>' +
+                '<input type="text" value="' + escapeHtml(section.title) + '" data-section-title="' + sectionIndex + '" />'
+              ));
+              head.appendChild(el('div', { class: 'form-group', style: 'margin-bottom:0;' },
+                '<label>Identificador (interno)</label>' +
+                '<input type="text" value="' + escapeHtml(section.id) + '" data-section-id="' + sectionIndex + '" placeholder="ex.: faq" />'
+              ));
+
+              const headActions = el('div', { class: 'admin-actions', style: 'justify-content:center; margin-top: 8px;' });
+              const addItemBtn = el('button', { type: 'button', class: 'btn-secondary', 'data-add-item': String(sectionIndex), text: 'Adicionar pergunta' });
+              const delSectionBtn = el('button', { type: 'button', class: 'btn-secondary btn-danger', 'data-del-section': String(sectionIndex), text: 'Excluir seção' });
+              headActions.appendChild(addItemBtn);
+              headActions.appendChild(delSectionBtn);
+
+              box.appendChild(head);
+              box.appendChild(headActions);
+
+              const itemsWrap = el('div', { style: 'margin-top: 10px; display:grid; gap:10px;' });
+              section.items.forEach((item, itemIndex) => {
+                const itemBox = el('div', { class: 'box' });
+                itemBox.innerHTML =
+                  '<div class="faq-row">' +
+                    '<div class="form-group" style="margin-bottom:0;">' +
+                      '<label>Pergunta</label>' +
+                      '<input type="text" value="' + escapeHtml(item.question) + '" data-item-question="' + sectionIndex + ':' + itemIndex + '" />' +
+                    '</div>' +
+                    '<div class="form-group" style="margin-bottom:0;">' +
+                      '<label>Resposta</label>' +
+                      '<textarea data-item-answer="' + sectionIndex + ':' + itemIndex + '">' + escapeHtml(item.answer) + '</textarea>' +
+                    '</div>' +
+                    '<div class="admin-actions" style="justify-content:center;">' +
+                      '<button type="button" class="btn-secondary btn-danger" data-del-item="' + sectionIndex + ':' + itemIndex + '">Excluir pergunta</button>' +
+                    '</div>' +
+                  '</div>';
+                itemsWrap.appendChild(itemBox);
+              });
+              box.appendChild(itemsWrap);
+
+              container.appendChild(box);
+            });
+          }
+
+          function addSection() {
+            state.sections.push({ id: 'faq', title: 'Perguntas frequentes (FAQ)', items: [] });
+            render();
+          }
+
+          function addItem(sectionIndex) {
+            const s = state.sections[sectionIndex];
+            if (!s) return;
+            s.items.push({ question: '', answer: '' });
+            render();
+          }
+
+          function deleteSection(sectionIndex) {
+            state.sections.splice(sectionIndex, 1);
+            render();
+          }
+
+          function deleteItem(sectionIndex, itemIndex) {
+            const s = state.sections[sectionIndex];
+            if (!s) return;
+            s.items.splice(itemIndex, 1);
+            render();
+          }
+
+          document.addEventListener('click', (ev) => {
+            const t = ev.target;
+            if (!(t instanceof HTMLElement)) return;
+            if (t.id === 'add-section') {
+              ev.preventDefault();
+              addSection();
+              return;
+            }
+            if (t.dataset.addItem != null) {
+              ev.preventDefault();
+              addItem(Number(t.dataset.addItem));
+              return;
+            }
+            if (t.dataset.delSection != null) {
+              ev.preventDefault();
+              if (!confirm('Excluir esta seção?')) return;
+              deleteSection(Number(t.dataset.delSection));
+              return;
+            }
+            if (t.dataset.delItem) {
+              ev.preventDefault();
+              if (!confirm('Excluir esta pergunta?')) return;
+              const parts = String(t.dataset.delItem).split(':');
+              deleteItem(Number(parts[0]), Number(parts[1]));
+            }
+          });
+
+          document.addEventListener('input', (ev) => {
+            const t = ev.target;
+            if (!(t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement)) return;
+
+            if (t.dataset.sectionTitle != null) {
+              const idx = Number(t.dataset.sectionTitle);
+              if (state.sections[idx]) state.sections[idx].title = t.value;
+              return;
+            }
+            if (t.dataset.sectionId != null) {
+              const idx = Number(t.dataset.sectionId);
+              if (state.sections[idx]) state.sections[idx].id = t.value;
+              return;
+            }
+            if (t.dataset.itemQuestion) {
+              const parts = String(t.dataset.itemQuestion).split(':');
+              const s = state.sections[Number(parts[0])];
+              const it = s && s.items ? s.items[Number(parts[1])] : null;
+              if (it) it.question = t.value;
+              return;
+            }
+            if (t.dataset.itemAnswer) {
+              const parts = String(t.dataset.itemAnswer).split(':');
+              const s = state.sections[Number(parts[0])];
+              const it = s && s.items ? s.items[Number(parts[1])] : null;
+              if (it) it.answer = t.value;
+            }
+          });
+
+          document.getElementById('faq-form').addEventListener('submit', () => {
+            const clean = {
+              updatedAt: state.updatedAt,
+              sections: state.sections,
+            };
+            document.getElementById('payload').value = JSON.stringify(clean);
+          });
+
+          render();
+        </script>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return res.type('html').send(html);
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/faq`, checkAdminIP, adminAuth, (req, res) => {
+  try {
+    const payloadRaw = String(req.body?.payload || '').trim();
+    if (!payloadRaw) return res.status(400).send('Payload vazio');
+
+    let parsed;
+    try {
+      parsed = JSON.parse(payloadRaw);
+    } catch {
+      return res.status(400).send('JSON inválido');
+    }
+
+    const sectionsIn = Array.isArray(parsed?.sections) ? parsed.sections : [];
+    const normalizedSections = sectionsIn
+      .slice(0, 10)
+      .map((s) => {
+        const itemsIn = Array.isArray(s?.items) ? s.items : [];
+        const id = String(s?.id || '').trim().slice(0, 40);
+        const title = String(s?.title || '').trim().slice(0, 80);
+        const items = itemsIn
+          .slice(0, 50)
+          .map((it) => {
+            const question = String(it?.question || '').trim().slice(0, 200);
+            const answer = String(it?.answer || '').trim().slice(0, 4000);
+            return { question, answer };
+          })
+          .filter((it) => it.question && it.answer);
+        return { id: id || 'faq', title: title || 'FAQ', items };
+      })
+      .filter((s) => s.items.length > 0);
+
+    const nextFaq = {
+      updatedAt: new Date().toISOString(),
+      sections: normalizedSections,
+    };
+
+    faqRepo.save(nextFaq);
+    try {
+      logAdminAction('UPDATE_FAQ', getClientIP(req), { sections: normalizedSections.map(s => ({ id: s.id, items: s.items.length })) });
+    } catch {
+      // não bloqueia
+    }
+
+    return res.redirect(`/secret/${ADMIN_SECRET}/admin/faq?saved=1`);
+  } catch (err) {
+    return res.status(500).send('Falha ao salvar FAQ');
+  }
 });
 
 // Alternar confirmação de presença

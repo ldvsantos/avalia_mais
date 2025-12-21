@@ -98,6 +98,12 @@ class AdminDashboardPresenter {
                 <h2>Gestão de Eventos</h2>
                 <p>Criar eventos, gerenciar inscrições e emitir certificados.</p>
               </a>
+
+              <a href="/secret/${this.adminSecret}/admin/faq" class="admin-card">
+                <div class="admin-card-icon">❓</div>
+                <h2>FAQ / Ajuda</h2>
+                <p>Atualizar textos de Ajuda e Perguntas Frequentes sem mexer no código.</p>
+              </a>
             </div>
             
             <div style="margin-top: 20px;">
