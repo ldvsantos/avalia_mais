@@ -21,7 +21,7 @@ function renderAdminNav({ adminSecret, active } = {}) {
   const linkHtml = links
     .map(({ key, href, label }) => {
       const cls = key === activeKey ? 'btn-primary' : 'btn-secondary';
-      return `<a class="${cls}" href="${href}" style="display:block; width:100%; text-align:left;">${label}</a>`;
+      return `<a class="${cls}" href="${href}" style="display:block; width:100%; box-sizing:border-box; text-align:left; white-space:normal; overflow-wrap:anywhere;">${label}</a>`;
     })
     .join('\n');
 
@@ -59,11 +59,22 @@ function renderAdminNav({ adminSecret, active } = {}) {
         transform: translateX(-20px);
         transition: all 0.2s ease-in-out;
         pointer-events: none;
+        box-sizing: border-box;
       }
       
-      .admin-drawer-inner { padding: 15px; }
+      .admin-drawer-inner { padding: 15px; box-sizing: border-box; overflow-x: hidden; }
       .admin-drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
       .admin-drawer-links { display: flex; flex-direction: column; gap: 8px; }
+
+      /* Garante que botões dentro do drawer não ultrapassem a largura */
+      .admin-drawer .btn-primary,
+      .admin-drawer .btn-secondary {
+        max-width: 100%;
+        box-sizing: border-box;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
 
       /* Estado Aberto */
       .admin-menu-toggle:checked ~ .admin-drawer { 
@@ -95,7 +106,7 @@ function renderAdminNav({ adminSecret, active } = {}) {
           </div>
           <div class="admin-drawer-links">
             ${linkHtml}
-            <a class="btn-secondary" href="${base}/logout" style="display:block; width:100%; text-align:left;">Sair</a>
+            <a class="btn-secondary" href="${base}/logout" style="display:block; width:100%; box-sizing:border-box; text-align:left; white-space:normal; overflow-wrap:anywhere;">Sair</a>
           </div>
         </div>
       </aside>
