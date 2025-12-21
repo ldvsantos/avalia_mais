@@ -91,10 +91,7 @@
       { key: 'suporte', href: 'suporte.html', label: 'Ajuda / FAQ' },
     ];
 
-    var wrap = document.createElement('div');
-    wrap.innerHTML = renderPublicNav(items, activeKey);
-
-    header.insertAdjacentElement('afterend', wrap.firstChild);
+    header.insertAdjacentHTML('afterend', renderPublicNav(items, activeKey));
   }
 
   if (document.readyState === 'loading') {
