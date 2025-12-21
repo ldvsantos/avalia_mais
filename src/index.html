@@ -6,6 +6,7 @@
     <title>Portal do Candidato - PLANTERR</title>
     <link rel="stylesheet" href="style.css?v=20251219-1">
     <link rel="stylesheet" href="theme.css?v=20251219-1">
+    <script src="nav-back.js?v=20251221-1" defer></script>
     <style>
         .portal-home-container {
             display: flex;
@@ -13,13 +14,15 @@
             align-items: center;
             justify-content: center;
             min-height: 70vh;
-            gap: 30px;
+            gap: 40px;
         }
         .portal-cards {
             display: flex;
             gap: 22px;
             flex-wrap: wrap;
             justify-content: center;
+            margin-top: 6px;
+            padding-bottom: 6px;
         }
         .portal-card {
             background: white;
@@ -60,7 +63,7 @@
     <div class="container">
         <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+                <a href="/" class="js-back-link" data-fallback="/" aria-label="Voltar" style="display:inline-block;">
                     <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
                 </a>
                 <div>
@@ -89,6 +92,12 @@
                     <div class="portal-card-icon">📋</div>
                     <h2>Processo Seletivo</h2>
                     <p>Inscrição, consulta, recursos e documentos do edital.</p>
+                </a>
+
+                <a href="suporte.html" class="portal-card">
+                    <div class="portal-card-icon">❓</div>
+                    <h2>Ajuda e Contato</h2>
+                    <p>Perguntas frequentes, problemas comuns e orientações.</p>
                 </a>
             </div>
         </div>

@@ -6,13 +6,14 @@
     <title>Interposição de Recurso - AVALIA+</title>
     <link rel="stylesheet" href="style.css?v=20251216-2">
     <link rel="stylesheet" href="theme.css?v=20251216-2">
+    <script src="nav-back.js?v=20251221-1" defer></script>
     <script src="script.js?v=13"></script>
 </head>
 <body>
     <div class="container">
         <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+                <a href="selecao.html" class="js-back-link" data-fallback="selecao.html" aria-label="Voltar" style="display:inline-block;">
                     <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
                 </a>
                 <h1>Formulário para Interposição de Recurso</h1>
@@ -86,6 +87,28 @@
                         <button type="submit" class="btn-primary">Enviar Recurso</button>
                     </div>
                 </form>
+
+                <!-- Revisão final (aparece antes do envio) -->
+                <div id="appeal-review-box" style="display:none; margin-top:14px; border:1px solid #86A3C2; background:#F4F9FD; padding:12px; border-radius:8px;">
+                    <div style="font-weight:bold; color:#003366; margin-bottom:8px;">Revisão final antes do envio</div>
+                    <div style="font-size:12px; color:#333; margin-bottom:10px;">Confira os dados principais do recurso antes de confirmar.</div>
+                    <div style="overflow-x:auto;">
+                        <table class="admin-table" style="font-size:12px;">
+                            <tbody>
+                                <tr><th>Protocolo de inscrição</th><td id="appeal-review-protocolo"></td></tr>
+                                <tr><th>Nome</th><td id="appeal-review-nome"></td></tr>
+                                <tr><th>CPF</th><td id="appeal-review-cpf"></td></tr>
+                                <tr><th>E-mail</th><td id="appeal-review-email"></td></tr>
+                                <tr><th>Título do projeto</th><td id="appeal-review-titulo"></td></tr>
+                                <tr><th>Etapa</th><td id="appeal-review-etapa"></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="display:flex; gap:10px; justify-content:center; margin-top:12px; flex-wrap:wrap;">
+                        <button type="button" id="appeal-review-cancel" class="btn-primary">Voltar e Revisar</button>
+                        <button type="button" id="appeal-review-confirm" class="btn-secondary">Confirmar Envio</button>
+                    </div>
+                </div>
 
                 <div id="appeal-success" style="display:none; margin-top:18px; text-align:center;">
                     <div style="margin-bottom:10px; font-size:12px;">
@@ -221,13 +244,28 @@
             }
         })();
 
-        // Simple script to handle form submission (placeholder)
+        // Envio de recurso com validação humana + revisão final
         document.getElementById('recurso-form').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
-            
+
+            // Validação com foco no primeiro erro
+            if (typeof validateAppealFormHuman === 'function') {
+                const ok = validateAppealFormHuman(data);
+                if (!ok) return;
+            }
+
+            // Revisão antes do envio
+            if (typeof askAppealConfirmation === 'function') {
+                const confirmed = await askAppealConfirmation(data);
+                if (!confirmed) return;
+            } else {
+                const confirmed = confirm('Confirmar envio do recurso?');
+                if (!confirmed) return;
+            }
+
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerText;
             submitBtn.disabled = true;

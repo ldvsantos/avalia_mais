@@ -61,6 +61,329 @@ function setFeedback(elementId, message) {
     el.classList.toggle('error', Boolean(message));
 }
 
+function normalizeDigits(value) {
+    return String(value || '').replace(/\D/g, '');
+}
+
+function ensureFieldFeedbackElement(inputEl) {
+    if (!inputEl || !inputEl.id) return null;
+    const feedbackId = inputEl.id + '-feedback';
+    let fb = document.getElementById(feedbackId);
+    if (fb) return fb;
+
+    fb = document.createElement('div');
+    fb.id = feedbackId;
+    fb.className = 'field-feedback';
+    fb.setAttribute('aria-live', 'polite');
+    fb.dataset.generated = '1';
+
+    // Insere logo após o input/select/textarea
+    inputEl.insertAdjacentElement('afterend', fb);
+    return fb;
+}
+
+function clearGeneratedFeedback(scopeEl) {
+    const scope = scopeEl || document;
+    const els = scope.querySelectorAll('.field-feedback[data-generated="1"]');
+    els.forEach((el) => {
+        el.textContent = '';
+        el.classList.remove('error');
+    });
+}
+
+function setFieldError(inputEl, message) {
+    if (!inputEl) return;
+    inputEl.setAttribute('aria-invalid', 'true');
+    const fb = ensureFieldFeedbackElement(inputEl);
+    if (fb) {
+        fb.textContent = message || '';
+        fb.classList.toggle('error', Boolean(message));
+    }
+}
+
+function clearFieldError(inputEl) {
+    if (!inputEl) return;
+    inputEl.removeAttribute('aria-invalid');
+    const fbId = inputEl.id ? (inputEl.id + '-feedback') : '';
+    const fb = fbId ? document.getElementById(fbId) : null;
+    if (fb && fb.dataset.generated === '1') {
+        fb.textContent = '';
+        fb.classList.remove('error');
+    }
+}
+
+function focusAndScroll(inputEl) {
+    try {
+        inputEl.focus();
+        inputEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch {
+        // ignore
+    }
+}
+
+function setFormErrorSummary(messages, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    let box = document.getElementById('form-error-summary');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'form-error-summary';
+        box.setAttribute('role', 'alert');
+        box.style.margin = '10px 0';
+        box.style.padding = '10px';
+        box.style.border = '1px solid #b71c1c';
+        box.style.backgroundColor = '#FFEBEE';
+        box.style.color = '#b71c1c';
+        container.insertBefore(box, container.firstChild);
+    }
+
+    if (!messages || messages.length === 0) {
+        box.textContent = '';
+        box.style.display = 'none';
+        return;
+    }
+
+    box.style.display = 'block';
+    box.innerHTML = '<strong>Verifique os campos obrigatórios:</strong><br>' + messages.map(m => escapeHtml(m)).join('<br>');
+}
+
+function validateInscricaoFormHuman() {
+    const container = document.getElementById('form-content');
+    if (!container) return true;
+
+    clearGeneratedFeedback(container);
+    setFormErrorSummary([], 'form-content');
+
+    const errors = [];
+    const firstError = { el: null };
+
+    const requireText = (id, message) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        clearFieldError(el);
+        const v = String(el.value || '').trim();
+        if (!v) {
+            const msg = message || 'Campo obrigatório.';
+            setFieldError(el, msg);
+            errors.push(msg);
+            if (!firstError.el) firstError.el = el;
+        }
+    };
+
+    // Campos obrigatórios (inscrição)
+    requireText('nome', 'Informe seu nome completo.');
+    requireText('data_nascimento', 'Informe sua data de nascimento.');
+    requireText('cpf', 'Informe seu CPF.');
+    requireText('rg', 'Informe seu RG.');
+    requireText('orgao_expedidor', 'Informe o órgão expedidor do RG.');
+    requireText('data_expedicao', 'Informe a data de expedição do RG.');
+    requireText('endereco', 'Informe seu endereço completo.');
+    requireText('cidade_estado', 'Informe cidade/estado.');
+    requireText('cep', 'Informe o CEP.');
+    requireText('celular', 'Informe um celular com DDD.');
+    requireText('email', 'Informe seu e-mail.');
+    requireText('curso_graduacao', 'Informe seu curso de graduação.');
+    requireText('instituicao', 'Informe sua instituição.');
+    requireText('ano_conclusao', 'Informe o ano de conclusão (4 dígitos).');
+
+    // Projeto (mínimo essencial)
+    requireText('titulo_pt', 'Informe o título do projeto.');
+
+    // Validações de formato
+    const cpfEl = document.getElementById('cpf');
+    if (cpfEl && String(cpfEl.value || '').trim()) {
+        if (!isValidCPF(cpfEl.value)) {
+            setFeedback('cpf-feedback', 'CPF inválido.');
+            errors.push('CPF inválido.');
+            if (!firstError.el) firstError.el = cpfEl;
+        } else {
+            setFeedback('cpf-feedback', '');
+        }
+    }
+
+    const cepEl = document.getElementById('cep');
+    if (cepEl && String(cepEl.value || '').trim()) {
+        const digits = normalizeDigits(cepEl.value);
+        if (digits.length !== 8) {
+            const msg = 'CEP inválido (digite 8 números).';
+            setFieldError(cepEl, msg);
+            errors.push(msg);
+            if (!firstError.el) firstError.el = cepEl;
+        }
+    }
+
+    const celEl = document.getElementById('celular');
+    if (celEl && String(celEl.value || '').trim()) {
+        const digits = normalizeDigits(celEl.value);
+        if (!(digits.length === 10 || digits.length === 11)) {
+            const msg = 'Celular inválido (use DDD + número).';
+            setFieldError(celEl, msg);
+            errors.push(msg);
+            if (!firstError.el) firstError.el = celEl;
+        }
+    }
+
+    const emailEl = document.getElementById('email');
+    if (emailEl && String(emailEl.value || '').trim()) {
+        if (typeof emailEl.checkValidity === 'function' && !emailEl.checkValidity()) {
+            const msg = 'E-mail inválido.';
+            setFieldError(emailEl, msg);
+            errors.push(msg);
+            if (!firstError.el) firstError.el = emailEl;
+        }
+    }
+
+    const anoEl = document.getElementById('ano_conclusao');
+    if (anoEl && String(anoEl.value || '').trim()) {
+        const v = String(anoEl.value || '').trim();
+        if (!/^\d{4}$/.test(v)) {
+            const msg = 'Ano de conclusão inválido (use 4 dígitos).';
+            setFieldError(anoEl, msg);
+            errors.push(msg);
+            if (!firstError.el) firstError.el = anoEl;
+        }
+    }
+
+    // Área / linha de pesquisa
+    const areaSel = document.getElementById('area');
+    if (!areaSel || !String(areaSel.value || '').trim()) {
+        updateAreaFeedback();
+        errors.push('Selecione uma linha de pesquisa.');
+        if (!firstError.el && areaSel) firstError.el = areaSel;
+    } else {
+        updateAreaFeedback();
+    }
+
+    // Termo
+    const termo = document.getElementById('termo_compromisso');
+    if (!termo?.checked) {
+        updateTermoFeedback();
+        errors.push('Marque a declaração de compromisso.');
+        if (!firstError.el && termo) firstError.el = termo;
+    } else {
+        updateTermoFeedback();
+    }
+
+    if (errors.length > 0) {
+        setFormErrorSummary(errors.slice(0, 8), 'form-content');
+        if (firstError.el) focusAndScroll(firstError.el);
+        return false;
+    }
+
+    setFormErrorSummary([], 'form-content');
+    return true;
+}
+
+async function askAppealConfirmation(data) {
+    const box = document.getElementById('appeal-review-box');
+    const btnCancel = document.getElementById('appeal-review-cancel');
+    const btnConfirm = document.getElementById('appeal-review-confirm');
+
+    if (!box || !btnCancel || !btnConfirm) {
+        const lines = [
+            `Protocolo: ${String(data?.protocolo_inscricao || '').trim()}`,
+            `Nome: ${String(data?.nome || '').trim()}`,
+            `CPF: ${String(data?.cpf || '').trim()}`,
+            `E-mail: ${String(data?.email || '').trim()}`,
+            `Etapa: ${String(data?.etapa_processo || '').trim()}`,
+        ].join('\n');
+        return confirm('Revisão final do recurso:\n\n' + lines + '\n\nConfirmar envio?');
+    }
+
+    const set = (id, v) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = String(v || '');
+    };
+
+    set('appeal-review-protocolo', data?.protocolo_inscricao);
+    set('appeal-review-nome', data?.nome);
+    set('appeal-review-cpf', data?.cpf);
+    set('appeal-review-email', data?.email);
+    set('appeal-review-titulo', data?.titulo_projeto);
+    set('appeal-review-etapa', data?.etapa_processo);
+
+    box.style.display = 'block';
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    return new Promise((resolve) => {
+        // Clean up previous listeners by cloning
+        const newCancel = btnCancel.cloneNode(true);
+        const newConfirm = btnConfirm.cloneNode(true);
+        btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+        btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+
+        newCancel.addEventListener('click', (e) => {
+            e.preventDefault();
+            box.style.display = 'none';
+            resolve(false);
+        });
+
+        newConfirm.addEventListener('click', (e) => {
+            e.preventDefault();
+            box.style.display = 'none';
+            resolve(true);
+        });
+    });
+}
+
+function validateAppealFormHuman(data) {
+    // Limpa feedbacks gerados na página inteira
+    clearGeneratedFeedback(document);
+
+    const required = [
+        ['protocolo_inscricao', 'Informe o protocolo de inscrição.'],
+        ['nome', 'Informe seu nome completo.'],
+        ['cpf', 'Informe seu CPF.'],
+        ['email', 'Informe seu e-mail.'],
+        ['titulo_projeto', 'Informe o título do projeto.'],
+        ['linha_pesquisa', 'Selecione a linha de pesquisa.'],
+        ['etapa_processo', 'Selecione a etapa do processo.'],
+        ['decisao_contestacao', 'Descreva a decisão/objeto da contestação.'],
+        ['argumentacao', 'Informe sua argumentação.'],
+    ];
+
+    let first = null;
+    const msgs = [];
+
+    required.forEach(([id, msg]) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        clearFieldError(el);
+        const v = String(el.value || '').trim();
+        if (!v) {
+            setFieldError(el, msg);
+            msgs.push(msg);
+            if (!first) first = el;
+        }
+    });
+
+    const cpfEl = document.getElementById('cpf');
+    if (cpfEl && String(cpfEl.value || '').trim() && !isValidCPF(cpfEl.value)) {
+        const msg = 'CPF inválido.';
+        setFieldError(cpfEl, msg);
+        msgs.push(msg);
+        if (!first) first = cpfEl;
+    }
+
+    const emailEl = document.getElementById('email');
+    if (emailEl && String(emailEl.value || '').trim()) {
+        if (typeof emailEl.checkValidity === 'function' && !emailEl.checkValidity()) {
+            const msg = 'E-mail inválido.';
+            setFieldError(emailEl, msg);
+            msgs.push(msg);
+            if (!first) first = emailEl;
+        }
+    }
+
+    if (msgs.length > 0) {
+        if (first) focusAndScroll(first);
+        return false;
+    }
+
+    return true;
+}
+
 function updateCpfFeedback() {
     const cpfInput = document.getElementById('cpf');
     if (!cpfInput) return;
@@ -555,12 +878,30 @@ function askConfirmation() {
         const modal = document.getElementById('confirm-modal');
         const btnCancel = document.getElementById('btn-modal-cancel');
         const btnConfirm = document.getElementById('btn-modal-confirm');
+        const chk = document.getElementById('review-confirm-check');
+        const chkFb = document.getElementById('review-confirm-feedback');
+        const setReviewText = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = String(value || '');
+        };
         
         if (!modal || !btnCancel || !btnConfirm) {
             // Fallback if modal elements are missing
             resolve(confirm("Tem certeza que deseja enviar sua inscrição?"));
             return;
         }
+
+        // Preenche resumo (se existir no modal)
+        setReviewText('review-nome', document.getElementById('nome')?.value || '');
+        setReviewText('review-cpf', document.getElementById('cpf')?.value || '');
+        setReviewText('review-email', document.getElementById('email')?.value || '');
+        setReviewText('review-titulo', document.getElementById('titulo_pt')?.value || '');
+        setReviewText('review-area', document.getElementById('area')?.value || '');
+
+        // Reset checkbox
+        if (chk) chk.checked = false;
+        if (chkFb) chkFb.textContent = '';
 
         modal.style.display = 'flex';
         
@@ -569,6 +910,26 @@ function askConfirmation() {
         const newConfirm = btnConfirm.cloneNode(true);
         btnCancel.parentNode.replaceChild(newCancel, btnCancel);
         btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+
+        // Mantém confirmação desabilitada até marcar revisão
+        newConfirm.disabled = true;
+
+        const refresh = () => {
+            const ok = Boolean(chk && chk.checked);
+            newConfirm.disabled = !ok;
+            if (chkFb) {
+                chkFb.textContent = ok ? '' : 'Marque a confirmação de revisão para habilitar o envio.';
+                chkFb.classList.toggle('error', !ok);
+            }
+        };
+
+        if (chk) {
+            chk.addEventListener('change', refresh);
+            refresh();
+        } else {
+            // Sem checkbox no modal, libera como antes
+            newConfirm.disabled = false;
+        }
 
         newCancel.addEventListener('click', () => {
             modal.style.display = 'none';
@@ -588,6 +949,9 @@ async function generatePDF() {
     const MAX_RESUMO = 1800;
     const MAX_OBJETIVO_GERAL = 200;
     const limitText = (value, maxLen) => String(value || '').slice(0, maxLen);
+
+    // Validação humana + foco no primeiro erro
+    if (!validateInscricaoFormHuman()) return;
     
     const cpfInput = document.getElementById('cpf');
     const cpf = cpfInput.value.replace(/\D/g, '');

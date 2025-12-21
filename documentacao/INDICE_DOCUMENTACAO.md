@@ -53,6 +53,9 @@ Se você não sabe por onde começar, siga esta ordem:
 2. SECURITY_IMPLEMENTATION.md         15 min  Como usar
 3. SECURITY_STATUS.md                 10 min  Checklist
 4. server/.env.example                5 min   Variáveis
+
+Extras recomendados:
+- [OPERACAO_BACKUP_E_INCIDENTES.md](./OPERACAO_BACKUP_E_INCIDENTES.md) - Rotina de backup/export e resposta a incidente
 ```
 
 **Tempo total: 60 minutos**
@@ -222,6 +225,9 @@ Cobertura de tópicos:     100%
 
 ### Deploy
 - [DEPLOYMENT_UEFS.md](./DEPLOYMENT_UEFS.md) - Deploy em UEFS
+
+### Operação
+- [OPERACAO_BACKUP_E_INCIDENTES.md](./OPERACAO_BACKUP_E_INCIDENTES.md) - Backup/export e incidente
 
 ### Código
 - [server/admin-secret.js](./server/admin-secret.js) - UUID

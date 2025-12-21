@@ -6,6 +6,7 @@
     <title>Formulário de Inscrição - AVALIA+</title>
     <link rel="stylesheet" href="style.css?v=20251216-2">
     <link rel="stylesheet" href="theme.css?v=20251216-2">
+    <script src="nav-back.js?v=20251221-1" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
@@ -13,7 +14,7 @@
         <input type="text" id="website" name="website" autocomplete="off" tabindex="-1" style="position:absolute; left:-9999px; height:0; width:0; opacity:0;" aria-hidden="true">
         <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+                <a href="selecao.html" class="js-back-link" data-fallback="selecao.html" aria-label="Voltar" style="display:inline-block;">
                     <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
                 </a>
                 <h1>Formulário de Anteprojeto AVALIA+</h1>
@@ -30,6 +31,9 @@
                     <li>Ao finalizar, clique em <strong>Enviar Inscrição e Gerar PDF</strong>.</li>
                     <li>Guarde o PDF gerado com <strong>Protocolo</strong> e <strong>Hash</strong> (comprovante).</li>
                 </ol>
+                <div style="margin-top:10px; font-size: 12px; color:#555;">
+                    Dúvidas? Acesse <a href="suporte.html">Ajuda e Contato</a>.
+                </div>
             </div>
         </section>
 
@@ -297,7 +301,7 @@
     <div class="container" id="success-content" style="display:none;">
         <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+                <a href="selecao.html" class="js-back-link" data-fallback="selecao.html" aria-label="Voltar" style="display:inline-block;">
                     <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
                 </a>
                 <h1>Inscrição concluída - AVALIA+</h1>
@@ -372,12 +376,35 @@
 
     <!-- Modal de Confirmação Customizado -->
     <div id="confirm-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
-        <div style="background:white; padding:20px; border:1px solid #003366; max-width:400px; text-align:center; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
-            <h3 style="color:#003366; margin-top:0;">Confirmação de Envio</h3>
-            <p style="margin:15px 0; font-size:12px;">Tem certeza que deseja enviar sua inscrição?<br><br>Ao confirmar, seus dados serão registrados e não poderão ser alterados.</p>
-            <div style="display:flex; gap:10px; justify-content:center; margin-top:20px;">
+        <div style="background:white; padding:20px; border:1px solid #003366; max-width:520px; width: calc(100% - 32px); text-align:left; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+            <h3 style="color:#003366; margin-top:0; text-align:center;">Revisão final antes do envio</h3>
+            <p style="margin:12px 0; font-size:12px; color:#333; line-height:1.4;">
+                Confira os dados abaixo. Ao confirmar, sua inscrição será registrada e não poderá ser alterada.
+            </p>
+
+            <div style="border:1px solid #86A3C2; background:#F4F9FD; padding:10px; border-radius:8px;">
+                <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                    <tbody>
+                        <tr><td style="padding:4px 0; width:40%; color:#003366; font-weight:bold;">Nome</td><td style="padding:4px 0;" id="review-nome"></td></tr>
+                        <tr><td style="padding:4px 0; color:#003366; font-weight:bold;">CPF</td><td style="padding:4px 0;" id="review-cpf"></td></tr>
+                        <tr><td style="padding:4px 0; color:#003366; font-weight:bold;">E-mail</td><td style="padding:4px 0;" id="review-email"></td></tr>
+                        <tr><td style="padding:4px 0; color:#003366; font-weight:bold;">Título do projeto</td><td style="padding:4px 0;" id="review-titulo"></td></tr>
+                        <tr><td style="padding:4px 0; color:#003366; font-weight:bold;">Linha de pesquisa</td><td style="padding:4px 0;" id="review-area"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top:12px; font-size:12px;">
+                <label style="display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                    <input type="checkbox" id="review-confirm-check" />
+                    <span>Eu revisei os dados e confirmo que estão corretos.</span>
+                </label>
+                <div id="review-confirm-feedback" class="field-feedback" aria-live="polite"></div>
+            </div>
+
+            <div style="display:flex; gap:10px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
                 <button id="btn-modal-cancel" class="btn-primary">Voltar e Revisar</button>
-                <button id="btn-modal-confirm" class="btn-secondary">Confirmar Envio</button>
+                <button id="btn-modal-confirm" class="btn-secondary" disabled>Confirmar Envio</button>
             </div>
         </div>
     </div>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajuda, Perguntas Frequentes e Contato - PLANTERR</title>
+    <link rel="stylesheet" href="style.css?v=20251221-1">
+    <link rel="stylesheet" href="theme.css?v=20251221-1">
+    <script src="nav-back.js?v=20251221-1" defer></script>
+    <style>
+        .faq-accordion {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        details.faq {
+            border: 1px solid #86A3C2;
+            background: #F4F9FD;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        details.faq > summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 12px 14px;
+            color: #003366;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        details.faq > summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.faq > summary::after {
+            content: '＋';
+            color: #003366;
+            font-weight: bold;
+            flex: 0 0 auto;
+        }
+
+        details.faq[open] > summary {
+            border-bottom: 1px solid #86A3C2;
+            background: #D0E5F5;
+        }
+
+        details.faq[open] > summary::after {
+            content: '－';
+        }
+
+        .faq-answer {
+            padding: 12px 14px;
+            color: #333;
+            font-size: 0.95em;
+            line-height: 1.45;
+            background: #fff;
+        }
+
+        .faq-answer p {
+            margin: 0;
+        }
+        .callout {
+            border: 1px solid #86A3C2;
+            background: #fff;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        .callout strong { color: #003366; }
+        .list-clean {
+            margin: 8px 0 0 0;
+            padding-left: 18px;
+            color: #333;
+        }
+        .muted {
+            color: #666;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px; flex-wrap:wrap;">
+                <a href="/" class="js-back-link" data-fallback="/" aria-label="Voltar" style="display:inline-block;">
+                    <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                </a>
+                <div style="text-align:center;">
+                    <h1 style="margin:0; font-size: 1.5em;">Ajuda e Contato</h1>
+                    <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Perguntas frequentes e problemas comuns</p>
+                </div>
+                <img src="img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+            </div>
+        </header>
+
+        <section class="panel">
+            <div class="panel-body">
+                <p style="margin:0;">
+                    Esta página reúne orientações rápidas para <strong>inscrição</strong>, <strong>consulta</strong>, <strong>recursos</strong> e <strong>resultados</strong>.
+                </p>
+                <p class="muted" style="margin:10px 0 0 0;">
+                    Importante: os prazos e documentos oficiais são os do <a href="docs/edital_2026.pdf" target="_blank" rel="noopener">Edital</a>.
+                </p>
+            </div>
+        </section>
+
+        <h2 class="section-title">Contato / Atendimento</h2>
+        <section class="panel">
+            <div class="panel-body">
+                <div class="callout">
+                    <p style="margin:0;">
+                        Para atendimento, utilize os <strong>canais informados no Edital</strong>.
+                        Ao entrar em contato, inclua sempre o seu <strong>protocolo</strong> (se já tiver) e uma descrição objetiva do problema.
+                    </p>
+                    <ul class="list-clean">
+                        <li><strong>Assunto sugerido:</strong> “Processo Seletivo PLANTERR – Suporte”</li>
+                        <li><strong>Inclua:</strong> protocolo, nome completo, e-mail cadastrado e prints do erro (se houver)</li>
+                        <li><strong>Horários/prazos:</strong> conforme Edital</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <h2 class="section-title">Problemas comuns</h2>
+        <section class="panel">
+            <div class="panel-body">
+                <div class="faq-accordion">
+                    <details class="faq">
+                        <summary>Não recebi o e-mail de confirmação</summary>
+                        <div class="faq-answer">
+                            <p>
+                                Verifique <strong>Spam/Lixo</strong> e a aba “Promoções”. Se você digitou o e-mail incorretamente, o sistema não consegue reenviar para outro endereço.
+                                Nesse caso, contate a comissão conforme Edital.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="faq">
+                        <summary>Perdi meu protocolo</summary>
+                        <div class="faq-answer">
+                            <p>
+                                O protocolo fica no <strong>PDF gerado</strong> ao final da inscrição. Procure no download do navegador ou no histórico de arquivos do computador.
+                                Se não encontrar, contate a comissão conforme Edital.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="faq">
+                        <summary>“Enviei e voltou para revisar”</summary>
+                        <div class="faq-answer">
+                            <p>
+                                Isso ocorre quando algum campo obrigatório está incompleto/ inválido.
+                                O formulário destaca o campo e leva o foco para o primeiro erro.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="faq">
+                        <summary>Não consigo consultar minha inscrição</summary>
+                        <div class="faq-answer">
+                            <p>
+                                Use o <strong>protocolo</strong> exatamente como aparece no PDF. Se ainda assim falhar, tente novamente em outro navegador.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="faq">
+                        <summary>O botão de enviar está desativado</summary>
+                        <div class="faq-answer">
+                            <p>
+                                As inscrições podem estar <strong>fora do prazo</strong>. Confira o calendário/cronograma no portal e no Edital.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="faq">
+                        <summary>Erro ao enviar recurso</summary>
+                        <div class="faq-answer">
+                            <p>
+                                Confirme se o <strong>protocolo de inscrição</strong> está correto e se a etapa do recurso está <strong>em prazo</strong>.
+                                O sistema pode bloquear etapas fora do prazo.
+                            </p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <h2 class="section-title">Perguntas frequentes (FAQ)</h2>
+        <section class="panel">
+            <div class="panel-body">
+                <div class="faq-accordion">
+                    <details class="faq">
+                        <summary>Como sei que minha inscrição foi registrada?</summary>
+                        <div class="faq-answer">
+                            <p>
+                                Ao concluir, o sistema mostra um <strong>protocolo</strong> e um <strong>hash (SHA-256)</strong>, além de gerar um PDF com esses dados.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="faq">
+                        <summary>O que é o hash?</summary>
+                        <div class="faq-answer">
+                            <p>
+                                É um código de verificação calculado a partir do registro da inscrição.
+                                Ele serve para dar integridade ao comprovante (não é senha).
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="faq">
+                        <summary>Posso editar a inscrição depois de enviar?</summary>
+                        <div class="faq-answer">
+                            <p>
+                                Em geral, não. Por isso existe a etapa de <strong>revisão</strong> antes do envio.
+                                Para exceções, siga o que o Edital permitir.
+                            </p>
+                        </div>
+                    </details>
+
+                    <details class="faq">
+                        <summary>O que devo anexar?</summary>
+                        <div class="faq-answer">
+                            <p>
+                                As exigências variam por perfil (vaga reservada, vínculo empregatício etc.).
+                                O formulário sinaliza os anexos condicionais, mas a regra final é a do Edital.
+                            </p>
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <div style="text-align:center; margin-top:24px; margin-bottom:24px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+            <a href="selecao.html" class="btn-primary">Voltar ao Portal da Seleção</a>
+            <a href="/consulta" class="btn-secondary">Consultar Inscrição</a>
+        </div>
+
+        <footer style="text-align: center; margin-top: 40px; margin-bottom: 20px; color: #777; font-size: 0.9em;">
+            <p>&copy; 2025 PLANTERR/UEFS. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+</html>

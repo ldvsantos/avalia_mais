@@ -6,12 +6,21 @@
     <title>Portal do Candidato - Seleção (PLANTERR 2026)</title>
     <link rel="stylesheet" href="style.css?v=20251219-1">
     <link rel="stylesheet" href="theme.css?v=20251219-1">
+    <script src="nav-back.js?v=20251221-1" defer></script>
     <style>
         .home-menu {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: 1fr;
+            gap: 26px;
+            margin-top: 44px;
+            margin-bottom: 52px;
+            padding-bottom: 2px;
+        }
+
+        @media (min-width: 720px) {
+            .home-menu {
+                grid-template-columns: repeat(2, minmax(250px, 1fr));
+            }
         }
         .menu-card {
             background: white;
@@ -19,14 +28,12 @@
             border-radius: 8px;
             padding: 20px;
             text-align: center;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: box-shadow 0.2s;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
+            gap: 10px;
         }
         .menu-card:hover {
-            transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         .menu-card h3 {
@@ -36,11 +43,11 @@
         .menu-card p {
             color: #666;
             font-size: 0.9em;
-            flex-grow: 1;
+            margin: 0;
         }
         .menu-card .btn-primary, .menu-card .btn-secondary {
             width: 100%;
-            margin-top: 15px;
+            margin-top: auto;
             display: block;
             box-sizing: border-box;
             text-decoration: none;
@@ -117,11 +124,11 @@
     <div class="container">
         <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-                <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+                <a href="/" class="js-back-link" data-fallback="/" aria-label="Voltar" style="display:inline-block;">
                     <img src="img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
                 </a>
                 <div>
-                    <h1 style="margin:0; font-size: 1.5em;">Processo Seletivo 2026</h1>
+                    <h1 style="margin:0; font-size: 1.5em;">Processo Seletivo</h1>
                     <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Mestrado Profissional em Planejamento Territorial</p>
                 </div>
                 <img src="img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
@@ -150,6 +157,11 @@
                 <h3>Recursos</h3>
                 <p>Interposição de recursos contra resultados ou etapas do processo seletivo.</p>
                 <a href="recurso.html" class="btn-secondary">Interpor Recurso</a>
+            </div>
+            <div class="menu-card">
+                <h3>Ajuda e Contato</h3>
+                <p>Perguntas frequentes, problemas comuns e orientações de atendimento.</p>
+                <a href="suporte.html" class="btn-secondary">Acessar Ajuda</a>
             </div>
         </div>
 
