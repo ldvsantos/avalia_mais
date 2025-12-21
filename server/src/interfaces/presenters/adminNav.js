@@ -25,26 +25,35 @@ function renderAdminNav({ adminSecret, active } = {}) {
 
   return `
     <style>
-      /* Menu hambúrguer no topo-direita (barra do cabeçalho) */
-      .container { position: relative; }
-      details.admin-menu-float { position: absolute; top: 12px; right: 12px; z-index: 50; }
+      /* Menu hambúrguer alinhado ao cabeçalho (topo-direita) */
+      nav.admin-menu-wrap { position: relative; height: 0; margin: 0; }
+      details.admin-menu-float { position: absolute; right: 12px; top: -64px; z-index: 50; }
       details.admin-menu-float > summary { list-style: none; }
       details.admin-menu-float > summary::-webkit-details-marker { display: none; }
-      details.admin-menu-float .admin-menu-trigger { display: inline-flex; align-items: center; gap: 6px; }
+      details.admin-menu-float .admin-menu-trigger { display: inline-flex; align-items: center; }
       details.admin-menu-float .admin-menu-panel { margin-top: 8px; }
       details.admin-menu-float .admin-menu-panel .admin-actions { justify-content: flex-end; }
+
+      /* Em telas pequenas, evita sobreposição no header e coloca abaixo */
+      @media (max-width: 820px) {
+        nav.admin-menu-wrap { height: auto; margin: 10px 0; display: flex; justify-content: flex-end; }
+        details.admin-menu-float { position: static; }
+        details.admin-menu-float .admin-menu-panel .admin-actions { justify-content: center; }
+      }
     </style>
-    <details class="admin-menu-float" aria-label="Menu administrativo">
-      <summary class="admin-menu-trigger">
-        <span class="btn-secondary" aria-label="Abrir menu">\u2630</span>
-      </summary>
-      <div class="admin-box admin-menu-panel">
-        <div class="admin-actions" style="justify-content:flex-end;">
-          ${linkHtml}
-          <a class="btn-secondary" href="${base}/logout">Sair</a>
+    <nav class="admin-menu-wrap" aria-label="Menu administrativo">
+      <details class="admin-menu-float">
+        <summary class="admin-menu-trigger">
+          <span class="btn-secondary" aria-label="Abrir menu">\u2630</span>
+        </summary>
+        <div class="admin-box admin-menu-panel">
+          <div class="admin-actions" style="justify-content:flex-end;">
+            ${linkHtml}
+            <a class="btn-secondary" href="${base}/logout">Sair</a>
+          </div>
         </div>
-      </div>
-    </details>
+      </details>
+    </nav>
   `;
 }
 
