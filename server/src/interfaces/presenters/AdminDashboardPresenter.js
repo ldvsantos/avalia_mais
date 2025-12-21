@@ -79,7 +79,7 @@ class AdminDashboardPresenter {
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
                 <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
               </a>
               <h1>Painel Administrativo</h1>
@@ -166,7 +166,7 @@ class AdminDashboardPresenter {
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
                 <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
               </a>
               <h1>Administração de Recursos - AVALIA+</h1>
@@ -271,7 +271,7 @@ class AdminDashboardPresenter {
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
                 <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
               </a>
               <h1>Gestão de Eventos</h1>
@@ -369,7 +369,7 @@ class AdminDashboardPresenter {
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
                 <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
               </a>
               <h1>${isEdit ? 'Editar' : 'Novo'} Evento</h1>
@@ -694,7 +694,7 @@ class AdminDashboardPresenter {
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
                 <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
               </a>
               <h1>Administração de Inscrições - AVALIA+</h1>

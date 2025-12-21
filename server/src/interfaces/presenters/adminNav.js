@@ -24,12 +24,19 @@ function renderAdminNav({ adminSecret, active } = {}) {
     .join('\n');
 
   return `
-    <nav class="admin-box" aria-label="Menu administrativo" style="margin: 10px 0;">
-      <div class="admin-actions" style="justify-content:center;">
+    <style>
+      details.admin-menu > summary { list-style: none; }
+      details.admin-menu > summary::-webkit-details-marker { display: none; }
+    </style>
+    <details class="admin-box admin-menu" style="margin: 10px 0;" aria-label="Menu administrativo">
+      <summary class="admin-actions" style="justify-content:center; cursor:pointer;">
+        <span class="btn-secondary">\u2630 Menu</span>
+      </summary>
+      <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
         ${linkHtml}
         <a class="btn-secondary" href="${base}/logout">Sair</a>
       </div>
-    </nav>
+    </details>
   `;
 }
 

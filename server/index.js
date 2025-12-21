@@ -634,7 +634,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
+            <a href="/secret/${ADMIN_SECRET}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
               <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
             </a>
             <h1>Calendário do Edital (Workflow)</h1>
