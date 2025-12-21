@@ -20,7 +20,9 @@
         .course-item {
             background: white;
             padding: 14px 16px;
-            display: block;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
             text-decoration: none;
             color: inherit;
             border-bottom: 1px solid #eee;
@@ -32,6 +34,28 @@
 
         .course-item:hover {
             background: #F4F9FD;
+        }
+
+        .course-thumb {
+            width: 84px;
+            height: 84px;
+            flex: 0 0 auto;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #f0f0f0;
+        }
+
+        .course-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .course-info {
+            min-width: 0;
+            flex: 1 1 auto;
         }
 
         .course-title {
@@ -121,6 +145,7 @@
                         const location = escapeHtml(e && e.location ? e.location : '');
                         const id = e && e.id ? String(e.id) : '';
                         const href = id ? ('/eventos/' + encodeURIComponent(id)) : '';
+                        const imageUrl = e && e.imageUrl ? escapeHtml(e.imageUrl) : 'img/post_padrao.png';
 
                         const item = document.createElement('a');
                         item.className = 'course-item';
@@ -131,10 +156,15 @@
                         }
 
                         item.innerHTML =
-                            '<div class="course-title">' + title + '</div>' +
-                            '<div class="course-meta">' +
-                            (date ? ('<div><strong>Data:</strong> ' + date + '</div>') : '') +
-                            (location ? ('<div><strong>Local:</strong> ' + location + '</div>') : '') +
+                            '<div class="course-thumb">' +
+                                '<img src="' + imageUrl + '" alt="Post do evento">' +
+                            '</div>' +
+                            '<div class="course-info">' +
+                                '<div class="course-title">' + title + '</div>' +
+                                '<div class="course-meta">' +
+                                    (date ? ('<div><strong>Data:</strong> ' + date + '</div>') : '') +
+                                    (location ? ('<div><strong>Local:</strong> ' + location + '</div>') : '') +
+                                '</div>' +
                             '</div>';
 
                         list.appendChild(item);
