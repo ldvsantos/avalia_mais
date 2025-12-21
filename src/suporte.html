@@ -126,20 +126,9 @@
             </div>
         </section>
 
-        <h2 class="section-title">Problemas comuns</h2>
-        <section class="panel">
-            <div class="panel-body">
-                <p class="muted" id="faq-loading" style="margin:0; text-align:center;">Carregando perguntas...</p>
-                <div class="faq-accordion" id="faq-problems" style="display:none;"></div>
-            </div>
-        </section>
-
-        <h2 class="section-title">Perguntas frequentes (FAQ)</h2>
-        <section class="panel">
-            <div class="panel-body">
-                <div class="faq-accordion" id="faq-faq" style="display:none;"></div>
-            </div>
-        </section>
+        <div id="faq-container">
+            <p class="muted" id="faq-loading" style="margin:20px; text-align:center;">Carregando perguntas...</p>
+        </div>
 
         <script>
             function escapeHtml(s) {
@@ -171,19 +160,32 @@
                 .then(r => r.json())
                 .then(data => {
                     const loading = document.getElementById('faq-loading');
-                    const problems = document.getElementById('faq-problems');
-                    const faq = document.getElementById('faq-faq');
+                    if (loading) loading.remove();
 
+                    const container = document.getElementById('faq-container');
                     const sections = data && Array.isArray(data.sections) ? data.sections : [];
-                    const problemsSection = sections.find(s => s && s.id === 'problems') || null;
-                    const faqSection = sections.find(s => s && s.id === 'faq') || null;
 
-                    renderAccordion(problems, problemsSection && Array.isArray(problemsSection.items) ? problemsSection.items : []);
-                    renderAccordion(faq, faqSection && Array.isArray(faqSection.items) ? faqSection.items : []);
+                    sections.forEach(section => {
+                        if (!section.items || section.items.length === 0) return;
 
-                    if (loading) loading.style.display = 'none';
-                    problems.style.display = 'flex';
-                    faq.style.display = 'flex';
+                        const title = document.createElement('h2');
+                        title.className = 'section-title';
+                        title.textContent = section.title;
+                        container.appendChild(title);
+
+                        const panel = document.createElement('section');
+                        panel.className = 'panel';
+                        const panelBody = document.createElement('div');
+                        panelBody.className = 'panel-body';
+                        const accordion = document.createElement('div');
+                        accordion.className = 'faq-accordion';
+                        
+                        renderAccordion(accordion, section.items);
+                        
+                        panelBody.appendChild(accordion);
+                        panel.appendChild(panelBody);
+                        container.appendChild(panel);
+                    });
                 })
                 .catch(() => {
                     const loading = document.getElementById('faq-loading');

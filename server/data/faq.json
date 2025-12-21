@@ -1,0 +1,67 @@
+{
+  "updatedAt": "2025-12-21T12:00:00.000Z",
+  "sections": [
+    {
+      "id": "selection",
+      "title": "Processo Seletivo",
+      "items": [
+        {
+          "question": "Como é calculada a nota final?",
+          "answer": "A nota final é calculada com base nos critérios estabelecidos no Edital. Geralmente envolve a análise curricular, entrevista e/ou prova escrita, dependendo da vaga. Consulte o item \"Da Classificação\" no Edital para a fórmula exata."
+        },
+        {
+          "question": "Quais são as etapas da seleção?",
+          "answer": "O processo seletivo é composto por etapas como: Inscrição, Homologação das Inscrições, Avaliação Curricular, Entrevista (se houver) e Resultado Final. Verifique o cronograma no Edital para as datas de cada etapa."
+        },
+        {
+          "question": "Onde vejo o resultado de cada etapa?",
+          "answer": "Os resultados são divulgados na página \"Processo Seletivo\" deste portal. Fique atento às publicações de editais de resultado e homologação."
+        },
+        {
+          "question": "Como entro com recurso?",
+          "answer": "Caso discorde de algum resultado preliminar, você pode interpor recurso através da página \"Recurso\" neste portal, dentro do prazo estipulado no cronograma do Edital."
+        },
+        {
+          "question": "O que é a Homologação das Inscrições?",
+          "answer": "É a confirmação de que sua inscrição foi aceita e que você cumpriu os requisitos iniciais (envio de documentos, preenchimento correto). Se sua inscrição não for homologada, verifique o motivo e o prazo para recurso."
+        }
+      ]
+    },
+    {
+      "id": "edital",
+      "title": "Dúvidas sobre o Edital",
+      "items": [
+        {
+          "question": "Quem pode participar da seleção?",
+          "answer": "Os requisitos para participação (formação, experiência, etc.) estão descritos no item \"Dos Requisitos\" do Edital. Leia atentamente para garantir que você se enquadra no perfil da vaga."
+        },
+        {
+          "question": "Quais documentos preciso enviar?",
+          "answer": "A lista de documentos obrigatórios consta no Edital. Geralmente inclui documento de identidade, CPF, comprovantes de escolaridade e currículo comprovado. A falta de qualquer documento pode levar ao indeferimento da inscrição."
+        },
+        {
+          "question": "Posso me inscrever em mais de uma vaga?",
+          "answer": "Verifique no Edital se há vedação para inscrição em mais de uma vaga ou se há compatibilidade de horários, caso as etapas ocorram simultaneamente."
+        }
+      ]
+    },
+    {
+      "id": "problems",
+      "title": "Problemas Comuns",
+      "items": [
+        {
+          "question": "Não recebi o e-mail de confirmação",
+          "answer": "Verifique Spam/Lixo e a aba “Promoções”. Se você digitou o e-mail incorretamente, o sistema não consegue reenviar para outro endereço. Nesse caso, contate a comissão conforme Edital."
+        },
+        {
+          "question": "Perdi meu protocolo",
+          "answer": "O protocolo fica no PDF gerado ao final da inscrição. Procure no download do navegador ou no histórico de arquivos do computador. Se não encontrar, contate a comissão conforme Edital."
+        },
+        {
+          "question": "Não consigo anexar meus documentos",
+          "answer": "Verifique se os arquivos estão no formato PDF e dentro do tamanho limite permitido (geralmente descrito no formulário de inscrição)."
+        }
+      ]
+    }
+  ]
+}

@@ -20,13 +20,57 @@ class JsonFaqRepository {
   }
 
   getDefault() {
-    // Seed inicial baseado no conteúdo que existia em src/suporte.html
+    // Seed inicial atualizado com foco no Processo Seletivo e Edital
     return {
       updatedAt: new Date().toISOString(),
       sections: [
         {
+          id: 'selection',
+          title: 'Processo Seletivo',
+          items: [
+            {
+              question: 'Como é calculada a nota final?',
+              answer: 'A nota final é calculada com base nos critérios estabelecidos no Edital. Geralmente envolve a análise curricular, entrevista e/ou prova escrita, dependendo da vaga. Consulte o item "Da Classificação" no Edital para a fórmula exata.'
+            },
+            {
+              question: 'Quais são as etapas da seleção?',
+              answer: 'O processo seletivo é composto por etapas como: Inscrição, Homologação das Inscrições, Avaliação Curricular, Entrevista (se houver) e Resultado Final. Verifique o cronograma no Edital para as datas de cada etapa.'
+            },
+            {
+              question: 'Onde vejo o resultado de cada etapa?',
+              answer: 'Os resultados são divulgados na página "Processo Seletivo" deste portal. Fique atento às publicações de editais de resultado e homologação.'
+            },
+            {
+              question: 'Como entro com recurso?',
+              answer: 'Caso discorde de algum resultado preliminar, você pode interpor recurso através da página "Recurso" neste portal, dentro do prazo estipulado no cronograma do Edital.'
+            },
+            {
+              question: 'O que é a Homologação das Inscrições?',
+              answer: 'É a confirmação de que sua inscrição foi aceita e que você cumpriu os requisitos iniciais (envio de documentos, preenchimento correto). Se sua inscrição não for homologada, verifique o motivo e o prazo para recurso.'
+            }
+          ]
+        },
+        {
+          id: 'edital',
+          title: 'Dúvidas sobre o Edital',
+          items: [
+            {
+              question: 'Quem pode participar da seleção?',
+              answer: 'Os requisitos para participação (formação, experiência, etc.) estão descritos no item "Dos Requisitos" do Edital. Leia atentamente para garantir que você se enquadra no perfil da vaga.'
+            },
+            {
+              question: 'Quais documentos preciso enviar?',
+              answer: 'A lista de documentos obrigatórios consta no Edital. Geralmente inclui documento de identidade, CPF, comprovantes de escolaridade e currículo comprovado. A falta de qualquer documento pode levar ao indeferimento da inscrição.'
+            },
+            {
+              question: 'Posso me inscrever em mais de uma vaga?',
+              answer: 'Verifique no Edital se há vedação para inscrição em mais de uma vaga ou se há compatibilidade de horários, caso as etapas ocorram simultaneamente.'
+            }
+          ]
+        },
+        {
           id: 'problems',
-          title: 'Problemas comuns',
+          title: 'Problemas Comuns',
           items: [
             {
               question: 'Não recebi o e-mail de confirmação',
@@ -37,42 +81,8 @@ class JsonFaqRepository {
               answer: 'O protocolo fica no PDF gerado ao final da inscrição. Procure no download do navegador ou no histórico de arquivos do computador. Se não encontrar, contate a comissão conforme Edital.'
             },
             {
-              question: '“Enviei e voltou para revisar”',
-              answer: 'Isso ocorre quando algum campo obrigatório está incompleto/inválido. O formulário destaca o campo e leva o foco para o primeiro erro.'
-            },
-            {
-              question: 'Não consigo consultar minha inscrição',
-              answer: 'Use o protocolo exatamente como aparece no PDF. Se ainda assim falhar, tente novamente em outro navegador.'
-            },
-            {
-              question: 'O botão de enviar está desativado',
-              answer: 'As inscrições podem estar fora do prazo. Confira o calendário/cronograma no portal e no Edital.'
-            },
-            {
-              question: 'Erro ao enviar recurso',
-              answer: 'Confirme se o protocolo de inscrição está correto e se a etapa do recurso está em prazo. O sistema pode bloquear etapas fora do prazo.'
-            }
-          ]
-        },
-        {
-          id: 'faq',
-          title: 'Perguntas frequentes (FAQ)',
-          items: [
-            {
-              question: 'Como sei que minha inscrição foi registrada?',
-              answer: 'Ao concluir, o sistema mostra um protocolo e um hash (SHA-256), além de gerar um PDF com esses dados.'
-            },
-            {
-              question: 'O que é o hash?',
-              answer: 'É um código de verificação calculado a partir do registro da inscrição. Ele serve para dar integridade ao comprovante (não é senha).'
-            },
-            {
-              question: 'Posso editar a inscrição depois de enviar?',
-              answer: 'Em geral, não. Por isso existe a etapa de revisão antes do envio. Para exceções, siga o que o Edital permitir.'
-            },
-            {
-              question: 'O que devo anexar?',
-              answer: 'As exigências variam por perfil (vaga reservada, vínculo empregatício etc.). O formulário sinaliza os anexos condicionais, mas a regra final é a do Edital.'
+              question: 'Não consigo anexar meus documentos',
+              answer: 'Verifique se os arquivos estão no formato PDF e dentro do tamanho limite permitido (geralmente descrito no formulário de inscrição).'
             }
           ]
         }
