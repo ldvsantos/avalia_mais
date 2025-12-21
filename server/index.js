@@ -49,6 +49,7 @@ const EvaluationController = require('./src/interfaces/http/controllers/Evaluati
 const EventController = require('./src/interfaces/http/controllers/EventController');
 const AdminController = require('./src/interfaces/controllers/AdminController');
 const AdminDashboardPresenter = require('./src/interfaces/presenters/AdminDashboardPresenter');
+const { renderAdminNav } = require('./src/interfaces/presenters/adminNav');
 const ListSubmissions = require('./src/application/ListSubmissions');
 const ListEvaluations = require('./src/application/ListEvaluations');
 const ListAppeals = require('./src/application/ListAppeals');
@@ -641,8 +642,9 @@ function renderCalendarEditPage({ year, values, saved, error }) {
           </div>
         </header>
 
+        ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'selection' })}
+
         <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar ao Admin</a>
           <span class="admin-badge">Ano: ${escapeHtml(String(year))}</span>
         </div>
 
@@ -4195,6 +4197,8 @@ app.get(`/secret/${ADMIN_SECRET}/admin/faq`, checkAdminIP, adminAuth, (req, res)
           </div>
         </header>
 
+        ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'faq' })}
+
         <section class="panel">
           <div class="panel-header"><h2>Configuração</h2></div>
           <div class="panel-body">
@@ -4204,9 +4208,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/faq`, checkAdminIP, adminAuth, (req, res)
             </div>
             ${saved ? '<div class="ok">Salvo com sucesso.</div>' : ''}
             <div class="admin-actions" style="justify-content:center; margin-top: 10px;">
-              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
               <a class="btn-secondary" href="/suporte.html" target="_blank" rel="noopener noreferrer">Ver Ajuda (público)</a>
-              <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/logout" style="background-color: #d9534f; border-color: #d43f3a; color:white;">Sair</a>
             </div>
           </div>
         </section>
@@ -4530,6 +4532,8 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, 
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
+
+          ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'events' })}
           <section class="panel">
             <div class="panel-header"><h2>${escapeHtml(event.title)}</h2></div>
             <div class="panel-body">
@@ -4537,11 +4541,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, 
               <p><strong>Local:</strong> ${escapeHtml(event.location)}</p>
               <p><strong>Carga Horária:</strong> ${escapeHtml(event.workload)}</p>
               <p><strong>Total de Inscritos:</strong> ${event.registrations.length}</p>
-              
-              <div class="admin-actions">
-                <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/events">← Voltar aos Eventos</a>
-              </div>
-              
+
               <table class="admin-table">
                 <thead>
                   <tr>
@@ -4706,9 +4706,8 @@ app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, async (req
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
-        <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">Admin</a>
-        </div>
+
+        ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'committee' })}
         
         <section class="panel">
           <div class="panel-header"><h2>Linha 1 – Planejamento Urbano-regional, Ambiental e de Comunidades Tradicionais</h2></div>
@@ -4834,8 +4833,9 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, as
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
+
+        ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'results' })}
         <div class="admin-actions" style="justify-content:center; gap:8px; margin-bottom:10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar</a>
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/committee/results/csv">Baixar CSV</a>
           <button class="btn-secondary" type="button" id="btn-print-ranking">Imprimir / PDF</button>
           <span class="admin-badge">Pesos: Projeto=4, Entrevista=5, Língua=1 (normalizados)</span>
@@ -5071,6 +5071,8 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
+
+        ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'committee' })}
         <div class="admin-actions" style="justify-content:center; gap:8px;">
           <a class="btn-secondary" href="${backHref}">← Voltar</a>
           <span class="admin-badge">Protocolo: ${escapeHtml(protocol)}</span>
@@ -5498,9 +5500,8 @@ app.get(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminA
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
-        <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">← Voltar ao Admin</a>
-        </div>
+
+        ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'events' })}
         <form method="POST" action="/secret/${ADMIN_SECRET}/admin/certificados/teste" target="_blank">
           <section class="panel">
             <div class="panel-header"><h2>Dados do Certificado</h2></div>
@@ -5756,8 +5757,9 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
           </div>
         </header>
 
+        ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'selection' })}
+
         <div class="admin-actions" style="justify-content: center; margin-bottom: 10px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar</a>
           <button class="btn-secondary" type="button" id="print-btn">Imprimir / Salvar em PDF</button>
           <span class="admin-badge">Protocolo: <span class="mono" id="protocol">${escapeHtml(protocol)}</span></span>
           <span class="admin-badge">Status integridade: ${hashValid ? 'Íntegra (hash confere)' : 'Atenção: hash não confere'}</span>
@@ -5990,9 +5992,8 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
-        <div class="admin-actions" style="justify-content:center; margin-bottom:20px;">
-          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar ao Admin</a>
-        </div>
+
+        ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'evaluator-links' })}
         
         <div class="panel">
           <div class="panel-body">

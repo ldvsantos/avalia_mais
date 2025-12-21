@@ -7,6 +7,8 @@ const escapeHtml = (unsafe) => {
     .replace(/'/g, "&#039;");
 };
 
+const { renderAdminNav } = require('./adminNav');
+
 class AdminDashboardPresenter {
   constructor(adminSecret) {
     this.adminSecret = adminSecret;
@@ -85,6 +87,8 @@ class AdminDashboardPresenter {
             </div>
           </header>
 
+          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'home' })}
+
           <div class="admin-home-container">
             <div class="admin-cards">
               <a href="/secret/${this.adminSecret}/admin/selection" class="admin-card">
@@ -104,10 +108,6 @@ class AdminDashboardPresenter {
                 <h2>FAQ / Ajuda</h2>
                 <p>Atualizar textos de Ajuda e Perguntas Frequentes sem mexer no código.</p>
               </a>
-            </div>
-            
-            <div style="margin-top: 20px;">
-               <a href="/secret/${this.adminSecret}/logout" class="btn-secondary">Sair</a>
             </div>
           </div>
         </div>
@@ -174,14 +174,12 @@ class AdminDashboardPresenter {
             </div>
           </header>
 
+          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'appeals' })}
+
           <section class="panel">
             <div class="panel-header"><h2>Busca e filtros</h2></div>
             <div class="panel-body">
               <div class="hint">Dica: use a busca por protocolo, nome, email, CPF ou título.</div>
-              <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/selection">Voltar ao Admin</a>
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/logout" style="background-color: #d9534f; border-color: #d43f3a;">Sair</a>
-              </div>
               <form method="GET" action="/secret/${this.adminSecret}/admin/appeals">
                 <div class="filters-grid" style="margin-top: 8px;">
                   <div class="form-group" style="margin-bottom: 0;">
@@ -280,12 +278,13 @@ class AdminDashboardPresenter {
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
+
+          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'events' })}
           <section class="panel">
             <div class="panel-header"><h2>Eventos Cadastrados</h2></div>
             <div class="panel-body">
               <div class="admin-actions">
                 <a class="btn-primary" href="/secret/${this.adminSecret}/admin/events/new">Novo Evento</a>
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Voltar ao Admin</a>
               </div>
               <table class="admin-table">
                 <thead>
@@ -377,10 +376,8 @@ class AdminDashboardPresenter {
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
-          
-          <div class="admin-actions" style="justify-content:center; margin-bottom:10px;">
-            <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/events">← Voltar aos Eventos</a>
-          </div>
+
+          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'events' })}
           
           <section class="panel">
             <div class="panel-body">
@@ -766,14 +763,8 @@ class AdminDashboardPresenter {
             <div class="panel-header"><h2>Busca e filtros</h2></div>
             <div class="panel-body">
               <div class="hint">Dica: clique no protocolo para ver detalhes, status e verificação.</div>
-              <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin">Voltar ao Início</a>
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/appeals">Recursos</a>
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/committee">Área da Comissão</a>
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/committee/results">Ranking / Resultados</a>
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/evaluator-links">Credenciais Avaliadores</a>
-                <a class="btn-secondary" href="/secret/${this.adminSecret}/logout" style="background-color: #d9534f; border-color: #d43f3a;">Sair</a>
-              </div>
+
+              ${renderAdminNav({ adminSecret: this.adminSecret, active: 'selection' })}
               <form method="GET" action="/secret/${this.adminSecret}/admin/selection">
                 <div class="filters-grid" style="margin-top: 8px;">
                   <div class="form-group" style="margin-bottom: 0;">
