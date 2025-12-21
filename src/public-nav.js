@@ -47,7 +47,7 @@
       '.public-drawer-links { display: flex; flex-direction: column; gap: 8px; }' +
       '.public-drawer .btn-primary, .public-drawer .btn-secondary { max-width: 100%; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }' +
       '.public-menu-toggle:checked ~ .public-drawer { opacity: 1; visibility: visible; transform: translateX(0); pointer-events: auto; }' +
-      '@media (max-width: 820px) { nav.public-menu-wrap { height: auto; margin: 10px 0; display: flex; justify-content: flex-end; } label.public-menu-btn { position: static; display: inline-block; margin-bottom: 0; } .public-drawer { top: 10px; z-index: 100; } }' +
+      '@media (max-width: 820px) { nav.public-menu-wrap { height: 44px; margin: 8px 0 0; } label.public-menu-btn { position: absolute; top: 8px; right: 8px; } label.public-menu-btn .btn-secondary { padding: 10px 14px; } .public-drawer { top: 44px; z-index: 100; width: 320px; max-width: 92vw; } }' +
       '</style>' +
       '<nav class="public-menu-wrap" aria-label="Menu">' +
       '<input class="public-menu-toggle" type="checkbox" id="' +
