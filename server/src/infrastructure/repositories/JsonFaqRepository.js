@@ -5,7 +5,7 @@ const { safeWriteFileUtf8Atomic } = require('./fileUtils');
 class JsonFaqRepository {
   constructor(dataDir) {
     this.dataDir = dataDir;
-    this.filePath = path.join(dataDir, 'faq_v3.json');
+    this.filePath = path.join(dataDir, 'faq_v4.json');
     this.ensureFile();
   }
 
@@ -20,83 +20,71 @@ class JsonFaqRepository {
   }
 
   getDefault() {
-    // Seed inicial atualizado com base no Edital 2026
+    // Seed inicial atualizado com foco na Operacionalização do Site e Edital
     return {
       updatedAt: new Date().toISOString(),
       sections: [
         {
-          id: 'inscricoes',
-          title: 'Inscrições e Documentação',
+          id: 'inscricao_site',
+          title: 'Como realizar a Inscrição no Site',
           items: [
             {
-              question: 'Como faço minha inscrição?',
-              answer: 'As inscrições são realizadas exclusivamente por e-mail (seletivoplanterr@gmail.com) de 17/10/2025 a 17/11/2025. Você deve enviar a documentação digitalizada (PDF ou JPG, máx 5MB por arquivo) conforme a lista do item 4 do Edital.'
+              question: 'Como preencher o formulário de inscrição?',
+              answer: 'Acesse a página "Inscrição" neste portal. Preencha seus dados pessoais e, na seção "Projeto de Pesquisa", digite ou cole os textos do seu Anteprojeto (Resumo, Introdução, etc.) nos campos correspondentes. O sistema formatará tudo automaticamente.'
             },
             {
-              question: 'Quais documentos são obrigatórios?',
-              answer: 'Ficha de Inscrição (Anexo I), Documento de Identificação (RG/CNH), Currículo Lattes atualizado, Termo de Compromisso (Anexo II), Declaração do empregador (se vínculo > 20h) e o Anteprojeto de TCC (Anexo IV) SEM identificação. Candidatos a vagas reservadas devem enviar também os anexos específicos (V a XII).'
+              question: 'O site salva rascunho?',
+              answer: 'NÃO. O site não salva rascunhos. Recomendamos que você escreva seu Anteprojeto em um editor de texto (Word, Docs) e, quando estiver pronto, copie e cole nos campos do site para evitar perda de dados.'
             },
             {
-              question: 'O Anteprojeto deve ser identificado?',
-              answer: 'NÃO. O Anteprojeto de TCC (Anexo IV) não deve conter seu nome ou qualquer identificação, para garantir a imparcialidade na avaliação da Primeira Etapa.'
+              question: 'Como gero o PDF da inscrição?',
+              answer: 'Ao final do preenchimento, clique no botão "Enviar Inscrição e Gerar PDF". O sistema registrará seus dados e baixará automaticamente um arquivo PDF contendo sua Ficha de Inscrição e o Anteprojeto.'
             },
             {
-              question: 'Posso enviar fotos dos documentos?',
-              answer: 'Sim, desde que estejam legíveis e sem rasuras, em formato JPG ou PDF. O tamanho máximo é de 5MB por arquivo.'
+              question: 'O que faço com o PDF gerado?',
+              answer: 'Este PDF é o seu comprovante e contém os Anexos I e IV preenchidos. Você deve enviá-lo para o e-mail da seleção (seletivoplanterr@gmail.com) juntamente com os demais documentos exigidos (RG, Diploma, etc.), conforme o item 4 do Edital.'
             }
           ]
         },
         {
-          id: 'etapas',
-          title: 'Etapas da Seleção',
+          id: 'anteprojeto',
+          title: 'Preenchimento do Anteprojeto',
           items: [
             {
-              question: 'Quais são as etapas do processo?',
-              answer: '1ª Etapa: Enquadramento e Avaliação do Anteprojeto (Eliminatória/Classificatória, peso 4); 2ª Etapa: Entrevista Presencial (Eliminatória/Classificatória, peso 5); 3ª Etapa: Prova de Língua Estrangeira (Classificatória, peso 1).'
+              question: 'Posso colocar meu nome no Anteprojeto?',
+              answer: 'NÃO. O Anteprojeto (campos de texto do projeto) NÃO deve conter seu nome ou qualquer identificação, pois a avaliação é "às cegas". Se houver identificação no corpo do texto, sua inscrição poderá ser indeferida.'
             },
             {
-              question: 'Qual a nota mínima para aprovação?',
-              answer: 'É necessário obter nota mínima de 7,0 (sete) na Avaliação do Anteprojeto e na Entrevista para não ser eliminado. A média final para aprovação também deve ser igual ou superior a 7,0.'
-            },
-            {
-              question: 'Como funciona a Prova de Língua Estrangeira?',
-              answer: 'É uma prova presencial de leitura e interpretação (Inglês ou Espanhol). É permitido o uso de dicionário impresso. Não é permitido o uso de eletrônicos. A nota é classificatória.'
-            },
-            {
-              question: 'Onde ocorrem as etapas presenciais?',
-              answer: 'As entrevistas e a prova de língua estrangeira ocorrem no campus da UEFS, em Feira de Santana. Os locais e horários específicos serão divulgados no site do programa.'
+              question: 'Como respeito o limite de caracteres?',
+              answer: 'Cada campo de texto possui um contador de caracteres abaixo dele. O sistema não permitirá digitar além do limite. Planeje seu texto para caber nos espaços estipulados.'
             }
           ]
         },
         {
-          id: 'resultados',
-          title: 'Resultados e Recursos',
+          id: 'recurso_site',
+          title: 'Como interpor Recurso',
           items: [
             {
-              question: 'Como é calculada a Nota Final?',
-              answer: 'A Nota Final é a média ponderada: (Nota Anteprojeto x 4 + Nota Entrevista x 5 + Nota Língua Estrangeira x 1) / 10.'
+              question: 'Como faço um recurso pelo site?',
+              answer: 'Acesse a página "Recurso", preencha o formulário com seu protocolo de inscrição e a argumentação. Ao clicar em "Enviar Recurso", o sistema registrará seu pedido.'
             },
             {
-              question: 'Como entro com recurso?',
-              answer: 'Os recursos devem ser enviados para o e-mail seletivoplanterr@gmail.com utilizando o formulário Anexo XV, dentro dos prazos estabelecidos no Cronograma do Edital.'
-            },
-            {
-              question: 'Onde vejo os resultados?',
-              answer: 'Todos os resultados e convocações são divulgados exclusivamente na página do Programa: http://www.planterr.uefs.br.'
+              question: 'Preciso enviar o recurso por e-mail também?',
+              answer: 'Sim. O Edital prevê o envio por e-mail. Utilize o PDF ou comprovante gerado pelo site (se houver) ou o formulário Anexo XV preenchido e envie para seletivoplanterr@gmail.com dentro do prazo recursal.'
             }
           ]
         },
         {
-          id: 'cotas',
-          title: 'Ações Afirmativas (Cotas)',
+          id: 'edital_geral',
+          title: 'Dúvidas Gerais do Edital',
           items: [
             {
-              question: 'Quais são as vagas reservadas?',
-              answer: '50% das vagas são destinadas a ações afirmativas: negros/as, indígenas, quilombolas, ciganos/as, pessoas trans e pessoas com deficiência. Há também 20% para servidores da UEFS e 20% para servidores da SDR.'
+              question: 'Quais documentos são obrigatórios no e-mail?',
+              answer: 'Além do PDF gerado no site (Ficha + Anteprojeto), você deve anexar: RG, CPF, Diploma (ou certificado), Histórico Escolar, Currículo Lattes e os demais anexos específicos para cotas ou vínculo empregatício. Consulte o item 4 do Edital.'
             },
             {
-              question: 'Como funciona a validação das cotas?',
-              answer: 'Candidatos negros passam por Comissão de Heteroidentificação. Indígenas, quilombolas, ciganos, trans e PcD passam por Comissão de Validação Documental. As datas estão no cronograma.'
+              question: 'Qual o prazo de inscrição?',
+              answer: 'De 17/10/2025 a 17/11/2025. Não deixe para a última hora para evitar lentidão no sistema ou problemas no envio do e-mail.'
             }
           ]
         }
