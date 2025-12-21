@@ -16,43 +16,57 @@ function renderAdminNav({ adminSecret, active } = {}) {
 
   const activeKey = String(active || '').trim();
 
+  const toggleId = `admin-menu-toggle-${encodeURIComponent(activeKey || 'default')}`;
+
   const linkHtml = links
     .map(({ key, href, label }) => {
       const cls = key === activeKey ? 'btn-primary' : 'btn-secondary';
-      return `<a class="${cls}" href="${href}">${label}</a>`;
+      return `<a class="${cls}" href="${href}" style="display:block; width:100%; text-align:left;">${label}</a>`;
     })
     .join('\n');
 
   return `
     <style>
-      /* Menu hambúrguer alinhado ao cabeçalho (topo-direita) */
+      /* Botão no topo-direita do header */
       nav.admin-menu-wrap { position: relative; height: 0; margin: 0; }
-      details.admin-menu-float { position: absolute; right: 12px; top: -64px; z-index: 50; }
-      details.admin-menu-float > summary { list-style: none; }
-      details.admin-menu-float > summary::-webkit-details-marker { display: none; }
-      details.admin-menu-float .admin-menu-trigger { display: inline-flex; align-items: center; }
-      details.admin-menu-float .admin-menu-panel { margin-top: 8px; }
-      details.admin-menu-float .admin-menu-panel .admin-actions { justify-content: flex-end; }
+      .admin-menu-toggle { position: absolute; left: -9999px; }
+      label.admin-menu-btn { position: absolute; right: 12px; top: -64px; z-index: 60; cursor: pointer; }
+      label.admin-menu-btn .btn-secondary { display: inline-flex; align-items: center; justify-content: center; }
 
-      /* Em telas pequenas, evita sobreposição no header e coloca abaixo */
+      /* Drawer lateral */
+      .admin-drawer { position: fixed; top: 0; left: -340px; height: 100vh; width: 320px; max-width: 85vw; z-index: 70; transition: left 0.2s ease-in-out; }
+      .admin-drawer-inner { height: 100%; overflow: auto; padding: 12px; }
+      .admin-drawer-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+      .admin-drawer-links { display: flex; flex-direction: column; gap: 8px; }
+
+      /* Quando aberto */
+      .admin-menu-toggle:checked ~ .admin-drawer { left: 0; }
+
+      /* Em telas pequenas, evita sobreposição no header e coloca o botão no fluxo */
       @media (max-width: 820px) {
         nav.admin-menu-wrap { height: auto; margin: 10px 0; display: flex; justify-content: flex-end; }
-        details.admin-menu-float { position: static; }
-        details.admin-menu-float .admin-menu-panel .admin-actions { justify-content: center; }
+        label.admin-menu-btn { position: static; }
       }
     </style>
     <nav class="admin-menu-wrap" aria-label="Menu administrativo">
-      <details class="admin-menu-float">
-        <summary class="admin-menu-trigger">
-          <span class="btn-secondary" aria-label="Abrir menu">\u2630</span>
-        </summary>
-        <div class="admin-box admin-menu-panel">
-          <div class="admin-actions" style="justify-content:flex-end;">
+      <input class="admin-menu-toggle" type="checkbox" id="${toggleId}" />
+
+      <label class="admin-menu-btn" for="${toggleId}">
+        <span class="btn-secondary" aria-label="Abrir menu">\u2630</span>
+      </label>
+
+      <aside class="admin-drawer" aria-label="Menu administrativo lateral">
+        <div class="admin-box admin-drawer-inner">
+          <div class="admin-drawer-header">
+            <strong>Menu</strong>
+            <label class="btn-secondary" for="${toggleId}" aria-label="Fechar menu">✕</label>
+          </div>
+          <div class="admin-drawer-links">
             ${linkHtml}
-            <a class="btn-secondary" href="${base}/logout">Sair</a>
+            <a class="btn-secondary" href="${base}/logout" style="display:block; width:100%; text-align:left;">Sair</a>
           </div>
         </div>
-      </details>
+      </aside>
     </nav>
   `;
 }
