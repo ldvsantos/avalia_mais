@@ -705,6 +705,18 @@ class AdminDashboardPresenter {
           ${renderAdminNav({ adminSecret: this.adminSecret, active: 'selection' })}
 
           <section class="panel">
+            <div class="panel-header"><h2>Ações Rápidas</h2></div>
+            <div class="panel-body">
+              <div class="admin-actions" style="justify-content:center; gap:10px; flex-wrap:wrap;">
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/evaluator-links">Credenciais Avaliadores</a>
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/committee">Área da Comissão</a>
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/committee/results">Ranking / Resultados</a>
+                <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/appeals">Gerenciar Recursos</a>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
             <div class="panel-header"><h2>Calendário de Inscrições</h2></div>
             <div class="panel-body">
               <div style="margin-bottom:10px;">
