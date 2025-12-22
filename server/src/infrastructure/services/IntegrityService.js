@@ -16,12 +16,13 @@ class IntegrityService {
   }
 
   /**
-   * Orchestrates the scan (AI + Plagiarism)
+   * Orchestrates the scan (AI + Plagiarism + Reference Check)
    * @param {string} submissionId 
    * @param {string} text 
    * @param {string} title 
+   * @param {string} references (Optional)
    */
-  async submitTextScan(submissionId, text, title = 'Untitled') {
+  async submitTextScan(submissionId, text, title = 'Untitled', references = '') {
     console.log(`[IntegrityService] Submitting scan for ${submissionId}... Mock: ${this.mockMode}`);
 
     if (this.mockMode) {
@@ -65,6 +66,18 @@ class IntegrityService {
       errors.push(`Plag: ${err.message}`);
     }
 
+    // 3. Check References (Hallucination Detection)
+    let referenceAnalysis = null;
+    if (references && references.length > 20) {
+        try {
+            referenceAnalysis = await this.checkReferences(references);
+        } catch (err) {
+            console.error('[IntegrityService] Reference Check failed:', err.message);
+            // Don't fail the whole scan, just log error
+            errors.push(`RefCheck: ${err.message}`);
+        }
+    }
+
     const status = (aiScore === null && plagiarismScore === null) ? 'error' : 'completed';
     let message = errors.length > 0 ? errors.join(' | ') : 'Scan completed successfully';
     
@@ -83,10 +96,72 @@ class IntegrityService {
       reportUrl: reportUrl,
       sources: sources,
       matches: matches,
+      referenceAnalysis: referenceAnalysis,
       scannedText: text,
       message: message,
       interpretation: interpretation
     };
+  }
+
+  /**
+   * Checks References for Hallucinations using Eden AI (Generative)
+   * @param {string} referencesText 
+   * @returns {Promise<Array>}
+   */
+  async checkReferences(referencesText) {
+    const url = 'https://api.edenai.run/v2/text/chat';
+    // Use openai as default for reasoning/checking, fallback to google if needed
+    const provider = 'openai'; 
+    
+    const payload = {
+      providers: provider,
+      text: `Analise as seguintes referências bibliográficas quanto à sua existência real.
+      
+      Referências:
+      ${referencesText}
+      
+      Responda estritamente um JSON Array com o formato:
+      [
+        { "ref": "texto da referencia", "status": "Real" | "Alucinação" | "Suspeita", "reason": "explicação curta" }
+      ]
+      Não inclua markdown, apenas o JSON cru.`,
+      chatbot_global_action: "Você é um assistente bibliotecário especialista em verificar a existência de referências acadêmicas. Você deve identificar alucinações de IA.",
+      temperature: 0.2,
+      max_tokens: 1000
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${this.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Eden AI (Chat) Error: ${response.status} ${errText}`);
+    }
+
+    const data = await response.json();
+    const providerResult = data[provider];
+    
+    if (!providerResult || providerResult.status === 'fail') {
+       throw new Error(`Provider ${provider} failed: ${providerResult?.error?.message}`);
+    }
+
+    const content = providerResult.generated_text || '';
+    
+    // Try to parse JSON
+    try {
+        // Remove markdown code blocks if present
+        const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(cleanJson);
+    } catch (e) {
+        console.error('Failed to parse reference check JSON:', content);
+        return null;
+    }
   }
 
   _getInterpretation(aiScore, plagiarismScore) {

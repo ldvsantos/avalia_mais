@@ -5376,6 +5376,19 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
                         <p style="margin-bottom:0;"><strong>Parecer do Sistema:</strong> ${escapeHtml(iText)}</p>
                     </div>
                     `;
+
+                    if (integrity.referenceAnalysis && integrity.referenceAnalysis.length > 0) {
+                        html += '<div style="margin-bottom:15px; padding:10px; background-color:#fff; border:1px solid #ddd;"><strong>Análise de Referências (Alucinações):</strong><ul style="margin-top:5px; padding-left:20px;">';
+                        integrity.referenceAnalysis.forEach(r => {
+                            let color = 'black';
+                            let icon = '[?]';
+                            if (r.status === 'Real') { color = 'green'; icon = '✓'; }
+                            if (r.status === 'Suspeita') { color = 'orange'; icon = '!'; }
+                            if (r.status === 'Alucinação') { color = 'red'; icon = '✗'; }
+                            html += `<li style="color:${color}; margin-bottom:4px;"><strong>${icon} [${r.status}]</strong> ${escapeHtml(r.ref)} <br><small style="color:#555;">${escapeHtml(r.reason)}</small></li>`;
+                        });
+                        html += '</ul></div>';
+                    }
                     
                     if (sources.length > 0) {
                         html += `
@@ -6558,6 +6571,8 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, async (re
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Avaliador ${num} - Linha ${line}</title>
       <link rel="stylesheet" href="/theme.css" />
+      <script src="/nav-back.js" defer></script>
+      <script src="/public-nav.js" defer></script>
     </head>
     <body>
       <div class="container">
@@ -6712,6 +6727,8 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Projeto e Avaliação - ${escapeHtml(protocol)}</title>
       <link rel="stylesheet" href="/theme.css" />
+      <script src="/nav-back.js" defer></script>
+      <script src="/public-nav.js" defer></script>
       <style>
         .muted { color: #003366; }
         .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
@@ -6882,6 +6899,19 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
                         <p style="margin-bottom:0;"><strong>Parecer do Sistema:</strong> ${escapeHtml(iText)}</p>
                     </div>
                     `;
+
+                    if (integrity.referenceAnalysis && integrity.referenceAnalysis.length > 0) {
+                        html += '<div style="margin-bottom:15px; padding:10px; background-color:#fff; border:1px solid #ddd;"><strong>Análise de Referências (Alucinações):</strong><ul style="margin-top:5px; padding-left:20px;">';
+                        integrity.referenceAnalysis.forEach(r => {
+                            let color = 'black';
+                            let icon = '[?]';
+                            if (r.status === 'Real') { color = 'green'; icon = '✓'; }
+                            if (r.status === 'Suspeita') { color = 'orange'; icon = '!'; }
+                            if (r.status === 'Alucinação') { color = 'red'; icon = '✗'; }
+                            html += `<li style="color:${color}; margin-bottom:4px;"><strong>${icon} [${r.status}]</strong> ${escapeHtml(r.ref)} <br><small style="color:#555;">${escapeHtml(r.reason)}</small></li>`;
+                        });
+                        html += '</ul></div>';
+                    }
                     
                     if (sources.length > 0) {
                         html += `

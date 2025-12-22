@@ -790,10 +790,36 @@ class PdfService {
           });
       }
 
+      // Reference Analysis (Hallucination Check)
+      const refAnalysis = integrity.referenceAnalysis;
+      if (refAnalysis && Array.isArray(refAnalysis) && refAnalysis.length > 0) {
+          doc.addPage();
+          doc.fontSize(14).font('Helvetica-Bold').text('4. Verificação de Referências (Alucinações)', { underline: true });
+          doc.fontSize(10).font('Helvetica-Oblique').text('(Análise automática de existência das referências citadas)', { color: 'gray' });
+          doc.moveDown();
+
+          refAnalysis.forEach((item) => {
+              if (doc.y > doc.page.height - 100) doc.addPage();
+
+              let color = 'black';
+              let icon = '[?]';
+              if (item.status === 'Real') { color = 'green'; icon = '[OK]'; }
+              if (item.status === 'Suspeita') { color = 'orange'; icon = '[!]'; }
+              if (item.status === 'Alucinação') { color = 'red'; icon = '[X]'; }
+
+              doc.fontSize(11).font('Helvetica-Bold').fillColor(color).text(`${icon} ${item.status}`, { continued: true });
+              doc.font('Helvetica').fillColor('black').text(`: ${item.reason || ''}`);
+              
+              doc.fontSize(10).font('Helvetica-Oblique').text(item.ref, { indent: 15 });
+              doc.moveDown(0.5);
+          });
+          doc.moveDown();
+      }
+
       // Full Text Analysis
       if (scannedText) {
           doc.addPage();
-          doc.fontSize(14).font('Helvetica-Bold').text('4. Texto Completo Analisado', { underline: true });
+          doc.fontSize(14).font('Helvetica-Bold').text(refAnalysis ? '5. Texto Completo Analisado' : '4. Texto Completo Analisado', { underline: true });
           doc.fontSize(10).font('Helvetica-Oblique').text('(Os trechos acima foram localizados dentro deste conteúdo)', { color: 'gray' });
           doc.moveDown();
           doc.fontSize(10).font('Helvetica').fillColor('black').text(scannedText, {
@@ -805,7 +831,7 @@ class PdfService {
 
       // Tips
       doc.addPage();
-      doc.fontSize(14).font('Helvetica-Bold').text('5. Dicas de Verificação (Vícios de IA)', { underline: true });
+      doc.fontSize(14).font('Helvetica-Bold').text(refAnalysis ? '6. Dicas de Verificação (Vícios de IA)' : '5. Dicas de Verificação (Vícios de IA)', { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(10).font('Helvetica');
       doc.list([

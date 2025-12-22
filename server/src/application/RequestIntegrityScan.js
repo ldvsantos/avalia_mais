@@ -23,24 +23,26 @@ class RequestIntegrityScan {
       project.objetivos_especificos,
       project.revisao_literatura,
       project.procedimentos_metodologicos,
-      // project.referencias // Optional: include references? Usually better to exclude to avoid false positives on bibliography
+      // project.referencias // Excluded from main scan to avoid false positives
     ].filter(Boolean).join('\n\n');
+
+    const references = project.referencias || '';
 
     if (!textToScan || textToScan.length < 50) {
        // Fallback: try to dump all values if specific fields are missing (legacy support)
        const fallbackText = Object.values(project).filter(v => typeof v === 'string' && v.length > 20).join('\n\n');
        if (fallbackText.length >= 50) {
-           return this._proceedWithScan(protocol, submission, fallbackText, project.titulo_pt);
+           return this._proceedWithScan(protocol, submission, fallbackText, project.titulo_pt, references);
        }
        throw new Error('Not enough text to scan (minimum 50 chars). Verifique se o projeto tem conteúdo preenchido.');
     }
 
     const title = project.titulo_pt || `Project ${protocol}`;
-    return this._proceedWithScan(protocol, submission, textToScan, title);
+    return this._proceedWithScan(protocol, submission, textToScan, title, references);
   }
 
-  async _proceedWithScan(protocol, submission, text, title) {
-    const result = await this.integrityService.submitTextScan(protocol, text, title);
+  async _proceedWithScan(protocol, submission, text, title, references) {
+    const result = await this.integrityService.submitTextScan(protocol, text, title, references);
     
     // Update submission status
     submission.integrity = {
@@ -52,6 +54,7 @@ class RequestIntegrityScan {
         reportUrl: result.reportUrl,
         sources: result.sources,
         matches: result.matches,
+        referenceAnalysis: result.referenceAnalysis, // New field
         message: result.message,
         interpretation: result.interpretation,
         scannedText: text, // Save the exact text used for scanning
