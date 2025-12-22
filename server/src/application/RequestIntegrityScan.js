@@ -51,6 +51,7 @@ class RequestIntegrityScan {
         aiScore: result.aiScore,
         reportUrl: result.reportUrl,
         sources: result.sources,
+        matches: result.matches,
         message: result.message,
         interpretation: result.interpretation,
         updatedAt: new Date().toISOString()

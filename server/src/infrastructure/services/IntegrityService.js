@@ -218,15 +218,28 @@ class IntegrityService {
     // Some providers return a report url
     const reportUrl = providerResult.report_url || null;
 
-    // Extract sources from items if available
+    // Extract sources and matches from items if available
     let sources = [];
+    let matches = [];
     if (providerResult.items && Array.isArray(providerResult.items)) {
         const urlSet = new Set();
         providerResult.items.forEach(item => {
+            const textSegment = item.text || '';
+            
             if (item.candidates && Array.isArray(item.candidates)) {
                 item.candidates.forEach(candidate => {
                     if (candidate.url) {
                         urlSet.add(candidate.url);
+                        
+                        // Add to matches list (limit to top 5 to avoid huge reports)
+                        // Only add if we have text context
+                        if (matches.length < 5 && textSegment.length > 20) {
+                             matches.push({
+                                 text: textSegment,
+                                 source: candidate.url,
+                                 score: candidate.plagia_score || candidate.score || 0
+                             });
+                        }
                     }
                 });
             }
@@ -234,7 +247,7 @@ class IntegrityService {
         sources = Array.from(urlSet).slice(0, 10); // Limit to top 10 sources
     }
 
-    return { score, reportUrl, sources, providerResult };
+    return { score, reportUrl, sources, matches, providerResult };
   }
 
   async processWebhook(payload) {

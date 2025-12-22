@@ -5152,6 +5152,22 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol/integrity-report`,
       doc.moveDown();
   }
 
+  // Matches / Excerpts
+  const matches = integrity.matches || [];
+  if (matches.length > 0) {
+      doc.addPage();
+      doc.fontSize(14).text('Trechos Críticos Detectados (Amostra)', { underline: true });
+      doc.moveDown();
+      
+      matches.forEach((match, index) => {
+          doc.fontSize(10).font('Helvetica-Bold').text(`Trecho #${index + 1} (Similaridade: ${match.score}%)`);
+          doc.font('Helvetica-Oblique').text(`"${match.text}"`);
+          doc.font('Helvetica').fillColor('blue').text(`Fonte: ${match.source}`, { link: match.source });
+          doc.fillColor('black');
+          doc.moveDown();
+      });
+  }
+
   // Tips
   doc.fontSize(14).text('Dicas de Verificação (Vícios de IA)', { underline: true });
   doc.moveDown(0.5);
