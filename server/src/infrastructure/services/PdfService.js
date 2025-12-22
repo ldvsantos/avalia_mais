@@ -791,7 +791,6 @@ class PdfService {
       }
 
       // Full Text Analysis
-      const scannedText = integrity.scannedText || '';
       if (scannedText) {
           doc.addPage();
           doc.fontSize(14).font('Helvetica-Bold').text('4. Texto Completo Analisado', { underline: true });
