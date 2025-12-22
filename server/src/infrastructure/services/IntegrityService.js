@@ -57,9 +57,9 @@ class IntegrityService {
       sources = plagResult.sources || [];
       matches = plagResult.matches || [];
       
-      if (plagiarismScore === 0) {
-          debugInfo = ` [Debug: ${JSON.stringify(plagResult.providerResult)}]`;
-      }
+      // if (plagiarismScore === 0) {
+      //    debugInfo = ` [Debug: ${JSON.stringify(plagResult.providerResult)}]`;
+      // }
     } catch (err) {
       console.error('[IntegrityService] Plagiarism Detection failed:', err.message);
       errors.push(`Plag: ${err.message}`);
@@ -68,9 +68,9 @@ class IntegrityService {
     const status = (aiScore === null && plagiarismScore === null) ? 'error' : 'completed';
     let message = errors.length > 0 ? errors.join(' | ') : 'Scan completed successfully';
     
-    if (debugInfo) {
-        message += debugInfo;
-    }
+    // if (debugInfo) {
+    //    message += debugInfo;
+    // }
 
     // Generate Interpretation Report
     const interpretation = this._getInterpretation(aiScore, plagiarismScore);
