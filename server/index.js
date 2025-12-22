@@ -5115,55 +5115,100 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol/integrity-report`,
   // Header
   doc.fontSize(18).text('Relatório de Integridade Acadêmica', { align: 'center' });
   doc.moveDown();
-  doc.fontSize(12).text(`Protocolo: ${protocol}`);
-  doc.text(`Título: ${s.project?.titulo_pt || 'N/A'}`);
+  doc.fontSize(10).text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, { align: 'right' });
+  doc.moveDown();
+  
+  doc.fontSize(12).font('Helvetica-Bold').text(`Protocolo: ${protocol}`);
+  doc.font('Helvetica').text(`Título: ${s.project?.titulo_pt || 'N/A'}`);
   doc.moveDown();
 
   // Scores
   const score = integrity.score != null ? integrity.score + '%' : '—';
   const aiScore = integrity.aiScore != null ? integrity.aiScore + '%' : '—';
   
-  doc.fontSize(14).text('Resultados da Análise', { underline: true });
+  doc.fontSize(14).font('Helvetica-Bold').text('1. Resumo da Análise', { underline: true });
   doc.moveDown(0.5);
-  doc.fontSize(12).text(`Plágio Detectado: ${score}`);
-  doc.text(`Probabilidade de IA: ${aiScore}`);
-  doc.moveDown();
+  
+  // Draw Score Box
+  const startY = doc.y;
+  doc.rect(50, startY, 250, 60).stroke();
+  doc.fontSize(12).text('Índice de Plágio', 60, startY + 10);
+  doc.fontSize(24).font('Helvetica-Bold').fillColor(integrity.score > 20 ? 'red' : 'green').text(score, 60, startY + 30);
+  
+  doc.rect(310, startY, 250, 60).stroke();
+  doc.fontSize(12).font('Helvetica').fillColor('black').text('Probabilidade de IA', 320, startY + 10);
+  doc.fontSize(24).font('Helvetica-Bold').fillColor(integrity.aiScore > 50 ? 'red' : 'orange').text(aiScore, 320, startY + 30);
+  
+  doc.fillColor('black').moveDown(4);
 
   // Interpretation
   const interpretation = integrity.interpretation || {};
   if (interpretation.status_label) {
-      doc.fontSize(14).text('Parecer do Sistema', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(12).font('Helvetica-Bold').text(interpretation.status_label);
-      doc.font('Helvetica').text(interpretation.explanation_text || '');
+      doc.fontSize(12).font('Helvetica-Bold').text('Parecer do Sistema:');
+      doc.font('Helvetica').text(interpretation.status_label, { continued: true });
+      doc.text(' - ' + (interpretation.explanation_text || ''));
       doc.moveDown();
   }
 
-  // Sources
-  const sources = integrity.sources || [];
-  if (sources.length > 0) {
-      doc.fontSize(14).text('Fontes Detectadas', { underline: true });
-      doc.moveDown(0.5);
-      doc.fontSize(10);
-      sources.forEach(url => {
-          doc.fillColor('blue').text(url, { link: url, underline: true });
-      });
-      doc.fillColor('black');
-      doc.moveDown();
-  }
-
-  // Matches / Excerpts
+  // Sources Table (CopySpider Style)
   const matches = integrity.matches || [];
+  const sources = integrity.sources || [];
+  
+  // Aggregate matches by source to find max similarity per source
+  const sourceStats = {};
+  sources.forEach(url => { sourceStats[url] = 0; });
+  matches.forEach(m => {
+      if (m.source && (!sourceStats[m.source] || m.score > sourceStats[m.source])) {
+          sourceStats[m.source] = m.score;
+      }
+  });
+
+  if (Object.keys(sourceStats).length > 0) {
+      doc.fontSize(14).font('Helvetica-Bold').text('2. Fontes Identificadas', { underline: true });
+      doc.moveDown(0.5);
+      
+      // Table Header
+      const tableTop = doc.y;
+      doc.fontSize(10).font('Helvetica-Bold');
+      doc.text('Fonte (URL)', 50, tableTop);
+      doc.text('Similaridade Máx.', 450, tableTop, { width: 100, align: 'right' });
+      doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
+      doc.moveDown();
+
+      // Table Rows
+      doc.font('Helvetica');
+      Object.entries(sourceStats)
+          .sort(([,a], [,b]) => b - a) // Sort by score desc
+          .forEach(([url, maxScore]) => {
+              const y = doc.y;
+              doc.fillColor('blue').text(url, 50, y, { link: url, width: 380, lineBreak: false, ellipsis: true });
+              doc.fillColor(maxScore > 20 ? 'red' : 'black').text(`${maxScore.toFixed(1)}%`, 450, y, { width: 100, align: 'right' });
+              doc.moveDown(0.5);
+          });
+      doc.fillColor('black').moveDown();
+  }
+
+  // Detailed Matches (CopySpider Style)
   if (matches.length > 0) {
       doc.addPage();
-      doc.fontSize(14).text('Evidências de Plágio (Trechos Críticos)', { underline: true });
+      doc.fontSize(14).font('Helvetica-Bold').text('3. Detalhamento dos Trechos (Evidências)', { underline: true });
       doc.moveDown();
       
       matches.forEach((match, index) => {
-          doc.fontSize(10).font('Helvetica-Bold').text(`Trecho #${index + 1} (Similaridade: ${match.score}%)`);
-          doc.font('Helvetica-Oblique').text(`"${match.text}"`);
-          doc.font('Helvetica').fillColor('blue').text(`Fonte: ${match.source}`, { link: match.source });
+          // Avoid page break inside a block if possible
+          if (doc.y > 700) doc.addPage();
+
+          doc.fontSize(11).font('Helvetica-Bold').fillColor('black').text(`Coincidência #${index + 1}`);
+          doc.fontSize(10).font('Helvetica').text(`Fonte: ${match.source}`, { link: match.source });
+          doc.text(`Similaridade do Trecho: ${match.score}%`);
+          doc.moveDown(0.5);
+          
+          // Box with text
+          doc.font('Helvetica-Oblique').fillColor('#8B0000'); // Dark Red
+          doc.text(`"${match.text}"`, { indent: 20 });
           doc.fillColor('black');
+          doc.moveDown();
+          doc.moveTo(50, doc.y).lineTo(550, doc.y).strokeColor('#ccc').stroke().strokeColor('black'); // Separator
           doc.moveDown();
       });
   }
@@ -5172,9 +5217,10 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol/integrity-report`,
   const scannedText = integrity.scannedText || '';
   if (scannedText) {
       doc.addPage();
-      doc.fontSize(14).text('Texto Completo Analisado', { underline: true });
+      doc.fontSize(14).font('Helvetica-Bold').text('4. Texto Completo Analisado', { underline: true });
+      doc.fontSize(10).font('Helvetica-Oblique').text('(Os trechos acima foram localizados dentro deste conteúdo)', { color: 'gray' });
       doc.moveDown();
-      doc.fontSize(10).font('Helvetica').text(scannedText, {
+      doc.fontSize(10).font('Helvetica').fillColor('black').text(scannedText, {
           align: 'justify',
           lineGap: 2
       });
@@ -5182,9 +5228,10 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol/integrity-report`,
   }
 
   // Tips
-  doc.fontSize(14).text('Dicas de Verificação (Vícios de IA)', { underline: true });
+  doc.addPage();
+  doc.fontSize(14).font('Helvetica-Bold').text('5. Dicas de Verificação (Vícios de IA)', { underline: true });
   doc.moveDown(0.5);
-  doc.fontSize(10);
+  doc.fontSize(10).font('Helvetica');
   doc.list([
       'Estrutura Padronizada: Uso excessivo de listas ou travessões.',
       'Tom Enciclopédico: Texto excessivamente didático.',
