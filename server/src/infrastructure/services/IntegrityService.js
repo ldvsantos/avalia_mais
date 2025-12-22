@@ -110,58 +110,75 @@ class IntegrityService {
    */
   async checkReferences(referencesText) {
     const url = 'https://api.edenai.run/v2/text/chat';
-    // Use openai as default for reasoning/checking, fallback to google if needed
-    const provider = 'openai'; 
+    // Fallback chain: OpenAI -> Google -> Anthropic
+    const providers = ['openai', 'google', 'anthropic']; 
     
-    const payload = {
-      providers: provider,
-      text: `Analise as seguintes referências bibliográficas quanto à sua existência real.
-      
-      Referências:
-      ${referencesText}
-      
-      Responda estritamente um JSON Array com o formato:
-      [
-        { "ref": "texto da referencia", "status": "Real" | "Alucinação" | "Suspeita", "reason": "explicação curta" }
-      ]
-      Não inclua markdown, apenas o JSON cru.`,
-      chatbot_global_action: "Você é um assistente bibliotecário especialista em verificar a existência de referências acadêmicas. Você deve identificar alucinações de IA.",
-      temperature: 0.2,
-      max_tokens: 1000
-    };
+    let lastError = null;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${this.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
+    for (const provider of providers) {
+        try {
+            console.log(`[IntegrityService] Checking references with provider: ${provider}`);
+            
+            const payload = {
+              providers: provider,
+              text: `Analise as seguintes referências bibliográficas quanto à sua existência real.
+              
+              Referências:
+              ${referencesText}
+              
+              Responda estritamente um JSON Array com o formato:
+              [
+                { "ref": "texto da referencia", "status": "Real" | "Alucinação" | "Suspeita", "reason": "explicação curta" }
+              ]
+              Não inclua markdown, apenas o JSON cru.`,
+              chatbot_global_action: "Você é um assistente bibliotecário especialista em verificar a existência de referências acadêmicas. Você deve identificar alucinações de IA.",
+              temperature: 0.2,
+              max_tokens: 1000
+            };
 
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Eden AI (Chat) Error: ${response.status} ${errText}`);
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${this.apiKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+              const errText = await response.text();
+              throw new Error(`Eden AI (Chat) Error: ${response.status} ${errText}`);
+            }
+
+            const data = await response.json();
+            const providerResult = data[provider];
+            
+            if (!providerResult || providerResult.status === 'fail') {
+               throw new Error(`Provider ${provider} failed: ${providerResult?.error?.message}`);
+            }
+
+            const content = providerResult.generated_text || '';
+            
+            // Try to parse JSON
+            try {
+                // Remove markdown code blocks if present
+                const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
+                return JSON.parse(cleanJson);
+            } catch (e) {
+                console.error(`Failed to parse reference check JSON from ${provider}:`, content);
+                // If JSON parsing fails, treat as provider failure and try next
+                throw new Error('Invalid JSON response');
+            }
+
+        } catch (err) {
+            console.warn(`[IntegrityService] Reference check failed with ${provider}: ${err.message}`);
+            lastError = err;
+            // Continue to next provider
+        }
     }
 
-    const data = await response.json();
-    const providerResult = data[provider];
-    
-    if (!providerResult || providerResult.status === 'fail') {
-       throw new Error(`Provider ${provider} failed: ${providerResult?.error?.message}`);
-    }
-
-    const content = providerResult.generated_text || '';
-    
-    // Try to parse JSON
-    try {
-        // Remove markdown code blocks if present
-        const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
-        return JSON.parse(cleanJson);
-    } catch (e) {
-        console.error('Failed to parse reference check JSON:', content);
-        return null;
-    }
+    // If we get here, all providers failed
+    throw new Error(`All providers failed. Last error: ${lastError?.message}`);
   }
 
   _getInterpretation(aiScore, plagiarismScore) {
