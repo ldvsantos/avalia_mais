@@ -6626,6 +6626,35 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evalu
 });
 
 // 3.1 Visualizar/Imprimir Projeto (sem ficha) — Avaliador
+app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol/integrity-report`, evaluatorAuth, async (req, res) => {
+  const { line, protocol } = req.params;
+  const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
+  if (!s) return res.status(404).send('Submissão não encontrada');
+
+  if (req.user?.role !== 'admin' && !assertSubmissionBelongsToLine(s, line)) {
+    return res.status(403).send('Acesso negado');
+  }
+
+  const integrity = s.integrity || {};
+  
+  const auditInfo = {
+    ip: req.ip,
+    user: `Avaliador (Linha ${line})`,
+    hash: crypto.createHash('sha256').update(JSON.stringify(integrity)).digest('hex')
+  };
+
+  try {
+    const pdfBuffer = await pdfService.generateIntegrityReportPdf(s, integrity, auditInfo);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Relatorio_Integridade_${protocol}.pdf`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Erro ao gerar PDF de integridade:', err);
+    res.status(500).send('Erro ao gerar PDF');
+  }
+});
+
 app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evaluatorAuth, async (req, res) => {
   const { line, num, protocol } = req.params;
   const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
@@ -6787,8 +6816,111 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
             <div class="sectionTitle"><strong>7 – Cronograma</strong></div>
             <div class="box">${safeMultiline(project?.cronograma)}</div>
 
-            <div class="sectionTitle"><strong>8 – Referências (ABNT)</strong></div>
+            <div class="sectionTitle">
+                <strong>8 – Referências (ABNT)</strong>
+                <span style="font-size: 0.8em; color: #c0392b; margin-left: 10px; font-weight: normal;">(Atenção: Verifique se as referências existem e não são alucinações de IA)</span>
+            </div>
             <div class="box">${safeMultiline(project?.referencias)}</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Verificação de Integridade (Plágio/IA)</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            ${(() => {
+                const integrity = s.integrity || {};
+                const status = integrity.status || 'not_scanned';
+                const score = integrity.score != null ? integrity.score + '%' : '—';
+                const aiScore = integrity.aiScore != null ? integrity.aiScore + '%' : '—';
+                const reportUrl = integrity.reportUrl;
+                const sources = integrity.sources || [];
+                const message = integrity.message || '';
+                const interpretation = integrity.interpretation || {};
+                
+                let statusLabel = 'Não verificado';
+                let statusColor = '#666';
+                if (status === 'pending') { statusLabel = 'Em análise...'; statusColor = '#f39c12'; }
+                if (status === 'completed') { statusLabel = 'Concluído'; statusColor = '#27ae60'; }
+                if (status === 'error') { statusLabel = 'Erro'; statusColor = '#c0392b'; }
+
+                let html = `
+                  <div style="display:flex; gap:20px; align-items:center; margin-bottom:10px;">
+                    <div><strong>Status:</strong> <span style="color:${statusColor}; font-weight:bold;">${statusLabel}</span></div>
+                    <div><strong>Plágio:</strong> ${score}</div>
+                    <div><strong>Probabilidade IA:</strong> ${aiScore}</div>
+                  </div>
+                `;
+
+                if (status === 'completed') {
+                    html += `
+                    <div class="ai-disclaimer-box" style="background-color: #e3f2fd; border-left: 5px solid #2196f3; padding: 15px; margin: 15px 0; border-radius: 4px; color: #0d47a1;">
+                      <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <h4 style="margin: 0; font-size: 16px; font-weight: bold;">Termo de Isenção e Orientação</h4>
+                      </div>
+                      <p style="margin-bottom: 10px; font-size: 14px;">
+                        <strong>Nota para a Comissão de Seleção:</strong> Este relatório de detecção de IA (Percentual: <strong>${aiScore}</strong>) é uma ferramenta auxiliar de triagem. Conforme as melhores práticas acadêmicas e os termos do edital, <strong>não recomenda-se a desclassificação automática</strong> baseada apenas neste índice.
+                      </p>
+                      <p style="margin-bottom: 5px; font-size: 14px;">Sugere-se utilizar este dado para:</p>
+                      <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                        <li>Confrontar o candidato durante a arguição oral sobre conceitos específicos do texto.</li>
+                        <li>Avaliar a coerência entre a escrita do projeto e a prova escrita/dissertativa.</li>
+                        <li>Penalizar no critério de "Originalidade" caso a falta de autoria pessoal seja evidente na leitura humana.</li>
+                      </ul>
+                    </div>
+                    `;
+                }
+
+                if (status === 'completed' && interpretation.status_label) {
+                    const iLabel = interpretation.status_label;
+                    const iColor = interpretation.color || '#666';
+                    const iText = interpretation.explanation_text || '';
+                    
+                    html += `
+                    <div style="background-color:#f8f9fa; border-left: 4px solid ${iColor}; padding: 15px; margin-bottom: 15px;">
+                        <h4 style="margin-top:0; color:${iColor};">${escapeHtml(iLabel)}</h4>
+                        <p style="margin-bottom:0;"><strong>Parecer do Sistema:</strong> ${escapeHtml(iText)}</p>
+                    </div>
+                    `;
+                    
+                    if (sources.length > 0) {
+                        html += `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Fontes Detectadas (Top ${sources.length}):</strong>
+                            <ul style="margin-top: 5px; font-size: 0.9em;">
+                                ${sources.map(url => `<li><a href="${url}" target="_blank" style="color:#0056b3; text-decoration:underline;">${escapeHtml(url)}</a></li>`).join('')}
+                            </ul>
+                        </div>
+                        `;
+                    }
+
+                    html += `
+                    <div style="background-color:#eef2f7; padding: 10px; border-radius: 4px; font-size: 0.9em; margin-bottom: 15px;">
+                        <strong>Dicas de Verificação (Vícios de IA):</strong>
+                        <ul style="margin: 5px 0 0 20px; padding-left: 20px;">
+                            <li><strong>Estrutura Padronizada:</strong> Uso excessivo de listas, "listas ocultas" (Primeiramente, Em segundo lugar...) ou travessões (—) para apostos explicativos.</li>
+                            <li><strong>Tom Enciclopédico:</strong> Texto excessivamente didático, explicando conceitos óbvios da área sem profundidade crítica.</li>
+                            <li><strong>Conectivos Repetitivos:</strong> Uso mecânico de "Além disso", "Por outro lado", "Em conclusão" no início de parágrafos.</li>
+                            <li><strong>Alucinação Bibliográfica:</strong> Citações que parecem reais (Autor, Ano) mas não existem ou são atribuídas incorretamente.</li>
+                        </ul>
+                    </div>
+                    `;
+                }
+
+                if (message) {
+                    html += `<div style="margin-bottom:10px; color:#c0392b; font-size:12px;">${escapeHtml(message)}</div>`;
+                }
+
+                if (reportUrl) {
+                    html += `<div style="margin-bottom:10px;"><a href="${reportUrl}" target="_blank" class="btn-secondary">Ver Relatório Completo</a></div>`;
+                }
+
+                if (status === 'completed') {
+                    html += `<div style="margin-bottom:10px;"><a href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/project/${s.protocol}/integrity-report" target="_blank" class="btn-secondary">📄 Baixar Relatório Completo (PDF)</a></div>`;
+                }
+                
+                return html;
+            })()}
           </div>
         </section>
 
