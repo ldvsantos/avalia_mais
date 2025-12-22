@@ -704,15 +704,33 @@ class PdfService {
       // Sources Table (CopySpider Style)
       const matches = integrity.matches || [];
       const sources = integrity.sources || [];
+      const scannedText = integrity.scannedText || '';
+      const totalLength = scannedText.length;
       
-      // Aggregate matches by source to find max similarity per source
+      // Aggregate matches by source to calculate percentage of text from that source
       const sourceStats = {};
       sources.forEach(url => { sourceStats[url] = 0; });
-      matches.forEach(m => {
-          if (m.source && (!sourceStats[m.source] || m.score > sourceStats[m.source])) {
-              sourceStats[m.source] = m.score;
-          }
-      });
+
+      if (totalLength > 0) {
+          matches.forEach(m => {
+              if (m.source) {
+                  if (typeof sourceStats[m.source] === 'undefined') sourceStats[m.source] = 0;
+                  sourceStats[m.source] += m.text.length;
+              }
+          });
+          
+          // Convert to percentage
+          Object.keys(sourceStats).forEach(url => {
+              sourceStats[url] = (sourceStats[url] / totalLength) * 100;
+          });
+      } else {
+          // Fallback to max score if no text length
+          matches.forEach(m => {
+              if (m.source && (!sourceStats[m.source] || m.score > sourceStats[m.source])) {
+                  sourceStats[m.source] = m.score;
+              }
+          });
+      }
 
       if (Object.keys(sourceStats).length > 0) {
           doc.fontSize(14).font('Helvetica-Bold').text('2. Fontes Identificadas', { underline: true });
@@ -722,7 +740,7 @@ class PdfService {
           const tableTop = doc.y;
           doc.fontSize(10).font('Helvetica-Bold');
           doc.text('Fonte (URL)', 50, tableTop);
-          doc.text('Similaridade Máx.', 450, tableTop, { width: 100, align: 'right' });
+          doc.text('Similaridade', 450, tableTop, { width: 100, align: 'right' });
           doc.moveTo(50, tableTop + 15).lineTo(550, tableTop + 15).stroke();
           doc.moveDown();
 
@@ -730,7 +748,10 @@ class PdfService {
           doc.font('Helvetica');
           Object.entries(sourceStats)
               .sort(([,a], [,b]) => b - a) // Sort by score desc
-              .forEach(([url, maxScore]) => {
+              .forEach(([url, score]) => {
+                  // Filter out very small percentages if desired, or show all
+                  if (score < 0.1) return; 
+
                   const y = doc.y;
                   // Check page break
                   if (y > doc.page.height - 100) {
@@ -738,7 +759,7 @@ class PdfService {
                       doc.y = 50;
                   }
                   doc.fillColor('blue').text(url, 50, doc.y, { link: url, width: 380, lineBreak: false, ellipsis: true });
-                  doc.fillColor(maxScore > 20 ? 'red' : 'black').text(`${maxScore.toFixed(1)}%`, 450, doc.y, { width: 100, align: 'right' });
+                  doc.fillColor(score > 3 ? 'red' : 'black').text(`${score.toFixed(2)}%`, 450, doc.y, { width: 100, align: 'right' });
                   doc.moveDown(0.5);
               });
           doc.fillColor('black').moveDown();

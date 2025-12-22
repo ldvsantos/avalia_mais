@@ -47,6 +47,7 @@ class IntegrityService {
     let plagiarismScore = null;
     let reportUrl = null;
     let sources = [];
+    let matches = [];
     let debugInfo = '';
 
     try {
@@ -54,6 +55,7 @@ class IntegrityService {
       plagiarismScore = plagResult.score;
       reportUrl = plagResult.reportUrl;
       sources = plagResult.sources || [];
+      matches = plagResult.matches || [];
       
       if (plagiarismScore === 0) {
           debugInfo = ` [Debug: ${JSON.stringify(plagResult.providerResult)}]`;
@@ -80,6 +82,8 @@ class IntegrityService {
       aiScore: aiScore,
       reportUrl: reportUrl,
       sources: sources,
+      matches: matches,
+      scannedText: text,
       message: message,
       interpretation: interpretation
     };
