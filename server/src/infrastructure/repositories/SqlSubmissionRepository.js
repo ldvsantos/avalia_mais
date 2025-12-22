@@ -56,6 +56,7 @@ function mapRowToSubmission(row) {
     identified: row.identified || {},
     project: row.project || {},
     blind: row.blind || {},
+    integrity: row.integrity || {},
     adminUpdatedAt: row.admin_updated_at ? new Date(row.admin_updated_at).toISOString() : undefined,
     audit: row.audit || null,
   });
@@ -65,12 +66,30 @@ class SqlSubmissionRepository {
   constructor({ pool }) {
     if (!pool) throw new Error('SqlSubmissionRepository requer pool do Postgres.');
     this.pool = pool;
+    this._integrityColumnChecked = false;
+  }
+
+  async ensureIntegrityColumn() {
+    if (this._integrityColumnChecked) return;
+    try {
+      // Tenta adicionar a coluna se não existir.
+      // IF NOT EXISTS é suportado no Postgres 9.6+.
+      await this.pool.query(`
+        ALTER TABLE submissions ADD COLUMN IF NOT EXISTS integrity JSONB DEFAULT '{}'::jsonb;
+      `);
+      this._integrityColumnChecked = true;
+    } catch (err) {
+      console.error('Erro ao verificar/criar coluna integrity:', err);
+      // Se falhar, pode ser que a versão do PG não suporte IF NOT EXISTS ou erro de permissão.
+      // Segue o fluxo, se a coluna não existir o INSERT/SELECT vai falhar naturalmente.
+    }
   }
 
   async findAll() {
+    await this.ensureIntegrityColumn();
     const { rows } = await this.pool.query(
       `SELECT protocol, hash, created_at, status, admin_notes, cpf_hash, cpf_last4, form_version,
-              identified, project, blind, admin_updated_at, audit
+              identified, project, blind, integrity, admin_updated_at, audit
          FROM submissions
         ORDER BY created_at DESC`
     );
@@ -87,9 +106,10 @@ class SqlSubmissionRepository {
     const p = String(protocol || '').trim();
     if (!p) return null;
 
+    await this.ensureIntegrityColumn();
     const { rows } = await this.pool.query(
       `SELECT protocol, hash, created_at, status, admin_notes, cpf_hash, cpf_last4, form_version,
-              identified, project, blind, admin_updated_at, audit
+              identified, project, blind, integrity, admin_updated_at, audit
          FROM submissions
         WHERE protocol = $1
         LIMIT 1`,
@@ -115,6 +135,7 @@ class SqlSubmissionRepository {
     const protocol = String(submission.protocol || '').trim();
     if (!protocol) throw new Error('submission.protocol é obrigatório');
 
+    await this.ensureIntegrityColumn();
     const ctx = getRequestContext();
 
     const client = await this.pool.connect();
@@ -190,6 +211,7 @@ class SqlSubmissionRepository {
       const identifiedJson = submission.identified ? JSON.stringify(submission.identified) : null;
       const projectJson = submission.project ? JSON.stringify(submission.project) : null;
       const blindJson = submission.blind ? JSON.stringify(submission.blind) : null;
+      const integrityJson = submission.integrity ? JSON.stringify(submission.integrity) : '{}';
       const auditJson = submission.audit ? JSON.stringify(submission.audit) : null;
       const adminNotes = submission.adminNotes != null ? String(submission.adminNotes) : null;
 
@@ -197,13 +219,13 @@ class SqlSubmissionRepository {
         `INSERT INTO submissions (
            protocol, hash, created_at, status, admin_notes,
            cpf_hash, cpf_last4, form_version,
-           identified, project, blind,
+           identified, project, blind, integrity,
            admin_updated_at, audit
          ) VALUES (
            $1, $2, $3, $4, $5,
            $6, $7, $8,
-           $9::jsonb, $10::jsonb, $11::jsonb,
-           $12, $13::jsonb
+           $9::jsonb, $10::jsonb, $11::jsonb, $12::jsonb,
+           $13, $14::jsonb
          )
          ON CONFLICT (protocol) DO UPDATE SET
            hash = EXCLUDED.hash,
@@ -216,6 +238,7 @@ class SqlSubmissionRepository {
            identified = EXCLUDED.identified,
            project = EXCLUDED.project,
            blind = EXCLUDED.blind,
+           integrity = EXCLUDED.integrity,
            admin_updated_at = EXCLUDED.admin_updated_at,
            audit = EXCLUDED.audit`,
         [
@@ -230,6 +253,7 @@ class SqlSubmissionRepository {
           identifiedJson,
           projectJson,
           blindJson,
+          integrityJson,
           adminUpdatedAt,
           auditJson,
         ]
