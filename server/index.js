@@ -38,7 +38,10 @@ const JwtService = require('./src/infrastructure/security/JwtService');
 const EmailService = require('./src/infrastructure/services/EmailService');
 const EmailTemplateService = require('./src/infrastructure/services/EmailTemplateService');
 const PdfService = require('./src/infrastructure/services/PdfService');
-const IntegrityService = require('./src/infrastructure/services/IntegrityService');
+// const IntegrityService = require('./src/infrastructure/services/IntegrityService'); // Deprecated
+const EdenAiAdapter = require('./src/infrastructure/adapters/EdenAiAdapter');
+const MockPlagiarismAdapter = require('./src/infrastructure/adapters/MockPlagiarismAdapter');
+const ProjectAnalysisService = require('./src/application/services/ProjectAnalysisService');
 
 const RegisterSubmission = require('./src/application/RegisterSubmission');
 const RegisterAppeal = require('./src/application/RegisterAppeal');
@@ -314,14 +317,24 @@ const listAppealsUseCase = new ListAppeals(appealRepo);
 const adminDashboardPresenter = new AdminDashboardPresenter(ADMIN_SECRET);
 const eventController = new EventController(eventRepo);
 
-const integrityService = new IntegrityService({ 
-  mockMode: process.env.INTEGRITY_MOCK_MODE !== 'false', // Default true (mock)
-  apiKey: process.env.EDEN_AI_API_KEY,
-  providerIA: process.env.EDEN_AI_PROVIDER_IA,
-  providerPlagiarism: process.env.EDEN_AI_PROVIDER_PLAGIARISM
-});
-const requestIntegrityScanUseCase = new RequestIntegrityScan(submissionRepo, integrityService);
-const processIntegrityWebhookUseCase = new ProcessIntegrityWebhook(submissionRepo, integrityService);
+const useMockIntegrity = process.env.INTEGRITY_MOCK_MODE !== 'false';
+let plagiarismDetector;
+
+if (useMockIntegrity) {
+  console.log('[Integrity] Using Mock Adapter');
+  plagiarismDetector = new MockPlagiarismAdapter();
+} else {
+  console.log('[Integrity] Using Eden AI Adapter');
+  plagiarismDetector = new EdenAiAdapter({
+    apiKey: process.env.EDEN_AI_API_KEY,
+    providerIA: process.env.EDEN_AI_PROVIDER_IA,
+    providerPlagiarism: process.env.EDEN_AI_PROVIDER_PLAGIARISM
+  });
+}
+
+const projectAnalysisService = new ProjectAnalysisService(plagiarismDetector);
+const requestIntegrityScanUseCase = new RequestIntegrityScan(submissionRepo, projectAnalysisService);
+const processIntegrityWebhookUseCase = new ProcessIntegrityWebhook(submissionRepo, projectAnalysisService);
 
 const submissionController = new SubmissionController(registerSubmissionUseCase, workflowService);
 const appealController = new AppealController(registerAppealUseCase, workflowService);
@@ -7180,8 +7193,8 @@ app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/integrity/scan/:protocol`
   }
 
   try {
-    const requestScan = new RequestIntegrityScan(submissionRepo, integrityService);
-    await requestScan.execute(protocol);
+    // const requestScan = new RequestIntegrityScan(submissionRepo, integrityService);
+    await requestIntegrityScanUseCase.execute(protocol);
     // Redirecionar explicitamente para a página do projeto do avaliador para evitar problemas com 'back'
     res.redirect(`/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/project/${protocol}`);
   } catch (err) {

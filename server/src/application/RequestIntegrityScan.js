@@ -42,7 +42,7 @@ class RequestIntegrityScan {
   }
 
   async _proceedWithScan(protocol, submission, text, title, references) {
-    const result = await this.integrityService.submitTextScan(protocol, text, title, references);
+    const result = await this.integrityService.analyzeProject(protocol, text, title, references);
     
     // Update submission status
     submission.integrity = {
