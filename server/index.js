@@ -6918,6 +6918,14 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
                 if (status === 'completed') {
                     html += `<div style="margin-bottom:10px;"><a href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/project/${s.protocol}/integrity-report" target="_blank" class="btn-secondary">📄 Baixar Relatório Completo (PDF)</a></div>`;
                 }
+
+                if (status === 'not_scanned' || status === 'error' || status === 'completed') {
+                    html += `
+                      <form method="POST" action="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/integrity/scan/${encodeURIComponent(protocol)}" style="display:inline;" onsubmit="const btn = this.querySelector('button'); btn.disabled = true; btn.innerHTML = 'Analisando... (pode demorar)';">
+                        <button type="submit" class="btn-primary" style="font-size:12px; padding:4px 8px;">Solicitar Nova Análise</button>
+                      </form>
+                    `;
+                }
                 
                 return html;
             })()}
@@ -7132,6 +7140,25 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
 });
 
 // 4. Processar Avaliação Individual (persistindo no storage para refletir em todas as telas)
+app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/integrity/scan/:protocol`, evaluatorAuth, async (req, res) => {
+  const { line, protocol } = req.params;
+  const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
+  if (!s) return res.status(404).send('Submissão não encontrada');
+
+  if (req.user?.role !== 'admin' && !assertSubmissionBelongsToLine(s, line)) {
+    return res.status(403).send('Acesso negado');
+  }
+
+  try {
+    const requestScan = new RequestIntegrityScan(submissionRepo, integrityService);
+    await requestScan.execute(protocol);
+    res.redirect('back');
+  } catch (err) {
+    console.error('Erro ao solicitar scan (avaliador):', err);
+    res.status(500).send('Erro ao solicitar análise: ' + err.message);
+  }
+});
+
 app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/evaluate/:protocol`, evaluatorAuth, async (req, res) => {
   const { line, protocol } = req.params;
   const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
