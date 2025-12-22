@@ -17,6 +17,16 @@ class Submission {
 
     // Governança/auditoria (metadados + histórico de alterações)
     this.audit = data.audit || null;
+
+    // Integridade (Plágio/IA)
+    this.integrity = data.integrity || {
+      status: 'not_scanned', // not_scanned, pending, processing, completed, error
+      score: null, // 0-100 (Plagiarism)
+      aiScore: null, // 0-100 (AI)
+      reportUrl: null,
+      scanId: null,
+      updatedAt: null
+    };
   }
 
   isValid() {

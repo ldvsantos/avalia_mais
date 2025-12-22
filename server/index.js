@@ -16,6 +16,7 @@ const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const QRCode = require('qrcode');
 const multer = require('multer');
+const PDFDocument = require('pdfkit');
 
 // --- CLEAN ARCHITECTURE IMPORTS ---
 const JsonSubmissionRepository = require('./src/infrastructure/repositories/JsonSubmissionRepository');
@@ -36,11 +37,14 @@ const JwtService = require('./src/infrastructure/security/JwtService');
 const EmailService = require('./src/infrastructure/services/EmailService');
 const EmailTemplateService = require('./src/infrastructure/services/EmailTemplateService');
 const PdfService = require('./src/infrastructure/services/PdfService');
+const IntegrityService = require('./src/infrastructure/services/IntegrityService');
 
 const RegisterSubmission = require('./src/application/RegisterSubmission');
 const RegisterAppeal = require('./src/application/RegisterAppeal');
 const AuthenticateUser = require('./src/application/AuthenticateUser');
 const SubmitEvaluation = require('./src/application/SubmitEvaluation');
+const RequestIntegrityScan = require('./src/application/RequestIntegrityScan');
+const ProcessIntegrityWebhook = require('./src/application/ProcessIntegrityWebhook');
 
 const SubmissionController = require('./src/interfaces/http/controllers/SubmissionController');
 const AppealController = require('./src/interfaces/http/controllers/AppealController');
@@ -308,6 +312,15 @@ const listAppealsUseCase = new ListAppeals(appealRepo);
 
 const adminDashboardPresenter = new AdminDashboardPresenter(ADMIN_SECRET);
 const eventController = new EventController(eventRepo);
+
+const integrityService = new IntegrityService({ 
+  mockMode: process.env.INTEGRITY_MOCK_MODE !== 'false', // Default true (mock)
+  apiKey: process.env.EDEN_AI_API_KEY,
+  providerIA: process.env.EDEN_AI_PROVIDER_IA,
+  providerPlagiarism: process.env.EDEN_AI_PROVIDER_PLAGIARISM
+});
+const requestIntegrityScanUseCase = new RequestIntegrityScan(submissionRepo, integrityService);
+const processIntegrityWebhookUseCase = new ProcessIntegrityWebhook(submissionRepo, integrityService);
 
 const submissionController = new SubmissionController(registerSubmissionUseCase, workflowService);
 const appealController = new AppealController(registerAppealUseCase, workflowService);
@@ -2378,6 +2391,16 @@ function formatPtBrDateTime(iso) {
 }
 
 app.post('/api/submissions', (req, res) => submissionController.register(req, res));
+
+app.post('/api/webhooks/integrity', async (req, res) => {
+  try {
+    const result = await processIntegrityWebhookUseCase.execute(req.body);
+    res.json({ success: true, protocol: result.protocol });
+  } catch (err) {
+    console.error('Webhook Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post('/api/appeals', (req, res) => appealController.register(req, res));
 
@@ -4797,11 +4820,17 @@ app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, async (req
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <a href="/secret/${ADMIN_SECRET}/admin" aria-label="Voltar ao painel administrativo">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            </a>
             <h1>Comissão - Avaliações</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
         </header>
+
+        <div class="admin-actions" style="justify-content: center; margin-bottom: 10px;">
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin">Voltar para Admin</a>
+        </div>
 
         ${renderAdminNav({ adminSecret: ADMIN_SECRET, active: 'committee' })}
         
@@ -4924,7 +4953,9 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, as
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <a href="/secret/${ADMIN_SECRET}/admin">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            </a>
             <h1>Resultados (Ranking)</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -5068,6 +5099,73 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results/csv`, checkAdminIP, adminAuth
   return res.send(csv);
 });
 
+app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol/integrity-report`, checkAdminIP, adminAuth, async (req, res) => {
+  const { protocol } = req.params;
+  const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
+  if (!s) return res.status(404).send('Submissão não encontrada');
+
+  const integrity = s.integrity || {};
+  const doc = new PDFDocument({ margin: 50 });
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename=Relatorio_Integridade_${protocol}.pdf`);
+
+  doc.pipe(res);
+
+  // Header
+  doc.fontSize(18).text('Relatório de Integridade Acadêmica', { align: 'center' });
+  doc.moveDown();
+  doc.fontSize(12).text(`Protocolo: ${protocol}`);
+  doc.text(`Título: ${s.project?.titulo_pt || 'N/A'}`);
+  doc.moveDown();
+
+  // Scores
+  const score = integrity.score != null ? integrity.score + '%' : '—';
+  const aiScore = integrity.aiScore != null ? integrity.aiScore + '%' : '—';
+  
+  doc.fontSize(14).text('Resultados da Análise', { underline: true });
+  doc.moveDown(0.5);
+  doc.fontSize(12).text(`Plágio Detectado: ${score}`);
+  doc.text(`Probabilidade de IA: ${aiScore}`);
+  doc.moveDown();
+
+  // Interpretation
+  const interpretation = integrity.interpretation || {};
+  if (interpretation.status_label) {
+      doc.fontSize(14).text('Parecer do Sistema', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(12).font('Helvetica-Bold').text(interpretation.status_label);
+      doc.font('Helvetica').text(interpretation.explanation_text || '');
+      doc.moveDown();
+  }
+
+  // Sources
+  const sources = integrity.sources || [];
+  if (sources.length > 0) {
+      doc.fontSize(14).text('Fontes Detectadas', { underline: true });
+      doc.moveDown(0.5);
+      doc.fontSize(10);
+      sources.forEach(url => {
+          doc.fillColor('blue').text(url, { link: url, underline: true });
+      });
+      doc.fillColor('black');
+      doc.moveDown();
+  }
+
+  // Tips
+  doc.fontSize(14).text('Dicas de Verificação (Vícios de IA)', { underline: true });
+  doc.moveDown(0.5);
+  doc.fontSize(10);
+  doc.list([
+      'Estrutura Padronizada: Uso excessivo de listas ou travessões.',
+      'Tom Enciclopédico: Texto excessivamente didático.',
+      'Conectivos Repetitivos: Uso mecânico de "Além disso", "Por outro lado".',
+      'Alucinação Bibliográfica: Citações inexistentes.'
+  ]);
+
+  doc.end();
+});
+
 app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
   const protocol = req.params.protocol;
   const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
@@ -5187,7 +5285,9 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <a href="/secret/${ADMIN_SECRET}/admin" aria-label="Voltar ao painel administrativo">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            </a>
             <h1>Avaliação de Projeto</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -5253,6 +5353,94 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
 
             <div class="sectionTitle"><strong>8 – Referências (ABNT)</strong></div>
             <div class="box">${safeMultiline(s.project?.referencias)}</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header"><h2>Verificação de Integridade (Plágio/IA)</h2></div>
+          <div class="panel-body" style="background-color:#fff;">
+            ${(() => {
+                const integrity = s.integrity || {};
+                const status = integrity.status || 'not_scanned';
+                const score = integrity.score != null ? integrity.score + '%' : '—';
+                const aiScore = integrity.aiScore != null ? integrity.aiScore + '%' : '—';
+                const reportUrl = integrity.reportUrl;
+                const sources = integrity.sources || [];
+                const message = integrity.message || '';
+                const interpretation = integrity.interpretation || {};
+                
+                let statusLabel = 'Não verificado';
+                let statusColor = '#666';
+                if (status === 'pending') { statusLabel = 'Em análise...'; statusColor = '#f39c12'; }
+                if (status === 'completed') { statusLabel = 'Concluído'; statusColor = '#27ae60'; }
+                if (status === 'error') { statusLabel = 'Erro'; statusColor = '#c0392b'; }
+
+                let html = `
+                  <div style="display:flex; gap:20px; align-items:center; margin-bottom:10px;">
+                    <div><strong>Status:</strong> <span style="color:${statusColor}; font-weight:bold;">${statusLabel}</span></div>
+                    <div><strong>Plágio:</strong> ${score}</div>
+                    <div><strong>Probabilidade IA:</strong> ${aiScore}</div>
+                  </div>
+                `;
+
+                if (status === 'completed' && interpretation.status_label) {
+                    const iLabel = interpretation.status_label;
+                    const iColor = interpretation.color || '#666';
+                    const iText = interpretation.explanation_text || '';
+                    
+                    html += `
+                    <div style="background-color:#f8f9fa; border-left: 4px solid ${iColor}; padding: 15px; margin-bottom: 15px;">
+                        <h4 style="margin-top:0; color:${iColor};">${escapeHtml(iLabel)}</h4>
+                        <p style="margin-bottom:0;"><strong>Parecer do Sistema:</strong> ${escapeHtml(iText)}</p>
+                    </div>
+                    `;
+                    
+                    if (sources.length > 0) {
+                        html += `
+                        <div style="margin-bottom: 15px;">
+                            <strong>Fontes Detectadas (Top ${sources.length}):</strong>
+                            <ul style="margin-top: 5px; font-size: 0.9em;">
+                                ${sources.map(url => `<li><a href="${url}" target="_blank" style="color:#0056b3; text-decoration:underline;">${escapeHtml(url)}</a></li>`).join('')}
+                            </ul>
+                        </div>
+                        `;
+                    }
+
+                    html += `
+                    <div style="background-color:#eef2f7; padding: 10px; border-radius: 4px; font-size: 0.9em; margin-bottom: 15px;">
+                        <strong>Dicas de Verificação (Vícios de IA):</strong>
+                        <ul style="margin: 5px 0 0 20px; padding-left: 20px;">
+                            <li><strong>Estrutura Padronizada:</strong> Uso excessivo de listas, "listas ocultas" (Primeiramente, Em segundo lugar...) ou travessões (—) para apostos explicativos.</li>
+                            <li><strong>Tom Enciclopédico:</strong> Texto excessivamente didático, explicando conceitos óbvios da área sem profundidade crítica.</li>
+                            <li><strong>Conectivos Repetitivos:</strong> Uso mecânico de "Além disso", "Por outro lado", "Em conclusão" no início de parágrafos.</li>
+                            <li><strong>Alucinação Bibliográfica:</strong> Citações que parecem reais (Autor, Ano) mas não existem ou são atribuídas incorretamente.</li>
+                        </ul>
+                    </div>
+                    `;
+                }
+
+                if (message) {
+                    html += `<div style="margin-bottom:10px; color:#c0392b; font-size:12px;">${escapeHtml(message)}</div>`;
+                }
+
+                if (reportUrl) {
+                    html += `<div style="margin-bottom:10px;"><a href="${reportUrl}" target="_blank" class="btn-secondary">Ver Relatório Completo</a></div>`;
+                }
+
+                if (status === 'completed') {
+                    html += `<div style="margin-bottom:10px;"><a href="/secret/${ADMIN_SECRET}/committee/evaluate/${s.protocol}/integrity-report" target="_blank" class="btn-secondary">📄 Baixar Relatório Completo (PDF)</a></div>`;
+                }
+
+                if (status === 'not_scanned' || status === 'error' || status === 'completed') {
+                    html += `
+                      <form method="POST" action="/secret/${ADMIN_SECRET}/admin/integrity/scan/${encodeURIComponent(protocol)}" style="display:inline;" onsubmit="const btn = this.querySelector('button'); btn.disabled = true; btn.innerHTML = 'Analisando... (pode demorar)';">
+                        <button type="submit" class="btn-primary" style="font-size:12px; padding:4px 8px;">Solicitar Nova Análise</button>
+                      </form>
+                    `;
+                }
+                
+                return html;
+            })()}
           </div>
         </section>
 
@@ -5632,6 +5820,18 @@ app.post(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, a
   }
 
   return res.redirect(`/secret/${ADMIN_SECRET}/committee/evaluate/${encodeURIComponent(protocol)}`);
+});
+
+app.post(`/secret/${ADMIN_SECRET}/admin/integrity/scan/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
+  try {
+    const protocol = req.params.protocol;
+    await requestIntegrityScanUseCase.execute(protocol);
+    // Explicit redirect to the evaluation page to avoid Referer issues
+    res.redirect(`/secret/${ADMIN_SECRET}/committee/evaluate/${encodeURIComponent(protocol)}`);
+  } catch (err) {
+    console.error('Scan Request Error:', err);
+    res.status(500).send(`Erro ao solicitar scan: ${err.message}`);
+  }
 });
 
 app.post(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
@@ -6171,7 +6371,9 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <a href="/secret/${ADMIN_SECRET}/admin">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            </a>
             <h1>Credenciais de Acesso - Avaliadores</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -6379,7 +6581,9 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, async (re
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <a href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}" aria-label="Recarregar Painel">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            </a>
             <div style="text-align:center;">
               <h1 style="margin:0;">Painel do Avaliador ${num}</h1>
               <div style="font-size: 1rem; font-weight: normal; color:#003366; margin-top:2px;">Linha ${line}</div>
@@ -6538,7 +6742,9 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <a href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}" aria-label="Voltar ao Painel">
+              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            </a>
             <div style="text-align:center;">
               <h1 style="margin:0;">Projeto e Avaliação</h1>
               <div style="font-size: 0.95rem; font-weight: normal; color:#003366; margin-top:2px;">(visualização e preenchimento)</div>
