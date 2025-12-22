@@ -54,6 +54,7 @@ class RequestIntegrityScan {
         matches: result.matches,
         message: result.message,
         interpretation: result.interpretation,
+        scannedText: text, // Save the exact text used for scanning
         updatedAt: new Date().toISOString()
     };
 

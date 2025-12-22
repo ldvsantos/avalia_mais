@@ -231,9 +231,9 @@ class IntegrityService {
                     if (candidate.url) {
                         urlSet.add(candidate.url);
                         
-                        // Add to matches list (limit to top 5 to avoid huge reports)
+                        // Add to matches list (limit to top 20)
                         // Only add if we have text context
-                        if (matches.length < 5 && textSegment.length > 20) {
+                        if (matches.length < 20 && textSegment.length > 10) {
                              matches.push({
                                  text: textSegment,
                                  source: candidate.url,
@@ -244,7 +244,7 @@ class IntegrityService {
                 });
             }
         });
-        sources = Array.from(urlSet).slice(0, 10); // Limit to top 10 sources
+        sources = Array.from(urlSet).slice(0, 15); // Limit to top 15 sources
     }
 
     return { score, reportUrl, sources, matches, providerResult };

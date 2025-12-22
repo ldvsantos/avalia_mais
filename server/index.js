@@ -5156,7 +5156,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol/integrity-report`,
   const matches = integrity.matches || [];
   if (matches.length > 0) {
       doc.addPage();
-      doc.fontSize(14).text('Trechos Críticos Detectados (Amostra)', { underline: true });
+      doc.fontSize(14).text('Evidências de Plágio (Trechos Críticos)', { underline: true });
       doc.moveDown();
       
       matches.forEach((match, index) => {
@@ -5166,6 +5166,19 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol/integrity-report`,
           doc.fillColor('black');
           doc.moveDown();
       });
+  }
+
+  // Full Text Analysis
+  const scannedText = integrity.scannedText || '';
+  if (scannedText) {
+      doc.addPage();
+      doc.fontSize(14).text('Texto Completo Analisado', { underline: true });
+      doc.moveDown();
+      doc.fontSize(10).font('Helvetica').text(scannedText, {
+          align: 'justify',
+          lineGap: 2
+      });
+      doc.moveDown();
   }
 
   // Tips
