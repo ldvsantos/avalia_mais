@@ -7141,7 +7141,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
 
 // 4. Processar Avaliação Individual (persistindo no storage para refletir em todas as telas)
 app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/integrity/scan/:protocol`, evaluatorAuth, async (req, res) => {
-  const { line, protocol } = req.params;
+  const { line, num, protocol } = req.params;
   const s = await Promise.resolve(submissionRepo.findByProtocol(protocol));
   if (!s) return res.status(404).send('Submissão não encontrada');
 
@@ -7152,7 +7152,8 @@ app.post(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/integrity/scan/:protocol`
   try {
     const requestScan = new RequestIntegrityScan(submissionRepo, integrityService);
     await requestScan.execute(protocol);
-    res.redirect('back');
+    // Redirecionar explicitamente para a página do projeto do avaliador para evitar problemas com 'back'
+    res.redirect(`/secret/${ADMIN_SECRET}/evaluator/${line}/${num}/project/${protocol}`);
   } catch (err) {
     console.error('Erro ao solicitar scan (avaliador):', err);
     res.status(500).send('Erro ao solicitar análise: ' + err.message);
