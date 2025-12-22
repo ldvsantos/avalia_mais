@@ -8,15 +8,15 @@ const dataDir = path.join(__dirname, '..', 'data');
 const submissionRepo = new JsonSubmissionRepository(dataDir);
 
 async function createFrankenstein() {
-  console.log('Criando submissão Frankenstein...');
+  console.log('Criando submissão STARWARS...');
 
-  const protocol = 'FRANKENSTEIN-2025';
+  const protocol = 'STARWARS-2025';
   
   // Dados do Candidato (Fictício)
   const candidate = {
-    nome: 'Dr. Victor Frankenstein',
+    nome: 'Luke Skywalker',
     nome_social: '',
-    cpf: '17073682019',
+    cpf: '15640348011',
     rg: '00000000',
     orgao_expedidor: 'SSP/BA',
     data_expedicao: '2000-01-01',
@@ -70,7 +70,7 @@ async function createFrankenstein() {
     // Alucinações (Referências Falsas misturadas com reais genéricas)
     referencias: `Silva, J. P., & Oliveira, M. R. (2024). O uso de drones na agricultura 5.0: Um estudo de caso no oeste baiano. Revista Brasileira de Tecnologia Agrícola, 12(3), 45-60.
 
-OpenAI. (2023). ChatGPT: Optimizing Soy Crops in Brazil through Generative AI. Tech Report 2023. San Francisco: OpenAI Press.
+Vidal. (2023). Optimizing Soy Crops in Brazil through Generative AI. Tech Report 2023. San Francisco: OpenAI Press.
 
 Embrapa. (2020). Visão 2030: o futuro da agricultura brasileira. Brasília: Embrapa.
 
