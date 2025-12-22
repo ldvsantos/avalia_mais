@@ -5310,7 +5310,10 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
             <div class="sectionTitle"><strong>7 – Cronograma</strong></div>
             <div class="box">${safeMultiline(s.project?.cronograma)}</div>
 
-            <div class="sectionTitle"><strong>8 – Referências (ABNT)</strong></div>
+            <div class="sectionTitle">
+                <strong>8 – Referências (ABNT)</strong>
+                <span style="font-size: 0.8em; color: #c0392b; margin-left: 10px; font-weight: normal;">(Atenção: Verifique se as referências existem e não são alucinações de IA)</span>
+            </div>
             <div class="box">${safeMultiline(s.project?.referencias)}</div>
           </div>
         </section>
@@ -5341,6 +5344,26 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
                     <div><strong>Probabilidade IA:</strong> ${aiScore}</div>
                   </div>
                 `;
+
+                if (status === 'completed') {
+                    html += `
+                    <div class="ai-disclaimer-box" style="background-color: #e3f2fd; border-left: 5px solid #2196f3; padding: 15px; margin: 15px 0; border-radius: 4px; color: #0d47a1;">
+                      <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 10px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        <h4 style="margin: 0; font-size: 16px; font-weight: bold;">Termo de Isenção e Orientação</h4>
+                      </div>
+                      <p style="margin-bottom: 10px; font-size: 14px;">
+                        <strong>Nota para a Comissão de Seleção:</strong> Este relatório de detecção de IA (Percentual: <strong>${aiScore}</strong>) é uma ferramenta auxiliar de triagem. Conforme as melhores práticas acadêmicas e os termos do edital, <strong>não recomenda-se a desclassificação automática</strong> baseada apenas neste índice.
+                      </p>
+                      <p style="margin-bottom: 5px; font-size: 14px;">Sugere-se utilizar este dado para:</p>
+                      <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+                        <li>Confrontar o candidato durante a arguição oral sobre conceitos específicos do texto.</li>
+                        <li>Avaliar a coerência entre a escrita do projeto e a prova escrita/dissertativa.</li>
+                        <li>Penalizar no critério de "Originalidade" caso a falta de autoria pessoal seja evidente na leitura humana.</li>
+                      </ul>
+                    </div>
+                    `;
+                }
 
                 if (status === 'completed' && interpretation.status_label) {
                     const iLabel = interpretation.status_label;

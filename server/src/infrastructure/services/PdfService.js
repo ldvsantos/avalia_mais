@@ -687,7 +687,7 @@ class PdfService {
       doc.fontSize(24).font('Helvetica-Bold').fillColor(integrity.score > 20 ? 'red' : 'green').text(score, 60, startY + 30);
       
       doc.rect(310, startY, 250, 60).stroke();
-      doc.fontSize(12).font('Helvetica').fillColor('black').text('Probabilidade de IA', 320, startY + 10);
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('black').text('Probabilidade de IA', 320, startY + 10);
       doc.fontSize(24).font('Helvetica-Bold').fillColor(integrity.aiScore > 50 ? 'red' : 'orange').text(aiScore, 320, startY + 30);
       
       doc.fillColor('black').moveDown(4);
