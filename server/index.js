@@ -340,7 +340,7 @@ const submissionController = new SubmissionController(registerSubmissionUseCase,
 const appealController = new AppealController(registerAppealUseCase, workflowService);
 const authController = new AuthController(authenticateUserUseCase, ADMIN_SECRET);
 const evaluationController = new EvaluationController(submitEvaluationUseCase);
-const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo, publicFileRepo);
+const adminController = new AdminController(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo, publicFileRepo, pdfService);
 // -----------------------------------------
 
 // Job de consolidação automática: reprovação definitiva após prazo de recurso
