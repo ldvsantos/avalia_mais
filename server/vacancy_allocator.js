@@ -8,19 +8,30 @@ class VacancyAllocator {
         this.candidatos = JSON.parse(JSON.stringify(candidatos)); // Deep copy
         
         // Se não foram passadas vagas extras (undefined ou null), define comportamento padrão
-        // Regra: 20% para Termo SDR e 20% para Servidor UEFS, independente do total de vagas
         if (!vagasExtras || Object.keys(vagasExtras).length === 0) {
-            this.vagasExtras = {
-                "Termo_SDR": Math.floor(totalVagas * 0.2),
-                "Servidor_UEFS": Math.floor(totalVagas * 0.2)
-            };
+            // Regra: 40% para Institucional (20% SDR + 20% UEFS)
+            // Calculamos o total institucional primeiro para evitar dupla contagem no arredondamento de números pequenos.
+            // Ex: 3 vagas. 20% = 0.6 (arredonda para 1). Se calcular separado, daria 1 SDR + 1 UEFS = 2 (66% do total).
+            // Calculando junto: 40% de 3 = 1.2 (arredonda para 1).
             
-            // Para números pequenos (3, 4, 5), 20% de X pode dar 0 ou 1.
-            // 3 * 0.2 = 0.6 -> 0 (floor). Mas arredondamento padrão seria 1.
-            // O método arredondar() usa >= 0.5 sobe.
-            // Vamos usar a mesma lógica de arredondamento para ser justo.
-            this.vagasExtras["Termo_SDR"] = this.arredondar(totalVagas * 0.2);
-            this.vagasExtras["Servidor_UEFS"] = this.arredondar(totalVagas * 0.2);
+            // Lógica de arredondamento local para garantir consistência
+            const round = (num) => {
+                let decimal = num - Math.floor(num);
+                decimal = parseFloat(decimal.toFixed(4));
+                if (decimal >= 0.5) return Math.ceil(num);
+                return Math.floor(num);
+            };
+
+            let totalInst = round(totalVagas * 0.4);
+            
+            // Distribui entre SDR e UEFS (Prioridade para SDR se ímpar)
+            let sdr = Math.ceil(totalInst / 2);
+            let uefs = Math.floor(totalInst / 2);
+
+            this.vagasExtras = {
+                "Termo_SDR": sdr,
+                "Servidor_UEFS": uefs
+            };
         } else {
             this.vagasExtras = vagasExtras;
         }
