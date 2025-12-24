@@ -286,14 +286,15 @@ class PdfService {
 
           const startX = 50;
           // Removed '#' (Class) and 'Nota' columns as requested
-          const colWidths = [230, 120, 150]; // Nome, Grupo, Situação
+          // Adjusted widths to fit 495pt (A4 margins)
+          const colWidths = [225, 120, 150]; // Total 495
           const headers = ['Nome', 'Grupo', 'Situação'];
           
           let currentY = doc.y;
           
           // Header Row
           doc.fontSize(9).font('Helvetica-Bold');
-          doc.rect(startX, currentY, 500, 20).fill('#e0e0e0');
+          doc.rect(startX, currentY, 495, 20).fill('#e0e0e0');
           doc.fillColor('black');
           
           let currentX = startX + 5;
@@ -316,15 +317,15 @@ class PdfService {
             const rowHeight = 20;
             // Alternating row color
             if (i % 2 === 0) {
-              doc.rect(startX, currentY, 500, rowHeight).fill('#f9f9f9');
+              doc.rect(startX, currentY, 495, rowHeight).fill('#f9f9f9');
               doc.fillColor('black');
             }
 
             currentX = startX + 5;
             const values = [
-              c.nome.substring(0, 40),
-              c.grupo_concorrencia || '-',
-              c.situacao
+              String(c.nome || '').substring(0, 40),
+              String(c.grupo_concorrencia || '-'),
+              String(c.situacao || '')
             ];
 
             values.forEach((v, idx) => {
