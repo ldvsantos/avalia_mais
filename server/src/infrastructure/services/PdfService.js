@@ -268,8 +268,9 @@ class PdfService {
         doc.moveDown(0.5);
 
         const startX = 50;
-        const colWidths = [30, 200, 50, 100, 100]; // Class, Nome, Nota, Grupo, Situação
-        const headers = ['#', 'Nome', 'Nota', 'Grupo', 'Situação'];
+        // Removed '#' (Class) and 'Nota' columns as requested
+        const colWidths = [230, 120, 150]; // Nome, Grupo, Situação
+        const headers = ['Nome', 'Grupo', 'Situação'];
         
         let currentY = doc.y;
         
@@ -304,9 +305,7 @@ class PdfService {
 
           currentX = startX + 5;
           const values = [
-            `${i + 1}º`,
-            c.nome.substring(0, 35),
-            c.nota.toFixed(2),
+            c.nome.substring(0, 40),
             c.grupo_concorrencia || '-',
             c.situacao
           ];
