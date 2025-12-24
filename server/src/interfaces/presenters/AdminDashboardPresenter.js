@@ -90,7 +90,9 @@ class AdminDashboardPresenter {
             <div class="panel-body">
               <div class="summary-box">
                 <p><strong>Total de Vagas (Edital):</strong> ${totalVagas}</p>
-                <p><strong>Vagas Extras:</strong> ${JSON.stringify(vagasExtras)}</p>
+                <p><strong>Vagas Extras:</strong> ${
+                  Object.entries(vagasExtras).map(([k, v]) => `${v} (${k.replace('_', ' ')})`).join(', ') || 'Nenhuma'
+                }</p>
               </div>
               
               <div class="summary-grid">
@@ -112,8 +114,25 @@ class AdminDashboardPresenter {
                 </div>
                 <div class="summary-item">
                   <small>Institucionais</small>
-                  <strong>${JSON.stringify(quadro_vagas_calculado.Institucional)}</strong>
+                  <strong>${
+                    Object.entries(quadro_vagas_calculado.Institucional || {}).map(([k, v]) => `${v} (${k.replace('_', ' ')})`).join(', ') || '0'
+                  }</strong>
                 </div>
+              </div>
+
+              <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #2e7d32; border-radius: 4px;">
+                <h3 style="margin-top: 0; color: #2e7d32; font-size: 1.1em;">Memória de Cálculo (Regras Aplicadas)</h3>
+                <ul style="margin-bottom: 0; padding-left: 20px; color: #555; font-size: 0.95em;">
+                  <li><strong>Divisão Base:</strong> 50% Ampla Concorrência / 50% Cotas (Resolução CONSEPE 088/2021).</li>
+                  <li><strong>Subdivisão de Cotas:</strong> 70% para Negros (Pretos/Pardos) e 30% para Demais Grupos (Indígenas, Quilombolas, Trans, PCD).</li>
+                  <li><strong>Vagas Institucionais (Deduzidas da Ampla Concorrência):</strong>
+                    <ul>
+                      <li><strong>20%</strong> reservadas para Termo SDR.</li>
+                      <li><strong>20%</strong> reservadas para Servidores da UEFS.</li>
+                    </ul>
+                  </li>
+                  <li><strong>Arredondamento:</strong> Frações ≥ 0.5 arredondam para cima; < 0.5 para baixo (priorizando Negros em caso de conflito na soma).</li>
+                </ul>
               </div>
             </div>
           </section>
@@ -972,14 +991,6 @@ class AdminDashboardPresenter {
                     <input type="number" name="totalVagas" required min="1" value="10" />
                   </div>
                   
-                  <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center;">
-                    <span style="font-size: 0.9em; color: #555;">
-                      O sistema calculará automaticamente:<br>
-                      <strong>20%</strong> para Termo SDR<br>
-                      <strong>20%</strong> para Servidor UEFS
-                    </span>
-                  </div>
-
                   <div class="filters-actions" style="margin-top:0; justify-content:flex-start;">
                     <button class="btn-primary" type="submit">Calcular Alocação</button>
                   </div>
