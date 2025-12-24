@@ -40,6 +40,57 @@ class PdfService {
     this.uefsLogoPath = path.join(__dirname, '../../../../src/img/logo_uefs.png');
   }
 
+  drawAllocationHeader(doc, editalYear) {
+    const leftX = 50;
+    const topY = 40;
+    const rightX = doc.page.width - 50;
+
+    const hasPlanter = fs.existsSync(this.planterLogoPath);
+    const hasUefs = fs.existsSync(this.uefsLogoPath);
+
+    if (hasPlanter) {
+      doc.image(this.planterLogoPath, leftX, topY, { width: 110 });
+    }
+
+    if (hasUefs) {
+      const uefsWidth = 105;
+      doc.image(this.uefsLogoPath, rightX - uefsWidth, topY, { width: uefsWidth });
+    }
+
+    doc.font('Helvetica-Bold').fontSize(11).fillColor('black');
+    doc.text('UNIVERSIDADE ESTADUAL DE FEIRA DE SANTANA', leftX, topY + 5, {
+      width: doc.page.width - 100,
+      align: 'center',
+    });
+
+    doc.font('Helvetica').fontSize(10);
+    doc.text('Programa de Pós-Graduação em Planejamento Territorial', {
+      width: doc.page.width - 100,
+      align: 'center',
+    });
+    doc.text('Mestrado Profissional', {
+      width: doc.page.width - 100,
+      align: 'center',
+    });
+
+    if (editalYear) {
+      doc.moveDown(0.6);
+      doc.font('Helvetica-Bold').fontSize(11).text(`EDITAL DE SELEÇÃO PARA ALUNO/A REGULAR ${editalYear}`, {
+        width: doc.page.width - 100,
+        align: 'center',
+      });
+    }
+
+    doc.moveDown(0.6);
+    doc.font('Helvetica-Bold').fontSize(12).text('RESULTADO FINAL', {
+      width: doc.page.width - 100,
+      align: 'center',
+    });
+
+    // posiciona o cursor após o cabeçalho
+    doc.y = Math.max(doc.y, 150);
+  }
+
   async stampUploadedPdf(pdfBuffer, stampInfo) {
     // Carimbo VISUAL (para aparecer no navegador). Deve ser aplicado ANTES de assinar.
     const createdAt = stampInfo?.createdAt ? new Date(stampInfo.createdAt) : new Date();
@@ -249,6 +300,7 @@ class PdfService {
 
   async generateAllocationReport(data, auditInfo) {
     console.log('[PdfService] generateAllocationReport started');
+    const editalYear = data?.editalYear;
     const pdfBuffer = await new Promise((resolve, reject) => {
       try {
         const doc = new PDFDocument({ margin: 50, size: 'A4' });
@@ -264,27 +316,19 @@ class PdfService {
             reject(err);
         });
 
-        // Header
-        this.drawHeader(doc);
+        // Header (modelo publicado: UEFS + PLANTERR)
+        this.drawAllocationHeader(doc, editalYear);
 
-        // Title
-        doc.fontSize(16).font('Helvetica-Bold').text('Resultado Final da Alocação de Vagas', { align: 'center' });
-        doc.moveDown(1);
-
-        // Sem texto explicativo no PDF (conforme modelo publicado)
-        doc.moveDown(1);
-
-        const drawTable = (title, candidates) => {
+        const drawConvocadosTable = (title, candidates) => {
           if (!candidates || candidates.length === 0) return;
 
           doc.fontSize(12).font('Helvetica-Bold').text(title, { underline: true });
           doc.moveDown(0.5);
 
           const startX = 50;
-          // Removed '#' (Class) and 'Nota' columns as requested
-          // Adjusted widths to fit 495pt (A4 margins)
-          const colWidths = [225, 120, 150]; // Total 495
-          const headers = ['Nome', 'Grupo', 'Situação'];
+          // Modelo: NOME + VAGA OCUPADA (sem nota e sem coluna de classificação)
+          const colWidths = [260, 235]; // Total 495
+          const headers = ['NOME DO/A CANDIDATO/A', 'VAGA OCUPADA'];
           
           let currentY = doc.y;
           
@@ -306,7 +350,7 @@ class PdfService {
             // Check page break
             if (currentY > doc.page.height - 100) {
               doc.addPage();
-              this.drawHeader(doc);
+              this.drawAllocationHeader(doc, editalYear);
               currentY = doc.y;
             }
 
@@ -319,8 +363,7 @@ class PdfService {
 
             currentX = startX + 5;
             const values = [
-              String(c.nome || '').substring(0, 40),
-              String(c.grupo_concorrencia || '-'),
+              String(c.nome || '').substring(0, 60),
               String(c.situacao || '')
             ];
 
@@ -329,6 +372,47 @@ class PdfService {
               currentX += colWidths[idx];
             });
 
+            currentY += rowHeight;
+          });
+
+          doc.moveDown(2);
+        };
+
+        const drawListaReservaTable = (title, candidates) => {
+          if (!candidates || candidates.length === 0) return;
+
+          doc.fontSize(12).font('Helvetica-Bold').text(title, { underline: true });
+          doc.moveDown(0.5);
+
+          const startX = 50;
+          const colWidths = [495];
+          const headers = ['NOME DO/A CANDIDATO/A'];
+
+          let currentY = doc.y;
+
+          doc.fontSize(9).font('Helvetica-Bold');
+          doc.rect(startX, currentY, 495, 20).fill('#e0e0e0');
+          doc.fillColor('black');
+
+          doc.text(headers[0], startX + 5, currentY + 5, { width: colWidths[0], align: 'left' });
+
+          currentY += 20;
+          doc.font('Helvetica').fontSize(9);
+
+          candidates.forEach((c, i) => {
+            if (currentY > doc.page.height - 100) {
+              doc.addPage();
+              this.drawAllocationHeader(doc, editalYear);
+              currentY = doc.y;
+            }
+
+            const rowHeight = 20;
+            if (i % 2 === 0) {
+              doc.rect(startX, currentY, 495, rowHeight).fill('#f9f9f9');
+              doc.fillColor('black');
+            }
+
+            doc.text(String(c.nome || '').substring(0, 80), startX + 5, currentY + 5, { width: 490, align: 'left' });
             currentY += rowHeight;
           });
 
@@ -364,12 +448,34 @@ class PdfService {
           
           doc.moveDown(1);
 
-          drawTable('Candidatos Aprovados', aprovados);
-          drawTable('Lista de Espera', lista_espera);
+          drawConvocadosTable('CANDIDATOS/AS APROVADOS/AS – CONVOCADOS/AS', aprovados);
+          drawListaReservaTable('CANDIDATOS/AS APROVADOS/AS – EM LISTA DE RESERVA', lista_espera);
         };
 
         processLine('Linha de Pesquisa 1', data.linha1);
         processLine('Linha de Pesquisa 2', data.linha2);
+
+        // Instruções pós-resultado (conforme modelo publicado 2026)
+        if (doc.y > doc.page.height - 220) {
+          doc.addPage();
+          this.drawAllocationHeader(doc, editalYear);
+        }
+        doc.font('Helvetica').fontSize(10).fillColor('black');
+        doc.moveDown(0.5);
+        doc.text('• Os/as candidatos/as convocados/as deverão encaminhar a documentação para a pré-matrícula (conforme item 11 do Edital de seleção) pelo e-mail planterr@uefs.br indicando também o dia/turno de apresentação dos originais dos documentos.', {
+          align: 'justify',
+        });
+        doc.moveDown(0.4);
+        doc.text('• A apresentação dos originais deve ser agendada para os seguintes dias/horários: 03 a 05/02/2026, das 09 às 12 horas ou das 14 às 17 horas.', {
+          align: 'justify',
+        });
+        doc.moveDown(0.4);
+        doc.text('• Endereço do Colegiado do PLANTERR: Módulo 7 (MA 7 – Módulo Administrativo), em frente ao Departamento de Ciências Humanas e Filosofia.', {
+          align: 'justify',
+        });
+
+        doc.moveDown(1);
+        doc.text(`Feira de Santana, ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}.`);
 
         // Signatures
         if (doc.y > doc.page.height - 150) doc.addPage();

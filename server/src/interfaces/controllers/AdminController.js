@@ -209,6 +209,7 @@ class AdminController {
     const resultado2 = allocator2.distribuir();
 
     const data = {
+      editalYear: activeEditalYear,
       linha1: { resultado: resultado1, total: vagasLinha1, allocator: allocator1 },
       linha2: { resultado: resultado2, total: vagasLinha2, allocator: allocator2 }
     };
