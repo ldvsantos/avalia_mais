@@ -271,12 +271,8 @@ class PdfService {
         doc.fontSize(16).font('Helvetica-Bold').text('Resultado Final da Alocação de Vagas', { align: 'center' });
         doc.moveDown(1);
 
-        // Explanatory Text
-        doc.fontSize(10).font('Helvetica').text(
-          'O sistema AVALIA+ ordenou a lista final por nota decrescente, preenchendo inicialmente a Ampla Concorrência com as maiores pontuações globais. Em seguida, aplicou-se uma rotina de otimização: candidatos com duplo perfil (Convênio e Cota Racial) foram alocados preferencialmente nas Cotas Raciais, liberando vagas de Convênio para a lista de espera específica. As demais reservas seguiram a ordem classificatória. Por fim, vagas ociosas em grupos específicos foram revertidas automaticamente para a Ampla Concorrência.',
-          { align: 'justify' }
-        );
-        doc.moveDown(2);
+        // Sem texto explicativo no PDF (conforme modelo publicado)
+        doc.moveDown(1);
 
         const drawTable = (title, candidates) => {
           if (!candidates || candidates.length === 0) return;
