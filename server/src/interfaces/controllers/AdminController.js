@@ -220,11 +220,18 @@ class AdminController {
       createdAt: new Date()
     };
 
-    const pdfBuffer = await this.pdfService.generateAllocationReport(data, auditInfo);
+    console.log('[AdminController] Generating allocation PDF...');
+    try {
+      const pdfBuffer = await this.pdfService.generateAllocationReport(data, auditInfo);
+      console.log('[AdminController] PDF generated, size:', pdfBuffer.length);
 
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="resultado_alocacao_${new Date().toISOString().slice(0, 10)}.pdf"`);
-    res.send(pdfBuffer);
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="resultado_alocacao_${new Date().toISOString().slice(0, 10)}.pdf"`);
+      res.send(pdfBuffer);
+    } catch (err) {
+      console.error('[AdminController] Error generating PDF:', err);
+      res.status(500).send('Erro ao gerar PDF');
+    }
   }
 
   async exportCsv(req, res) {
