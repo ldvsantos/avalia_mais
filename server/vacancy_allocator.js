@@ -125,11 +125,6 @@ class VacancyAllocator {
             this.quadroVagas.AC = this.totalVagas;
         }
     }
-        
-        // Se sobrar algo negativo (impossível com max 0, mas conceitualmente),
-        // significa que configuraram mais vagas institucionais do que ampla disponível.
-        // Nesse caso, a Ampla fica zerada.
-    }
 
     arredondar(num) {
         let decimal = num - Math.floor(num);
