@@ -159,10 +159,12 @@ class AdminDashboardPresenter {
           <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #2e7d32; border-radius: 4px;">
             <h3 style="margin-top: 0; color: #2e7d32; font-size: 1.1em;">Memória de Cálculo (Regras Aplicadas)</h3>
             <ul style="margin-bottom: 0; padding-left: 20px; color: #555; font-size: 0.95em;">
-              <li><strong>Divisão Base:</strong> 50% Ampla (que serão deduzidas as institucionais e cooperação)/ 50% Cotas (Resolução CONSEPE 088/2021).</li>
-              <li><strong>Subdivisão de Cotas:</strong> Das 50% cota, 70% para Negros (Pretos/Pardos) e 30% para Demais Grupos.</li>
+              <li><strong>Divisão Base:</strong> 50% Ampla Concorrência / 50% Cotas (Resolução CONSEPE 088/2021).</li>
+              <li><strong>Subdivisão de Cotas:</strong> 70% para Negros (Pretos/Pardos) e 30% para Demais Grupos.</li>
               <li><strong>Vagas Institucionais (Deduzidas da Ampla):</strong> 20% Termo SDR e 20% Servidor UEFS.</li>
               <li><strong>Arredondamento:</strong> Frações ≥ 0.5 arredondam para cima.</li>
+              <li><strong>Proteção da Ampla (Pequenos Quantitativos):</strong> Em editais com poucas vagas (ex: 3 a 5), o sistema garante no mínimo 1 vaga para Ampla Concorrência e ajusta as Cotas se necessário.</li>
+              <li><strong>Reversão:</strong> Vagas de cotas ou institucionais não preenchidas são revertidas para Ampla Concorrência.</li>
             </ul>
           </div>
 
