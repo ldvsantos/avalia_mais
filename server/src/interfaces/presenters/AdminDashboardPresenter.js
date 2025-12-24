@@ -77,10 +77,6 @@ class AdminDashboardPresenter {
                   <strong>${quadro_vagas_calculado.AC}</strong>
                 </div>
                 <div class="summary-item">
-                  <small>Cotas (Total)</small>
-                  <strong>${quadro_vagas_calculado.Cotas_Total}</strong>
-                </div>
-                <div class="summary-item">
                   <small>Cotas (Negros)</small>
                   <strong>${quadro_vagas_calculado.Cotas_Negros}</strong>
                 </div>
