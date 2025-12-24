@@ -976,17 +976,23 @@ class AdminDashboardPresenter {
                 <div class="filters-grid" style="align-items: end;">
                   <div class="form-group" style="margin-bottom: 0;">
                     <label>Total de Vagas (Edital)</label>
-                    <input type="number" name="totalVagas" required min="1" value="10" />
+                    <input type="number" id="totalVagasInput" name="totalVagas" required min="1" value="10" oninput="
+                      const total = parseInt(this.value) || 0;
+                      const sdr = Math.floor(total * 0.2);
+                      const uefs = Math.floor(total * 0.2);
+                      document.getElementById('vaga_sdr').value = sdr;
+                      document.getElementById('vaga_uefs').value = uefs;
+                    " />
                   </div>
                   
                   <div class="form-group" style="margin-bottom: 0;">
-                    <label>Vagas Termo SDR</label>
-                    <input type="number" id="vaga_sdr" min="0" value="0" class="form-control" />
+                    <label>Vagas Termo SDR (20%)</label>
+                    <input type="number" id="vaga_sdr" min="0" value="2" class="form-control" />
                   </div>
 
                   <div class="form-group" style="margin-bottom: 0;">
-                    <label>Vagas Servidor UEFS</label>
-                    <input type="number" id="vaga_uefs" min="0" value="0" class="form-control" />
+                    <label>Vagas Servidor UEFS (20%)</label>
+                    <input type="number" id="vaga_uefs" min="0" value="2" class="form-control" />
                   </div>
 
                   <input type="hidden" name="vagasExtras" id="vagasExtrasHidden" value="{}" />
