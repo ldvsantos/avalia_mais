@@ -4,13 +4,14 @@ const { getRequestContext } = require('../../../request-context');
 const { logDataExport } = require('../../../security-logger');
 
 class AdminController {
-  constructor(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo, publicFileRepo) {
+  constructor(listSubmissionsUseCase, listEvaluationsUseCase, listAppealsUseCase, adminDashboardPresenter, calendarRepo, publicFileRepo, pdfService) {
     this.listSubmissionsUseCase = listSubmissionsUseCase;
     this.listEvaluationsUseCase = listEvaluationsUseCase;
     this.listAppealsUseCase = listAppealsUseCase;
     this.adminDashboardPresenter = adminDashboardPresenter;
     this.calendarRepo = calendarRepo;
     this.publicFileRepo = publicFileRepo;
+    this.pdfService = pdfService;
   }
 
   async index(req, res) {
@@ -139,6 +140,91 @@ class AdminController {
       linha2: { resultado: resultado2, total: vagasLinha2, allocator: allocator2 }
     });
     res.type('html').send(html);
+  }
+
+  async allocationPdf(req, res) {
+    const vagasLinha1 = Number(req.query.v1 || 0);
+    const vagasLinha2 = Number(req.query.v2 || 0);
+    
+    const activeEditalYear = storage.getActiveEditalYear();
+    const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ editalYear: activeEditalYear }));
+    const evaluations = await Promise.resolve(this.listEvaluationsUseCase.execute());
+    const evalMap = new Map(evaluations.map(e => [e.protocol, e]));
+
+    const WEIGHTS = { project: 4, interview: 5, language: 1 };
+    const MAX = { project: 10, interview: 10, language: 10 };
+
+    const candidatos = submissions.map(s => {
+      const e = evalMap.get(s.protocol);
+      if (!e) return null;
+
+      const proj = Number(e.proj_total || 0);
+      const intr = Number(e.int_total || 0);
+      const lang = Number(e.lang_total || 0);
+
+      if (proj < 7 || intr < 7 || lang < 7) return null;
+
+      const projNorm = Math.max(0, Math.min(1, proj / MAX.project));
+      const intrNorm = Math.max(0, Math.min(1, intr / MAX.interview));
+      const langNorm = Math.max(0, Math.min(1, lang / MAX.language));
+      const finalScore = (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+
+      const tags = [];
+      const info = s.identified || {};
+      const combinedCotas = (info.vaga_reservada || info.cotas || '').toLowerCase();
+      const combinedInst = (info.vaga_institucional || info.vaga_cooperacao || '').toLowerCase();
+
+      if (combinedCotas.includes('negro') || combinedCotas.includes('preta') || combinedCotas.includes('parda')) tags.push('Negro');
+      if (combinedCotas.includes('indigena') || combinedCotas.includes('indígena')) tags.push('Indigena');
+      if (combinedCotas.includes('pcd') || combinedCotas.includes('deficiência')) tags.push('PCD');
+      if (combinedCotas.includes('trans')) tags.push('Trans');
+      if (combinedCotas.includes('quilombola')) tags.push('Quilombola');
+
+      if (combinedInst.includes('uefs') || combinedInst.includes('servidor')) tags.push('Servidor_UEFS');
+      if (combinedInst.includes('sdr') || combinedInst.includes('termo')) tags.push('Termo_SDR');
+
+      const linhaRaw = (info.linha_pesquisa || info.area || '').toLowerCase();
+      let linha = 0;
+      if (linhaRaw.includes('linha 1') || linhaRaw.includes('linha de pesquisa 1')) linha = 1;
+      else if (linhaRaw.includes('linha 2') || linhaRaw.includes('linha de pesquisa 2')) linha = 2;
+
+      return {
+        nome: info.nome || s.protocol,
+        protocol: s.protocol,
+        nota: Number(finalScore.toFixed(2)),
+        tags: tags,
+        linha: linha
+      };
+    }).filter(c => c !== null);
+
+    const VacancyAllocator = require('../../../vacancy_allocator');
+    
+    const candidatosL1 = candidatos.filter(c => c.linha === 1);
+    const candidatosL2 = candidatos.filter(c => c.linha === 2);
+
+    const allocator1 = new VacancyAllocator(vagasLinha1, candidatosL1);
+    const resultado1 = allocator1.distribuir();
+
+    const allocator2 = new VacancyAllocator(vagasLinha2, candidatosL2);
+    const resultado2 = allocator2.distribuir();
+
+    const data = {
+      linha1: { resultado: resultado1, total: vagasLinha1, allocator: allocator1 },
+      linha2: { resultado: resultado2, total: vagasLinha2, allocator: allocator2 }
+    };
+
+    const ctx = getRequestContext();
+    const auditInfo = {
+      ip: ctx?.ip,
+      user: ctx?.actor?.user ? { name: ctx.actor.user } : null,
+      createdAt: new Date()
+    };
+
+    const pdfBuffer = await this.pdfService.generateAllocationReport(data, auditInfo);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="resultado_alocacao_${new Date().toISOString().slice(0, 10)}.pdf"`);
+    res.send(pdfBuffer);
   }
 
   async exportCsv(req, res) {

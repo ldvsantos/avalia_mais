@@ -4176,6 +4176,10 @@ app.post(`/secret/${ADMIN_SECRET}/admin/selection/allocate`, checkAdminIP, admin
   return adminController.allocateVacancies(req, res);
 });
 
+app.get(`/secret/${ADMIN_SECRET}/admin/allocation/pdf`, checkAdminIP, adminAuth, async (req, res) => {
+  return adminController.allocationPdf(req, res);
+});
+
 app.post(`/secret/${ADMIN_SECRET}/admin/active-year`, checkAdminIP, adminAuth, (req, res) => {
   try {
     const yearRaw = String(req.body?.year || '').trim();

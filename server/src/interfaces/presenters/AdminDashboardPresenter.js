@@ -15,6 +15,9 @@ class AdminDashboardPresenter {
   }
 
   renderAllocationResult(data) {
+    const v1 = data.linha1?.total || 0;
+    const v2 = data.linha2?.total || 0;
+
     const renderLineSection = (title, lineData) => {
         if (!lineData || !lineData.resultado) return `<section class="panel"><div class="panel-header"><h2>${title}</h2></div><div class="panel-body"><p>Sem dados para esta linha.</p></div></section>`;
 
@@ -154,10 +157,18 @@ class AdminDashboardPresenter {
         <div class="container">
           <header class="main-header">
             <h1>Resultado da Alocação de Vagas</h1>
+            <div style="text-align: center; margin-top: 15px;">
+              <a href="/secret/${this.adminSecret}/admin/allocation/pdf?v1=${v1}&v2=${v2}" class="btn btn-primary" target="_blank" style="background-color: #2e7d32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Baixar Relatório PDF (Assinado)</a>
+            </div>
           </header>
 
           <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #2e7d32; border-radius: 4px;">
-            <h3 style="margin-top: 0; color: #2e7d32; font-size: 1.1em;">Memória de Cálculo (Regras Aplicadas)</h3>
+            <h3 style="margin-top: 0; color: #2e7d32; font-size: 1.1em;">Nota Oficial da Coordenação</h3>
+            <p style="color: #333; font-size: 0.95em; line-height: 1.5; text-align: justify;">
+              A Coordenação do Processo Seletivo torna pública a lista final de candidatos aprovados e classificados, após a aplicação dos critérios de alocação de vagas definidos em edital. A distribuição das vagas seguiu rigorosamente a ordem de classificação (nota final decrescente), respeitando primeiramente a ampla concorrência e, em seguida, aplicando as reservas de vagas (cotas raciais, vagas institucionais e demais grupos) conforme a disponibilidade e a legislação vigente. Em casos de empate, foram utilizados os critérios de desempate previstos. As vagas não preenchidas em grupos específicos foram revertidas para a ampla concorrência, garantindo o máximo aproveitamento das vagas ofertadas.
+            </p>
+            
+            <h4 style="margin-top: 15px; color: #2e7d32; font-size: 1em;">Memória de Cálculo (Regras Aplicadas)</h4>
             <ul style="margin-bottom: 0; padding-left: 20px; color: #555; font-size: 0.95em;">
               <li><strong>Divisão Base:</strong> 50% Ampla Concorrência / 50% Cotas (Resolução CONSEPE 088/2021).</li>
               <li><strong>Subdivisão de Cotas:</strong> 70% para Negros (Pretos/Pardos) e 30% para Demais Grupos.</li>

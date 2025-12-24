@@ -238,6 +238,150 @@ class PdfService {
     }
   }
 
+  async generateAllocationReport(data, auditInfo) {
+    const pdfBuffer = await new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ margin: 50, size: 'A4' });
+      const buffers = [];
+
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+      doc.on('error', reject);
+
+      // Header
+      this.drawHeader(doc);
+
+      // Title
+      doc.fontSize(16).font('Helvetica-Bold').text('Resultado Final da Alocação de Vagas', { align: 'center' });
+      doc.moveDown(1);
+
+      // Explanatory Text
+      doc.fontSize(10).font('Helvetica').text(
+        'A Coordenação do Processo Seletivo torna pública a lista final de candidatos aprovados e classificados, após a aplicação dos critérios de alocação de vagas definidos em edital.',
+        { align: 'justify' }
+      );
+      doc.moveDown(2);
+
+      const drawTable = (title, candidates) => {
+        if (!candidates || candidates.length === 0) return;
+
+        doc.fontSize(12).font('Helvetica-Bold').text(title, { underline: true });
+        doc.moveDown(0.5);
+
+        const startX = 50;
+        const colWidths = [30, 200, 50, 100, 100]; // Class, Nome, Nota, Grupo, Situação
+        const headers = ['#', 'Nome', 'Nota', 'Grupo', 'Situação'];
+        
+        let currentY = doc.y;
+        
+        // Header Row
+        doc.fontSize(9).font('Helvetica-Bold');
+        doc.rect(startX, currentY, 500, 20).fill('#e0e0e0');
+        doc.fillColor('black');
+        
+        let currentX = startX + 5;
+        headers.forEach((h, i) => {
+          doc.text(h, currentX, currentY + 5, { width: colWidths[i], align: 'left' });
+          currentX += colWidths[i];
+        });
+        
+        currentY += 20;
+        doc.font('Helvetica').fontSize(9);
+
+        candidates.forEach((c, i) => {
+          // Check page break
+          if (currentY > doc.page.height - 100) {
+            doc.addPage();
+            this.drawHeader(doc);
+            currentY = doc.y;
+          }
+
+          const rowHeight = 20;
+          // Alternating row color
+          if (i % 2 === 0) {
+            doc.rect(startX, currentY, 500, rowHeight).fill('#f9f9f9');
+            doc.fillColor('black');
+          }
+
+          currentX = startX + 5;
+          const values = [
+            `${i + 1}º`,
+            c.nome.substring(0, 35),
+            c.nota.toFixed(2),
+            c.grupo_concorrencia || '-',
+            c.situacao
+          ];
+
+          values.forEach((v, idx) => {
+            doc.text(v, currentX, currentY + 5, { width: colWidths[idx], align: 'left' });
+            currentX += colWidths[idx];
+          });
+
+          currentY += rowHeight;
+        });
+
+        doc.moveDown(2);
+      };
+
+      const processLine = (lineName, lineData) => {
+        if (!lineData || !lineData.resultado) return;
+
+        if (doc.y > doc.page.height - 150) doc.addPage();
+
+        doc.fontSize(14).font('Helvetica-Bold').fillColor('#2e7d32').text(lineName);
+        doc.fillColor('black');
+        doc.moveDown(0.5);
+
+        const { resultado, total, allocator } = lineData;
+        const { quadro_vagas_calculado, aprovados, lista_espera } = resultado;
+        const vagasExtras = allocator.vagasExtras || {};
+
+        // Summary Box
+        doc.fontSize(10).font('Helvetica');
+        doc.text(`Total de Vagas: ${total}`);
+        
+        const extrasText = Object.entries(vagasExtras).map(([k, v]) => `${v} (${k.replace('_', ' ')})`).join(', ') || 'Nenhuma';
+        doc.text(`Vagas Extras (Institucionais): ${extrasText}`);
+        
+        doc.moveDown(0.5);
+        doc.text('Distribuição Calculada:', { underline: true });
+        doc.text(`Ampla: ${quadro_vagas_calculado.AC} | Cotas (Negros): ${quadro_vagas_calculado.Cotas_Negros} | Cotas (Demais): ${quadro_vagas_calculado.Cotas_Demais}`);
+        
+        const instText = Object.entries(quadro_vagas_calculado.Institucional || {}).map(([k, v]) => `${v} (${k.replace('_', ' ')})`).join(', ') || '0';
+        doc.text(`Institucionais: ${instText}`);
+        
+        doc.moveDown(1);
+
+        drawTable('Candidatos Aprovados', aprovados);
+        drawTable('Lista de Espera', lista_espera);
+      };
+
+      processLine('Linha de Pesquisa 1', data.linha1);
+      processLine('Linha de Pesquisa 2', data.linha2);
+
+      // Signatures
+      if (doc.y > doc.page.height - 150) doc.addPage();
+      doc.moveDown(4);
+      
+      const sigY = doc.y;
+      const sigWidth = 200;
+      const gap = 50;
+      const startX = (doc.page.width - (sigWidth * 2 + gap)) / 2;
+
+      doc.moveTo(startX, sigY).lineTo(startX + sigWidth, sigY).stroke();
+      doc.text('Presidente da Comissão', startX, sigY + 10, { width: sigWidth, align: 'center' });
+
+      doc.moveTo(startX + sigWidth + gap, sigY).lineTo(startX + sigWidth + gap + sigWidth, sigY).stroke();
+      doc.text('Membro da Comissão', startX + sigWidth + gap, sigY + 10, { width: sigWidth, align: 'center' });
+
+      // Footer Audit
+      this.drawAuditFooter(doc, auditInfo);
+
+      doc.end();
+    });
+
+    return this.signPdf(pdfBuffer);
+  }
+
   async generateSubmissionPdf(submission, auditInfo) {
     const pdfBuffer = await new Promise((resolve, reject) => {
       const doc = new PDFDocument({ margin: 50 });
