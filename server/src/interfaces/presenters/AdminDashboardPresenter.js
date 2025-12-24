@@ -14,6 +14,155 @@ class AdminDashboardPresenter {
     this.adminSecret = adminSecret;
   }
 
+  renderAllocationResult(resultado, totalVagas, vagasExtras) {
+    const { quadro_vagas_calculado, aprovados, lista_espera } = resultado;
+    
+    const getRowClass = (c) => {
+        const sit = (c.situacao || '').toLowerCase();
+        const grp = (c.grupo_concorrencia || '').toLowerCase();
+        
+        if (sit.includes('ampla')) return 'row-ampla';
+        if (sit.includes('negros')) return 'row-negro';
+        if (sit.includes('uefs')) return 'row-uefs';
+        if (sit.includes('sdr')) return 'row-sdr';
+        if (sit.includes('pcd') || sit.includes('indígena') || sit.includes('trans')) return 'row-demais';
+        
+        // Fallback based on group
+        if (grp.includes('uefs')) return 'row-uefs';
+        if (grp.includes('sdr')) return 'row-sdr';
+        if (grp.includes('afirmativa')) return 'row-negro';
+        if (grp.includes('pcd')) return 'row-demais';
+        
+        return '';
+    };
+
+    const aprovadosRows = aprovados.map((c, i) => `
+      <tr class="${getRowClass(c)}">
+        <td>${i + 1}º</td>
+        <td>${escapeHtml(c.nome)}</td>
+        <td>${c.nota.toFixed(2)}</td>
+        <td>${escapeHtml(c.grupo_concorrencia || '-')}</td>
+        <td>${escapeHtml(c.situacao)}</td>
+      </tr>
+    `).join('');
+
+    const esperaRows = lista_espera.map((c, i) => `
+      <tr>
+        <td>${i + 1}º</td>
+        <td>${escapeHtml(c.nome)}</td>
+        <td>${c.nota.toFixed(2)}</td>
+        <td>${escapeHtml(c.grupo_concorrencia || '-')}</td>
+        <td>${escapeHtml(c.situacao)}</td>
+      </tr>
+    `).join('');
+
+    return `
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <title>Resultado da Alocação</title>
+        <link rel="stylesheet" href="/theme.css" />
+        <style>
+          .summary-box { background: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ddd; }
+          .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+          .summary-item strong { display: block; font-size: 1.2em; color: #2e7d32; }
+          
+          /* Cores da Tabela baseadas no exemplo */
+          .row-ampla { background-color: #fff3cd; } /* Amarelo claro */
+          .row-negro { background-color: #d4edda; } /* Verde claro */
+          .row-uefs { background-color: #cce5ff; } /* Azul claro */
+          .row-sdr { background-color: #fff3cd; } /* Amarelo (SDR no exemplo é amarelo forte, usando o mesmo da ampla por enquanto ou ajustar) */
+          .row-sdr { background-color: #ffffcc; } /* Amarelo mais forte */
+          .row-demais { background-color: #e2e3e5; } /* Cinza/Azulado */
+          
+          .admin-table th { background-color: #004d40; color: white; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <header class="main-header">
+            <h1>Resultado da Alocação de Vagas</h1>
+          </header>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Parâmetros e Quadro de Vagas</h2></div>
+            <div class="panel-body">
+              <div class="summary-box">
+                <p><strong>Total de Vagas (Edital):</strong> ${totalVagas}</p>
+                <p><strong>Vagas Extras:</strong> ${JSON.stringify(vagasExtras)}</p>
+              </div>
+              
+              <div class="summary-grid">
+                <div class="summary-item">
+                  <small>Ampla Concorrência</small>
+                  <strong>${quadro_vagas_calculado.AC}</strong>
+                </div>
+                <div class="summary-item">
+                  <small>Cotas (Total)</small>
+                  <strong>${quadro_vagas_calculado.Cotas_Total}</strong>
+                </div>
+                <div class="summary-item">
+                  <small>Cotas (Negros)</small>
+                  <strong>${quadro_vagas_calculado.Cotas_Negros}</strong>
+                </div>
+                <div class="summary-item">
+                  <small>Cotas (Demais)</small>
+                  <strong>${quadro_vagas_calculado.Cotas_Demais}</strong>
+                </div>
+                <div class="summary-item">
+                  <small>Institucionais</small>
+                  <strong>${JSON.stringify(quadro_vagas_calculado.Institucional)}</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Candidatos Aprovados (${aprovados.length})</h2></div>
+            <div class="panel-body">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Classificação Geral</th>
+                    <th>Nome do(a) Candidato(a)</th>
+                    <th>Nota Final</th>
+                    <th>Grupo de Concorrência</th>
+                    <th>Situação Final</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${aprovadosRows}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header"><h2>Lista de Espera / Excedentes (${lista_espera.length})</h2></div>
+            <div class="panel-body">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Classificação Geral</th>
+                    <th>Nome do(a) Candidato(a)</th>
+                    <th>Nota Final</th>
+                    <th>Grupo de Concorrência</th>
+                    <th>Situação Final</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${esperaRows}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
   renderIndex() {
     return `
       <!doctype html>
@@ -814,8 +963,28 @@ class AdminDashboardPresenter {
             </div>
           </section>
 
-          <section class="panel">
-            <div class="panel-header"><h2>Inscrições Recebidas (${submissions.length})</h2></div>
+          <section class="panel">            <div class="panel-header"><h2>Alocação de Vagas (Resolução 088/2021)</h2></div>
+            <div class="panel-body">
+              <form method="POST" action="/secret/${this.adminSecret}/admin/selection/allocate" target="_blank">
+                <div class="filters-grid" style="align-items: end;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Total de Vagas (Edital)</label>
+                    <input type="number" name="totalVagas" required min="1" value="10" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Vagas Extras (JSON)</label>
+                    <input type="text" name="vagasExtras" value='{"Termo_SDR": 2}' placeholder='{"Termo_SDR": 2}' />
+                  </div>
+                  <div class="filters-actions" style="margin-top:0; justify-content:flex-start;">
+                    <button class="btn-primary" type="submit">Calcular Alocação</button>
+                  </div>
+                </div>
+                <small class="hint" style="display:block; margin-top:5px;">Tags suportadas: Negro, Indigena, PCD, Trans, Quilombola, Servidor_UEFS, Termo_SDR</small>
+              </form>
+            </div>
+          </section>
+
+          <section class="panel">            <div class="panel-header"><h2>Inscrições Recebidas (${submissions.length})</h2></div>
             <div class="panel-body" style="overflow-x: auto;">
               <table class="admin-table">
                 <thead>

@@ -63,6 +63,68 @@ class AdminController {
     res.type('html').send(html);
   }
 
+  async allocateVacancies(req, res) {
+    const totalVagas = Number(req.body.totalVagas);
+    let vagasExtras = {};
+    try {
+      vagasExtras = JSON.parse(req.body.vagasExtras || '{}');
+    } catch (e) {
+      return res.status(400).send('JSON de vagas extras inválido');
+    }
+
+    const activeEditalYear = storage.getActiveEditalYear();
+    const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ editalYear: activeEditalYear }));
+    const evaluations = await Promise.resolve(this.listEvaluationsUseCase.execute());
+    const evalMap = new Map(evaluations.map(e => [e.protocol, e]));
+
+    const WEIGHTS = { project: 4, interview: 5, language: 1 };
+    const MAX = { project: 10, interview: 10, language: 10 };
+
+    const candidatos = submissions.map(s => {
+      const e = evalMap.get(s.protocol);
+      if (!e) return null;
+
+      const proj = Number(e.proj_total || 0);
+      const intr = Number(e.int_total || 0);
+      const lang = Number(e.lang_total || 0);
+
+      if (proj < 7 || intr < 7 || lang < 7) return null;
+
+      const projNorm = Math.max(0, Math.min(1, proj / MAX.project));
+      const intrNorm = Math.max(0, Math.min(1, intr / MAX.interview));
+      const langNorm = Math.max(0, Math.min(1, lang / MAX.language));
+      const finalScore = (projNorm * WEIGHTS.project) + (intrNorm * WEIGHTS.interview) + (langNorm * WEIGHTS.language);
+
+      const tags = [];
+      const info = s.identified || {};
+      const combinedCotas = (info.vaga_reservada || info.cotas || '').toLowerCase();
+      const combinedInst = (info.vaga_institucional || info.vaga_cooperacao || '').toLowerCase();
+
+      if (combinedCotas.includes('negro') || combinedCotas.includes('preta') || combinedCotas.includes('parda')) tags.push('Negro');
+      if (combinedCotas.includes('indigena') || combinedCotas.includes('indígena')) tags.push('Indigena');
+      if (combinedCotas.includes('pcd') || combinedCotas.includes('deficiência')) tags.push('PCD');
+      if (combinedCotas.includes('trans')) tags.push('Trans');
+      if (combinedCotas.includes('quilombola')) tags.push('Quilombola');
+
+      if (combinedInst.includes('uefs') || combinedInst.includes('servidor')) tags.push('Servidor_UEFS');
+      if (combinedInst.includes('sdr') || combinedInst.includes('termo')) tags.push('Termo_SDR');
+
+      return {
+        nome: info.nome || s.protocol,
+        protocol: s.protocol,
+        nota: Number(finalScore.toFixed(2)),
+        tags: tags
+      };
+    }).filter(c => c !== null);
+
+    const VacancyAllocator = require('../../../vacancy_allocator');
+    const allocator = new VacancyAllocator(totalVagas, candidatos, vagasExtras);
+    const resultado = allocator.distribuir();
+
+    const html = this.adminDashboardPresenter.renderAllocationResult(resultado, totalVagas, vagasExtras);
+    res.type('html').send(html);
+  }
+
   async exportCsv(req, res) {
     const q = String(req.query.q ?? '');
     const status = String(req.query.status ?? '');
