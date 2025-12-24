@@ -965,21 +965,36 @@ class AdminDashboardPresenter {
 
           <section class="panel">            <div class="panel-header"><h2>Alocação de Vagas (Resolução 088/2021)</h2></div>
             <div class="panel-body">
-              <form method="POST" action="/secret/${this.adminSecret}/admin/selection/allocate" target="_blank">
+              <form method="POST" action="/secret/${this.adminSecret}/admin/selection/allocate" target="_blank" onsubmit="
+                const sdr = document.getElementById('vaga_sdr').value;
+                const uefs = document.getElementById('vaga_uefs').value;
+                const obj = {};
+                if(sdr > 0) obj['Termo_SDR'] = parseInt(sdr);
+                if(uefs > 0) obj['Servidor_UEFS'] = parseInt(uefs);
+                document.getElementById('vagasExtrasHidden').value = JSON.stringify(obj);
+              ">
                 <div class="filters-grid" style="align-items: end;">
                   <div class="form-group" style="margin-bottom: 0;">
                     <label>Total de Vagas (Edital)</label>
                     <input type="number" name="totalVagas" required min="1" value="10" />
                   </div>
+                  
                   <div class="form-group" style="margin-bottom: 0;">
-                    <label>Vagas Extras (JSON)</label>
-                    <input type="text" name="vagasExtras" value='' placeholder='Ex: {"Termo_SDR": 2}' />
+                    <label>Vagas Termo SDR</label>
+                    <input type="number" id="vaga_sdr" min="0" value="0" class="form-control" />
                   </div>
+
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Vagas Servidor UEFS</label>
+                    <input type="number" id="vaga_uefs" min="0" value="0" class="form-control" />
+                  </div>
+
+                  <input type="hidden" name="vagasExtras" id="vagasExtrasHidden" value="{}" />
+
                   <div class="filters-actions" style="margin-top:0; justify-content:flex-start;">
                     <button class="btn-primary" type="submit">Calcular Alocação</button>
                   </div>
                 </div>
-                <small class="hint" style="display:block; margin-top:5px;">Tags suportadas: Negro, Indigena, PCD, Trans, Quilombola, Servidor_UEFS, Termo_SDR</small>
               </form>
             </div>
           </section>
