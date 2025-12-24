@@ -973,7 +973,7 @@ class AdminDashboardPresenter {
                   </div>
                   <div class="form-group" style="margin-bottom: 0;">
                     <label>Vagas Extras (JSON)</label>
-                    <input type="text" name="vagasExtras" value='{"Termo_SDR": 2}' placeholder='{"Termo_SDR": 2}' />
+                    <input type="text" name="vagasExtras" value='' placeholder='Ex: {"Termo_SDR": 2}' />
                   </div>
                   <div class="filters-actions" style="margin-top:0; justify-content:flex-start;">
                     <button class="btn-primary" type="submit">Calcular Alocação</button>
