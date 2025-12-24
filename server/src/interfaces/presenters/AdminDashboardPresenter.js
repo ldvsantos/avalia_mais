@@ -14,83 +14,59 @@ class AdminDashboardPresenter {
     this.adminSecret = adminSecret;
   }
 
-  renderAllocationResult(resultado, totalVagas, vagasExtras) {
-    const { quadro_vagas_calculado, aprovados, lista_espera } = resultado;
-    
-    const getRowClass = (c) => {
-        const sit = (c.situacao || '').toLowerCase();
-        const grp = (c.grupo_concorrencia || '').toLowerCase();
-        
-        if (sit.includes('ampla')) return 'row-ampla';
-        if (sit.includes('negros')) return 'row-negro';
-        if (sit.includes('uefs')) return 'row-uefs';
-        if (sit.includes('sdr')) return 'row-sdr';
-        if (sit.includes('pcd') || sit.includes('indígena') || sit.includes('trans')) return 'row-demais';
-        
-        // Fallback based on group
-        if (grp.includes('uefs')) return 'row-uefs';
-        if (grp.includes('sdr')) return 'row-sdr';
-        if (grp.includes('afirmativa')) return 'row-negro';
-        if (grp.includes('pcd')) return 'row-demais';
-        
-        return '';
-    };
+  renderAllocationResult(data) {
+    const renderLineSection = (title, lineData) => {
+        if (!lineData || !lineData.resultado) return `<section class="panel"><div class="panel-header"><h2>${title}</h2></div><div class="panel-body"><p>Sem dados para esta linha.</p></div></section>`;
 
-    const aprovadosRows = aprovados.map((c, i) => `
-      <tr class="${getRowClass(c)}">
-        <td>${i + 1}º</td>
-        <td>${escapeHtml(c.nome)}</td>
-        <td>${c.nota.toFixed(2)}</td>
-        <td>${escapeHtml(c.grupo_concorrencia || '-')}</td>
-        <td>${escapeHtml(c.situacao)}</td>
-      </tr>
-    `).join('');
+        const { resultado, total, allocator } = lineData;
+        const { quadro_vagas_calculado, aprovados, lista_espera } = resultado;
+        const vagasExtras = allocator.vagasExtras || {};
 
-    const esperaRows = lista_espera.map((c, i) => `
-      <tr>
-        <td>${i + 1}º</td>
-        <td>${escapeHtml(c.nome)}</td>
-        <td>${c.nota.toFixed(2)}</td>
-        <td>${escapeHtml(c.grupo_concorrencia || '-')}</td>
-        <td>${escapeHtml(c.situacao)}</td>
-      </tr>
-    `).join('');
+        const getRowClass = (c) => {
+            const sit = (c.situacao || '').toLowerCase();
+            const grp = (c.grupo_concorrencia || '').toLowerCase();
+            
+            if (sit.includes('ampla')) return 'row-ampla';
+            if (sit.includes('negros')) return 'row-negro';
+            if (sit.includes('uefs')) return 'row-uefs';
+            if (sit.includes('sdr')) return 'row-sdr';
+            if (sit.includes('pcd') || sit.includes('indígena') || sit.includes('trans')) return 'row-demais';
+            
+            if (grp.includes('uefs')) return 'row-uefs';
+            if (grp.includes('sdr')) return 'row-sdr';
+            if (grp.includes('afirmativa')) return 'row-negro';
+            if (grp.includes('pcd')) return 'row-demais';
+            
+            return '';
+        };
 
-    return `
-      <!doctype html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <title>Resultado da Alocação</title>
-        <link rel="stylesheet" href="/theme.css" />
-        <style>
-          .summary-box { background: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ddd; }
-          .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-          .summary-item strong { display: block; font-size: 1.2em; color: #2e7d32; }
-          
-          /* Cores da Tabela baseadas no exemplo */
-          .row-ampla { background-color: #fff3cd; } /* Amarelo claro */
-          .row-negro { background-color: #d4edda; } /* Verde claro */
-          .row-uefs { background-color: #cce5ff; } /* Azul claro */
-          .row-sdr { background-color: #fff3cd; } /* Amarelo (SDR no exemplo é amarelo forte, usando o mesmo da ampla por enquanto ou ajustar) */
-          .row-sdr { background-color: #ffffcc; } /* Amarelo mais forte */
-          .row-demais { background-color: #e2e3e5; } /* Cinza/Azulado */
-          
-          .admin-table th { background-color: #004d40; color: white; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <header class="main-header">
-            <h1>Resultado da Alocação de Vagas</h1>
-          </header>
+        const aprovadosRows = aprovados.map((c, i) => `
+          <tr class="${getRowClass(c)}">
+            <td>${i + 1}º</td>
+            <td>${escapeHtml(c.nome)}</td>
+            <td>${c.nota.toFixed(2)}</td>
+            <td>${escapeHtml(c.grupo_concorrencia || '-')}</td>
+            <td>${escapeHtml(c.situacao)}</td>
+          </tr>
+        `).join('');
 
-          <section class="panel">
-            <div class="panel-header"><h2>Parâmetros e Quadro de Vagas</h2></div>
+        const esperaRows = lista_espera.map((c, i) => `
+          <tr>
+            <td>${i + 1}º</td>
+            <td>${escapeHtml(c.nome)}</td>
+            <td>${c.nota.toFixed(2)}</td>
+            <td>${escapeHtml(c.grupo_concorrencia || '-')}</td>
+            <td>${escapeHtml(c.situacao)}</td>
+          </tr>
+        `).join('');
+
+        return `
+          <section class="panel" style="margin-bottom: 40px; border-top: 5px solid #2e7d32;">
+            <div class="panel-header"><h2>${title}</h2></div>
             <div class="panel-body">
               <div class="summary-box">
-                <p><strong>Total de Vagas (Edital):</strong> ${totalVagas}</p>
-                <p><strong>Vagas Extras:</strong> ${
+                <p><strong>Total de Vagas:</strong> ${total}</p>
+                <p><strong>Vagas Extras (Institucionais):</strong> ${
                   Object.entries(vagasExtras).map(([k, v]) => `${v} (${k.replace('_', ' ')})`).join(', ') || 'Nenhuma'
                 }</p>
               </div>
@@ -120,54 +96,31 @@ class AdminDashboardPresenter {
                 </div>
               </div>
 
-              <div style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #2e7d32; border-radius: 4px;">
-                <h3 style="margin-top: 0; color: #2e7d32; font-size: 1.1em;">Memória de Cálculo (Regras Aplicadas)</h3>
-                <ul style="margin-bottom: 0; padding-left: 20px; color: #555; font-size: 0.95em;">
-                  <li><strong>Divisão Base:</strong> 50% Ampla Concorrência / 50% Cotas (Resolução CONSEPE 088/2021).</li>
-                  <li><strong>Subdivisão de Cotas:</strong> 70% para Negros (Pretos/Pardos) e 30% para Demais Grupos (Indígenas, Quilombolas, Trans, PCD).</li>
-                  <li><strong>Vagas Institucionais (Deduzidas da Ampla Concorrência):</strong>
-                    <ul>
-                      <li><strong>20%</strong> reservadas para Termo SDR.</li>
-                      <li><strong>20%</strong> reservadas para Servidores da UEFS.</li>
-                    </ul>
-                  </li>
-                  <li><strong>Arredondamento:</strong> Frações ≥ 0.5 arredondam para cima; < 0.5 para baixo (priorizando Negros em caso de conflito na soma).</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-header"><h2>Candidatos Aprovados (${aprovados.length})</h2></div>
-            <div class="panel-body">
+              <h3 style="margin-top: 20px;">Candidatos Aprovados (${aprovados.length})</h3>
               <table class="admin-table">
                 <thead>
                   <tr>
-                    <th>Classificação Geral</th>
-                    <th>Nome do(a) Candidato(a)</th>
-                    <th>Nota Final</th>
-                    <th>Grupo de Concorrência</th>
-                    <th>Situação Final</th>
+                    <th>Classificação</th>
+                    <th>Nome</th>
+                    <th>Nota</th>
+                    <th>Grupo</th>
+                    <th>Situação</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${aprovadosRows}
                 </tbody>
               </table>
-            </div>
-          </section>
 
-          <section class="panel">
-            <div class="panel-header"><h2>Lista de Espera / Excedentes (${lista_espera.length})</h2></div>
-            <div class="panel-body">
+              <h3 style="margin-top: 20px;">Lista de Espera (${lista_espera.length})</h3>
               <table class="admin-table">
                 <thead>
                   <tr>
-                    <th>Classificação Geral</th>
-                    <th>Nome do(a) Candidato(a)</th>
-                    <th>Nota Final</th>
-                    <th>Grupo de Concorrência</th>
-                    <th>Situação Final</th>
+                    <th>Classificação</th>
+                    <th>Nome</th>
+                    <th>Nota</th>
+                    <th>Grupo</th>
+                    <th>Situação</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -176,6 +129,50 @@ class AdminDashboardPresenter {
               </table>
             </div>
           </section>
+        `;
+    };
+
+    return `
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <title>Resultado da Alocação</title>
+        <link rel="stylesheet" href="/theme.css" />
+        <style>
+          .summary-box { background: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ddd; }
+          .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+          .summary-item { background: white; padding: 10px; border: 1px solid #eee; border-radius: 4px; text-align: center; }
+          .summary-item strong { display: block; font-size: 1.2em; color: #2e7d32; }
+          
+          .row-ampla { background-color: #fff3cd; }
+          .row-negro { background-color: #d4edda; }
+          .row-uefs { background-color: #cce5ff; }
+          .row-sdr { background-color: #ffffcc; }
+          .row-demais { background-color: #e2e3e5; }
+          
+          .admin-table th { background-color: #004d40; color: white; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <header class="main-header">
+            <h1>Resultado da Alocação de Vagas</h1>
+          </header>
+
+          <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #2e7d32; border-radius: 4px;">
+            <h3 style="margin-top: 0; color: #2e7d32; font-size: 1.1em;">Memória de Cálculo (Regras Aplicadas)</h3>
+            <ul style="margin-bottom: 0; padding-left: 20px; color: #555; font-size: 0.95em;">
+              <li><strong>Divisão Base:</strong> 50% Ampla Concorrência / 50% Cotas (Resolução CONSEPE 088/2021).</li>
+              <li><strong>Subdivisão de Cotas:</strong> 70% para Negros (Pretos/Pardos) e 30% para Demais Grupos.</li>
+              <li><strong>Vagas Institucionais (Deduzidas da Ampla):</strong> 20% Termo SDR e 20% Servidor UEFS.</li>
+              <li><strong>Arredondamento:</strong> Frações ≥ 0.5 arredondam para cima.</li>
+            </ul>
+          </div>
+
+          ${renderLineSection('Linha de Pesquisa 1', data.linha1)}
+          ${renderLineSection('Linha de Pesquisa 2', data.linha2)}
+
         </div>
       </body>
       </html>
@@ -985,10 +982,14 @@ class AdminDashboardPresenter {
           <section class="panel">            <div class="panel-header"><h2>Alocação de Vagas (Resolução 088/2021)</h2></div>
             <div class="panel-body">
               <form method="POST" action="/secret/${this.adminSecret}/admin/selection/allocate" target="_blank">
-                <div class="filters-grid" style="align-items: end;">
+                <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
                   <div class="form-group" style="margin-bottom: 0;">
-                    <label>Total de Vagas (Edital)</label>
-                    <input type="number" name="totalVagas" required min="1" value="10" />
+                    <label>Vagas Linha 1</label>
+                    <input type="number" name="vagasLinha1" required min="1" value="5" style="width: 120px;" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Vagas Linha 2</label>
+                    <input type="number" name="vagasLinha2" required min="1" value="5" style="width: 120px;" />
                   </div>
                   
                   <div class="filters-actions" style="margin-top:0; justify-content:flex-start;">

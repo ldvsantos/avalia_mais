@@ -64,13 +64,11 @@ class AdminController {
   }
 
   async allocateVacancies(req, res) {
-    const totalVagas = Number(req.body.totalVagas);
-    let vagasExtras = {};
-    try {
-      vagasExtras = JSON.parse(req.body.vagasExtras || '{}');
-    } catch (e) {
-      return res.status(400).send('JSON de vagas extras inválido');
-    }
+    const vagasLinha1 = Number(req.body.vagasLinha1 || 0);
+    const vagasLinha2 = Number(req.body.vagasLinha2 || 0);
+    
+    // Se vier totalVagas (legado ou único), assume divisão igual ou erro?
+    // Vamos focar nos novos campos.
 
     const activeEditalYear = storage.getActiveEditalYear();
     const submissions = await Promise.resolve(this.listSubmissionsUseCase.execute({ editalYear: activeEditalYear }));
@@ -109,19 +107,37 @@ class AdminController {
       if (combinedInst.includes('uefs') || combinedInst.includes('servidor')) tags.push('Servidor_UEFS');
       if (combinedInst.includes('sdr') || combinedInst.includes('termo')) tags.push('Termo_SDR');
 
+      const linhaRaw = (info.linha_pesquisa || info.area || '').toLowerCase();
+      let linha = 0;
+      if (linhaRaw.includes('linha 1') || linhaRaw.includes('linha de pesquisa 1')) linha = 1;
+      else if (linhaRaw.includes('linha 2') || linhaRaw.includes('linha de pesquisa 2')) linha = 2;
+
       return {
         nome: info.nome || s.protocol,
         protocol: s.protocol,
         nota: Number(finalScore.toFixed(2)),
-        tags: tags
+        tags: tags,
+        linha: linha
       };
     }).filter(c => c !== null);
 
     const VacancyAllocator = require('../../../vacancy_allocator');
-    const allocator = new VacancyAllocator(totalVagas, candidatos, vagasExtras);
-    const resultado = allocator.distribuir();
+    
+    const candidatosL1 = candidatos.filter(c => c.linha === 1);
+    const candidatosL2 = candidatos.filter(c => c.linha === 2);
+    // Candidatos sem linha definida ou linha desconhecida? Vamos ignorar ou jogar em algum lugar?
+    // Por segurança, vamos assumir que todos têm linha. Se não tiver, não entra na alocação.
 
-    const html = this.adminDashboardPresenter.renderAllocationResult(resultado, totalVagas, vagasExtras);
+    const allocator1 = new VacancyAllocator(vagasLinha1, candidatosL1);
+    const resultado1 = allocator1.distribuir();
+
+    const allocator2 = new VacancyAllocator(vagasLinha2, candidatosL2);
+    const resultado2 = allocator2.distribuir();
+
+    const html = this.adminDashboardPresenter.renderAllocationResult({
+      linha1: { resultado: resultado1, total: vagasLinha1, allocator: allocator1 },
+      linha2: { resultado: resultado2, total: vagasLinha2, allocator: allocator2 }
+    });
     res.type('html').send(html);
   }
 
