@@ -965,37 +965,20 @@ class AdminDashboardPresenter {
 
           <section class="panel">            <div class="panel-header"><h2>Alocação de Vagas (Resolução 088/2021)</h2></div>
             <div class="panel-body">
-              <form method="POST" action="/secret/${this.adminSecret}/admin/selection/allocate" target="_blank" onsubmit="
-                const sdr = document.getElementById('vaga_sdr').value;
-                const uefs = document.getElementById('vaga_uefs').value;
-                const obj = {};
-                if(sdr > 0) obj['Termo_SDR'] = parseInt(sdr);
-                if(uefs > 0) obj['Servidor_UEFS'] = parseInt(uefs);
-                document.getElementById('vagasExtrasHidden').value = JSON.stringify(obj);
-              ">
+              <form method="POST" action="/secret/${this.adminSecret}/admin/selection/allocate" target="_blank">
                 <div class="filters-grid" style="align-items: end;">
                   <div class="form-group" style="margin-bottom: 0;">
                     <label>Total de Vagas (Edital)</label>
-                    <input type="number" id="totalVagasInput" name="totalVagas" required min="1" value="10" oninput="
-                      const total = parseInt(this.value) || 0;
-                      const sdr = Math.floor(total * 0.2);
-                      const uefs = Math.floor(total * 0.2);
-                      document.getElementById('vaga_sdr').value = sdr;
-                      document.getElementById('vaga_uefs').value = uefs;
-                    " />
+                    <input type="number" name="totalVagas" required min="1" value="10" />
                   </div>
                   
-                  <div class="form-group" style="margin-bottom: 0;">
-                    <label>Vagas Termo SDR (20%)</label>
-                    <input type="number" id="vaga_sdr" min="0" value="2" class="form-control" />
+                  <div class="form-group" style="margin-bottom: 0; display: flex; align-items: center;">
+                    <span style="font-size: 0.9em; color: #555;">
+                      O sistema calculará automaticamente:<br>
+                      <strong>20%</strong> para Termo SDR<br>
+                      <strong>20%</strong> para Servidor UEFS
+                    </span>
                   </div>
-
-                  <div class="form-group" style="margin-bottom: 0;">
-                    <label>Vagas Servidor UEFS (20%)</label>
-                    <input type="number" id="vaga_uefs" min="0" value="2" class="form-control" />
-                  </div>
-
-                  <input type="hidden" name="vagasExtras" id="vagasExtrasHidden" value="{}" />
 
                   <div class="filters-actions" style="margin-top:0; justify-content:flex-start;">
                     <button class="btn-primary" type="submit">Calcular Alocação</button>

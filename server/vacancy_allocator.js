@@ -6,7 +6,17 @@ class VacancyAllocator {
     constructor(totalVagas, candidatos, vagasExtras = {}) {
         this.totalVagas = totalVagas;
         this.candidatos = JSON.parse(JSON.stringify(candidatos)); // Deep copy
-        this.vagasExtras = vagasExtras; // Ex: { "SDR": 1, "UEFS": 1 } or just a number if generic
+        
+        // Se não foram passadas vagas extras, aplica a regra padrão:
+        // 20% para Termo SDR e 20% para Servidor UEFS
+        if (!vagasExtras || Object.keys(vagasExtras).length === 0) {
+            this.vagasExtras = {
+                "Termo_SDR": Math.floor(totalVagas * 0.2),
+                "Servidor_UEFS": Math.floor(totalVagas * 0.2)
+            };
+        } else {
+            this.vagasExtras = vagasExtras;
+        }
         
         // Configuração de Grupos
         this.grupos = {
@@ -20,7 +30,7 @@ class VacancyAllocator {
             Cotas_Total: 0,
             Cotas_Negros: 0,
             Cotas_Demais: 0,
-            Institucional: this.vagasExtras // Pode ser um objeto ou número
+            Institucional: this.vagasExtras
         };
 
         this.resultado = [];
