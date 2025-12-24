@@ -114,6 +114,38 @@ class VacancyAllocator {
 
         // Deduz da Ampla
         let amplaCalculada = this.totalVagas - totalCotasInteiro;
+        
+        // REGRA DE PROTEÇÃO DA AMPLA CONCORRÊNCIA:
+        // Se houver vagas suficientes (amplaCalculada > 0), a Ampla deve ter pelo menos 1 vaga.
+        // Caso as vagas institucionais consumam tudo, devemos reduzi-las para preservar 1 vaga para Ampla.
+        let minAmpla = amplaCalculada > 0 ? 1 : 0;
+        let maxInstitucional = Math.max(0, amplaCalculada - minAmpla);
+
+        if (totalInstitucional > maxInstitucional) {
+            // Precisamos reduzir as vagas institucionais
+            let excesso = totalInstitucional - maxInstitucional;
+            
+            // Estratégia de redução: remove uma de cada vez, ciclando entre as chaves
+            // para tentar manter o equilíbrio, ou remove da última para a primeira.
+            // Aqui vamos remover da última para a primeira para simplificar.
+            const chaves = Object.keys(this.vagasExtras).reverse();
+            
+            while (excesso > 0) {
+                let reduziu = false;
+                for (const key of chaves) {
+                    if (this.vagasExtras[key] > 0) {
+                        this.vagasExtras[key]--;
+                        totalInstitucional--;
+                        excesso--;
+                        reduziu = true;
+                        if (excesso === 0) break;
+                    }
+                }
+                // Se percorreu tudo e não reduziu nada (excesso ainda > 0), break para evitar loop infinito
+                if (!reduziu) break;
+            }
+        }
+
         this.quadroVagas.AC = Math.max(0, amplaCalculada - totalInstitucional);
         
         // Se sobrar algo negativo (impossível com max 0, mas conceitualmente),
