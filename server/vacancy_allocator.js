@@ -8,19 +8,19 @@ class VacancyAllocator {
         this.candidatos = JSON.parse(JSON.stringify(candidatos)); // Deep copy
         
         // Se não foram passadas vagas extras (undefined ou null), define comportamento padrão
+        // Regra: 20% para Termo SDR e 20% para Servidor UEFS, independente do total de vagas
         if (!vagasExtras || Object.keys(vagasExtras).length === 0) {
-            if (totalVagas >= 6) {
-                this.vagasExtras = {
-                    "Termo_SDR": Math.floor(totalVagas * 0.2),
-                    "Servidor_UEFS": Math.floor(totalVagas * 0.2)
-                };
-            } else {
-                // 3 a 5 vagas: Sem convênios automáticos
-                this.vagasExtras = {
-                    "Termo_SDR": 0,
-                    "Servidor_UEFS": 0
-                };
-            }
+            this.vagasExtras = {
+                "Termo_SDR": Math.floor(totalVagas * 0.2),
+                "Servidor_UEFS": Math.floor(totalVagas * 0.2)
+            };
+            
+            // Para números pequenos (3, 4, 5), 20% de X pode dar 0 ou 1.
+            // 3 * 0.2 = 0.6 -> 0 (floor). Mas arredondamento padrão seria 1.
+            // O método arredondar() usa >= 0.5 sobe.
+            // Vamos usar a mesma lógica de arredondamento para ser justo.
+            this.vagasExtras["Termo_SDR"] = this.arredondar(totalVagas * 0.2);
+            this.vagasExtras["Servidor_UEFS"] = this.arredondar(totalVagas * 0.2);
         } else {
             this.vagasExtras = vagasExtras;
         }
@@ -53,76 +53,68 @@ class VacancyAllocator {
         // Reset
         this.quadroVagas = { AC: 0, Cotas_Total: 0, Cotas_Negros: 0, Cotas_Demais: 0, Institucional: this.vagasExtras };
         
-        if (this.totalVagas >= 6) {
-            // Regra Geral (>= 6 vagas)
-            let floatCotas = this.totalVagas * 0.5;
-            
-            // Arredondamento do Total de Cotas (>= 0.5 sobe)
-            let totalCotasInteiro = this.arredondar(floatCotas);
-            
-            // Subdivisão das Cotas
-            let floatNegros = floatCotas * 0.7;
+        // 1. Calcular Institucional (já definido no construtor, mas vamos somar)
+        let totalInstitucional = 0;
+        if (typeof this.vagasExtras === 'object') {
+            for (let val of Object.values(this.vagasExtras)) totalInstitucional += val;
+        } else if (typeof this.vagasExtras === 'number') {
+            totalInstitucional = this.vagasExtras;
+        }
+
+        // 2. Calcular Cotas (50% do Total)
+        let floatCotas = this.totalVagas * 0.5;
+        let totalCotasInteiro = this.arredondar(floatCotas);
+        
+        // 3. Calcular Ampla (Resíduo)
+        // Ampla = Total - (Cotas + Institucional)
+        let amplaCalculada = this.totalVagas - (totalCotasInteiro + totalInstitucional);
+        
+        // 4. Ajuste de Prioridades
+        // Regra 1: Ampla deve ser pelo menos 1 (se Total >= 1)
+        // Regra 2: Institucional deve ser mantido (conforme pedido do usuário)
+        // Conclusão: Se faltar vaga para Ampla, tirar das Cotas.
+        
+        if (this.totalVagas > 0 && amplaCalculada < 1) {
+            let falta = 1 - amplaCalculada;
+            // Tenta tirar das Cotas
+            if (totalCotasInteiro >= falta) {
+                totalCotasInteiro -= falta;
+                amplaCalculada = 1;
+            } else {
+                // Se Cotas não for suficiente (ex: N=1, Cotas=1, Inst=0, Ampla=0 -> Falta 1. Tira Cotas -> Ampla=1)
+                // Se N=3, Inst=2, Cotas=2 (1.5->2). Total=4. Ampla=-1. Falta 2.
+                // Tira 2 de Cotas -> Cotas=0. Ampla=1. Inst=2. Total=3. OK.
+                let tirou = totalCotasInteiro;
+                totalCotasInteiro = 0;
+                amplaCalculada += tirou;
+                
+                // Se ainda faltar para Ampla ser 1, teria que tirar de Institucional,
+                // mas o usuário disse "sempre terão essas vagas".
+                // Então assumimos que Institucional é intocável, a menos que Ampla ainda seja < 1 e não tenha mais Cotas.
+                // Mas com N=3, Inst=2, Cotas=0, Ampla=1 -> Total=3. OK.
+            }
+        }
+        
+        // Atualiza Ampla Final
+        this.quadroVagas.AC = Math.max(0, this.totalVagas - (totalCotasInteiro + totalInstitucional));
+
+        // 5. Subdivisão das Cotas (com o novo total ajustado)
+        if (totalCotasInteiro > 0) {
+            // Mantém proporção 70/30 do novo total
+            let floatNegros = totalCotasInteiro * 0.7;
             let finalNegros = this.arredondar(floatNegros);
-            
-            // Demais Grupos é o restante para fechar o Total de Cotas
             let finalDemais = totalCotasInteiro - finalNegros;
             
-            // Proteção contra negativos (improvável, mas seguro)
-            if (finalDemais < 0) {
-                finalNegros += finalDemais; // Reduz negros para caber
-                finalDemais = 0;
-            }
-
+            // Ajuste fino se der negativo (não deve acontecer com lógica acima)
+            if (finalDemais < 0) { finalNegros += finalDemais; finalDemais = 0; }
+            
             this.quadroVagas.Cotas_Total = totalCotasInteiro;
             this.quadroVagas.Cotas_Negros = finalNegros;
             this.quadroVagas.Cotas_Demais = finalDemais;
-            
-            // Institucional
-            let totalInstitucional = 0;
-            if (typeof this.vagasExtras === 'object') {
-                for (let val of Object.values(this.vagasExtras)) totalInstitucional += val;
-            } else if (typeof this.vagasExtras === 'number') {
-                totalInstitucional = this.vagasExtras;
-            }
-            
-            // Ampla Concorrência é o RESÍDUO
-            this.quadroVagas.AC = Math.max(0, this.totalVagas - (totalCotasInteiro + totalInstitucional));
-            
-        } else if (this.totalVagas >= 3) {
-            // Regra de Exceção (3 a 5 vagas) - Tabela Fixa
-            let table = {
-                3: { AC: 1, Negros: 1, Demais: 1 },
-                4: { AC: 2, Negros: 1, Demais: 1 },
-                5: { AC: 2, Negros: 2, Demais: 1 }
-            };
-            
-            let rule = table[this.totalVagas];
-            
-            this.quadroVagas.Cotas_Negros = rule.Negros;
-            this.quadroVagas.Cotas_Demais = rule.Demais;
-            this.quadroVagas.Cotas_Total = rule.Negros + rule.Demais;
-            
-            // Institucional (se forçado)
-            let totalInstitucional = 0;
-            if (typeof this.vagasExtras === 'object') {
-                for (let val of Object.values(this.vagasExtras)) totalInstitucional += val;
-            } else if (typeof this.vagasExtras === 'number') {
-                totalInstitucional = this.vagasExtras;
-            }
-            
-            // Ampla Concorrência é o RESÍDUO
-            // Se houver institucional forçado, ele come da Ampla (ou do total, reduzindo a Ampla)
-            // A tabela define AC base, mas se tiver institucional, reduzimos AC.
-            // Ex: 5 vagas -> Tabela diz 2 AC. Se tiver 1 SDR forçado -> 1 AC.
-            // Mas a fórmula de resíduo é mais segura: Total - (Cotas + Inst)
-            
-            let calculatedAC = this.totalVagas - (this.quadroVagas.Cotas_Total + totalInstitucional);
-            this.quadroVagas.AC = Math.max(0, calculatedAC);
-            
         } else {
-            // < 3 vagas (1 ou 2)
-            // Assume tudo Ampla por padrão se não especificado
-            this.quadroVagas.AC = this.totalVagas;
+            this.quadroVagas.Cotas_Total = 0;
+            this.quadroVagas.Cotas_Negros = 0;
+            this.quadroVagas.Cotas_Demais = 0;
         }
     }
 
