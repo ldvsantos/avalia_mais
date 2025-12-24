@@ -203,12 +203,16 @@ class PdfService {
 
   async signPdf(pdfBuffer, options = {}) {
     const requireSignature = Boolean(options.requireSignature);
+    console.log('[PdfService] signPdf started');
 
     try {
       const p12Buffer = certManager.getCertBuffer();
+      console.log('[PdfService] Certificate loaded, size:', p12Buffer.length);
+      
       const signer = createNodeSignPdfSigner();
 
       const trySign = (bufferToSign) => {
+        console.log('[PdfService] Attempting to sign...');
         const pdfWithPlaceholder = plainAddPlaceholder({
           pdfBuffer: bufferToSign,
           reason: 'Assinatura Digital Planterr',
@@ -216,16 +220,21 @@ class PdfService {
           name: 'Planterr System',
           location: 'Digital',
         });
+        console.log('[PdfService] Placeholder added');
 
-        return signer.sign(pdfWithPlaceholder, p12Buffer, { passphrase: 'planterr_secret' });
+        const signed = signer.sign(pdfWithPlaceholder, p12Buffer, { passphrase: 'planterr_secret' });
+        console.log('[PdfService] Signed successfully');
+        return signed;
       };
 
       try {
         return trySign(pdfBuffer);
       } catch (err) {
+        console.warn('[PdfService] First sign attempt failed:', err.message);
         // PDFs externos (exportados por terceiros) frequentemente vêm com xref stream/linearização.
         // Quando plainAddPlaceholder não consegue ler o xref, tentamos normalizar e assinar de novo.
         if (isXrefParseError(err)) {
+          console.log('[PdfService] Normalizing PDF for signing...');
           const normalized = await normalizePdfForSigning(pdfBuffer);
           return trySign(normalized);
         }
