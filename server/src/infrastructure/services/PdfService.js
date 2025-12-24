@@ -273,7 +273,7 @@ class PdfService {
 
         // Explanatory Text
         doc.fontSize(10).font('Helvetica').text(
-          'A Coordenação do Processo Seletivo torna pública a lista final de candidatos aprovados e classificados, após a aplicação dos critérios de alocação de vagas definidos em edital.',
+          'O sistema AVALIA+ ordenou a lista final por nota decrescente, preenchendo inicialmente a Ampla Concorrência com as maiores pontuações globais. Em seguida, aplicou-se uma rotina de otimização: candidatos com duplo perfil (Convênio e Cota Racial) foram alocados preferencialmente nas Cotas Raciais, liberando vagas de Convênio para a lista de espera específica. As demais reservas seguiram a ordem classificatória. Por fim, vagas ociosas em grupos específicos foram revertidas automaticamente para a Ampla Concorrência.',
           { align: 'justify' }
         );
         doc.moveDown(2);
