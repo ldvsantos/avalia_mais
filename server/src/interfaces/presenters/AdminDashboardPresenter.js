@@ -947,6 +947,27 @@ class AdminDashboardPresenter {
             </div>
           </section>
 
+          <section class="panel">            <div class="panel-header"><h2>Alocação de Vagas (Resolução 088/2021)</h2></div>
+            <div class="panel-body">
+              <form method="POST" action="/secret/${this.adminSecret}/admin/selection/allocate" target="_blank">
+                <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Vagas Linha 1</label>
+                    <input type="number" name="vagasLinha1" required min="1" value="5" style="width: 120px;" />
+                  </div>
+                  <div class="form-group" style="margin-bottom: 0;">
+                    <label>Vagas Linha 2</label>
+                    <input type="number" name="vagasLinha2" required min="1" value="5" style="width: 120px;" />
+                  </div>
+                  
+                  <div class="filters-actions" style="margin-top:0; justify-content:flex-start;">
+                    <button class="btn-primary" type="submit">Calcular Alocação</button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </section>
+
           <section class="panel">
             <div class="panel-header"><h2>Busca e filtros</h2></div>
             <div class="panel-body">
@@ -983,27 +1004,6 @@ class AdminDashboardPresenter {
                   <button class="btn-primary" type="submit">Filtrar</button>
                   <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/selection?${new URLSearchParams({ year: String(editalYear ?? activeEditalYear ?? '') }).toString()}">Limpar Filtros</a>
                   <a class="btn-secondary" href="/secret/${this.adminSecret}/admin/export.csv?${new URLSearchParams({ q, status, from: fromStr, to: toStr, year: String(editalYear ?? activeEditalYear ?? '') }).toString()}">Exportar CSV</a>
-                </div>
-              </form>
-            </div>
-          </section>
-
-          <section class="panel">            <div class="panel-header"><h2>Alocação de Vagas (Resolução 088/2021)</h2></div>
-            <div class="panel-body">
-              <form method="POST" action="/secret/${this.adminSecret}/admin/selection/allocate" target="_blank">
-                <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
-                  <div class="form-group" style="margin-bottom: 0;">
-                    <label>Vagas Linha 1</label>
-                    <input type="number" name="vagasLinha1" required min="1" value="5" style="width: 120px;" />
-                  </div>
-                  <div class="form-group" style="margin-bottom: 0;">
-                    <label>Vagas Linha 2</label>
-                    <input type="number" name="vagasLinha2" required min="1" value="5" style="width: 120px;" />
-                  </div>
-                  
-                  <div class="filters-actions" style="margin-top:0; justify-content:flex-start;">
-                    <button class="btn-primary" type="submit">Calcular Alocação</button>
-                  </div>
                 </div>
               </form>
             </div>
