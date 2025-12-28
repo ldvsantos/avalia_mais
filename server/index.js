@@ -3105,6 +3105,7 @@ app.get('/consulta', (req, res) => {
     <html lang="pt-BR">
     <head>
       <title>Consultar Inscrição - AVALIA+</title>
+      <link rel="icon" type="image/png" href="/img/logo_avalia_quadrado.png">
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <style>
@@ -3492,6 +3493,7 @@ app.get('/candidato/status', async (req, res) => {
       <html lang="pt-BR">
       <head>
         <title>Minha Inscrição - AVALIA+</title>
+        <link rel="icon" type="image/png" href="/img/logo_avalia_quadrado.png">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="/style.css" />
