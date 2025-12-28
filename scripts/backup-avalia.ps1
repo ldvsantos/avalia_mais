@@ -13,7 +13,7 @@ function Resolve-RepoRoot {
 $repoRoot = Resolve-RepoRoot
 $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupRoot = Join-Path $repoRoot "backups"
-$dest = Join-Path $backupRoot "planterr-backup-$timestamp"
+$dest = Join-Path $backupRoot "avalia-backup-$timestamp"
 
 New-Item -ItemType Directory -Force -Path $dest | Out-Null
 

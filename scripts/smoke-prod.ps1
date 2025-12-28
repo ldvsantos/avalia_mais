@@ -17,8 +17,8 @@ function Step([string]$label) {
   Write-Host ("[smoke-prod] {0}" -f $label)
 }
 
-$jar = Join-Path $env:TEMP ("planterr-smoke-cookies-{0}.txt" -f [guid]::NewGuid())
-$headersFile = Join-Path $env:TEMP ("planterr-smoke-headers-{0}.txt" -f [guid]::NewGuid())
+$jar = Join-Path $env:TEMP ("avalia-smoke-cookies-{0}.txt" -f [guid]::NewGuid())
+$headersFile = Join-Path $env:TEMP ("avalia-smoke-headers-{0}.txt" -f [guid]::NewGuid())
 
 $title = "SMOKE-PROD {0}" -f (Get-Date -Format 'yyyyMMdd-HHmmss')
 $yesterday = (Get-Date).AddDays(-1)

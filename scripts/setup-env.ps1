@@ -28,8 +28,8 @@ if ($AdminNotifyTo) {
 Write-Host "Configurando variáveis de ambiente no servidor $Server..." -ForegroundColor Cyan
 
 $timestamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$tmpLocal = Join-Path $env:TEMP "planterr-env-$timestamp.env"
-$tmpRemote = "/tmp/planterr-env-$timestamp.env"
+$tmpLocal = Join-Path $env:TEMP "avalia-env-$timestamp.env"
+$tmpRemote = "/tmp/avalia-env-$timestamp.env"
 
 Set-Content -Path $tmpLocal -Value $envContent -Encoding UTF8
 
@@ -38,12 +38,12 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Falha no SCP" }
 
     # Instala o arquivo garantindo owner/permissões corretos (evita ficar root:root e quebrar leitura do dotenv)
-    $remoteInstall = "sudo install -o ubuntu -g ubuntu -m 600 '$tmpRemote' /opt/planterr/server/.env && rm -f '$tmpRemote' && echo 'Arquivo .env instalado com sucesso.'"
+    $remoteInstall = "sudo install -o ubuntu -g ubuntu -m 600 '$tmpRemote' /opt/avalia/server/.env && rm -f '$tmpRemote' && echo 'Arquivo .env instalado com sucesso.'"
     ssh -p $SshPort -o ConnectTimeout=$SshConnectTimeoutSeconds -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" $remoteInstall
     if ($LASTEXITCODE -ne 0) { throw "Falha ao instalar .env" }
 
     Write-Host "Configuração concluída! Reiniciando aplicação..." -ForegroundColor Green
-    ssh -p $SshPort -o ConnectTimeout=$SshConnectTimeoutSeconds -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" "sudo -u ubuntu pm2 restart planterr"
+    ssh -p $SshPort -o ConnectTimeout=$SshConnectTimeoutSeconds -o StrictHostKeyChecking=no -i $KeyPath "${User}@${Server}" "sudo -u ubuntu pm2 restart avalia"
 } finally {
     if (Test-Path $tmpLocal) { Remove-Item -Force $tmpLocal }
 }

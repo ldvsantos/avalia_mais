@@ -242,7 +242,7 @@ class PdfService {
     // Linha separadora
     doc.moveTo(startX, startY).lineTo(startX + width, startY).stroke();
     
-    doc.text(`Documento assinado digitalmente e auditado pelo sistema Planterr.`, startX, startY + 10, { align: 'center', width: width });
+    doc.text(`Documento assinado digitalmente e auditado pelo sistema Avalia Mais.`, startX, startY + 10, { align: 'center', width: width });
     doc.text(`Gerado por: ${userName} | IP: ${ip || 'N/A'} (${location}) | Data: ${dateStr}`, startX, startY + 22, { align: 'center', width: width });
     if (hash) {
       doc.text(`Código de Verificação (Hash): ${hash}`, startX, startY + 34, { align: 'center', width: width });
@@ -266,9 +266,9 @@ class PdfService {
         console.log('[PdfService] Attempting to sign...');
         const pdfWithPlaceholder = plainAddPlaceholder({
           pdfBuffer: bufferToSign,
-          reason: 'Assinatura Digital Planterr',
-          contactInfo: 'sistema@planterr.com',
-          name: 'Planterr System',
+          reason: 'Assinatura Digital Avalia Mais',
+          contactInfo: 'sistema@avaliamais.tec.br',
+          name: 'Avalia Mais System',
           location: 'Digital',
         });
         console.log('[PdfService] Placeholder added');
