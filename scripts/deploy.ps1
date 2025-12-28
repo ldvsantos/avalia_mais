@@ -1,7 +1,7 @@
 param(
   [Parameter(Mandatory = $false)]
   [Alias('Host')]
-  [string]$Server = '18.222.198.84',
+  [string]$Server = '13.59.96.218',
 
   [Parameter(Mandatory = $false)]
   [string]$User = 'ubuntu',

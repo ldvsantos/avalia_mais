@@ -12,7 +12,7 @@ param(
 
     [string]$AdminNotifyTo = '',
 
-    [string]$Server = '18.222.198.84',
+    [string]$Server = '13.59.96.218',
     [string]$User = 'ubuntu',
     [string]$KeyPath = "$env:USERPROFILE\.ssh\planterr.pem",
     [int]$SshPort = 22,

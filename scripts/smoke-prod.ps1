@@ -1,5 +1,5 @@
 param(
-  [string]$BaseUrl = 'https://18.222.198.84',
+  [string]$BaseUrl = 'https://13.59.96.218',
   [string]$AdminSecret = '4a98a736-811d-447a-bfb3-6f4c2bc0dbc7',
   [string]$AdminUser = 'admin',
   [string]$AdminPass = ''

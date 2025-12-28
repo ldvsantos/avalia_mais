@@ -41,8 +41,8 @@ Se o repositório tiver workflow de CI/CD configurado, o deploy será automátic
 ## 🎯 Verificar Deploy
 
 Após o deploy, acesse:
-- **Admin**: https://18.222.198.84/secret/4a98a736-811d-447a-bfb3-6f4c2bc0dbc7/admin
-- **Público**: https://18.222.198.84/
+- **Admin**: https://13.59.96.218/secret/4a98a736-811d-447a-bfb3-6f4c2bc0dbc7/admin
+- **Público**: https://13.59.96.218/
 
 Teste:
 1. ✅ Criar novo evento com atividades

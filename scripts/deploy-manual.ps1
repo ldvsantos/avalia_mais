@@ -14,8 +14,8 @@ echo "🔄 Reiniciando aplicação..."
 pm2 restart avalia
 
 echo "✅ Deploy concluído!"
-echo "🌐 Acesse: http://18.222.198.84"
-echo "🔐 Admin: http://18.222.198.84/secret/4a98a736-811d-447a-bfb3-6f4c2bc0dbc7/admin"
+echo "🌐 Acesse: http://13.59.96.218"
+echo "🔐 Admin: http://13.59.96.218/secret/4a98a736-811d-447a-bfb3-6f4c2bc0dbc7/admin"
 
 pm2 status
 "@

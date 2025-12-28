@@ -2,7 +2,7 @@
 # NÃO commite scripts/deploy-config.ps1 (já está no .gitignore).
 
 @{
-  Host      = '18.222.198.84'
+  Host      = '13.59.96.218'
   User      = 'ubuntu'
   KeyPath   = "$env:USERPROFILE\.ssh\planterr.pem"
   # SshPort = 22
