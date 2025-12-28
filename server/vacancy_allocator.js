@@ -30,7 +30,7 @@ class VacancyAllocator {
 
             this.vagasExtras = {
                 "Termo_SDR": sdr,
-                "Servidor_UEFS": uefs
+                "Institucional": uefs
             };
         } else {
             this.vagasExtras = vagasExtras;
@@ -40,7 +40,7 @@ class VacancyAllocator {
         this.grupos = {
             negros: ["Negro"],
             demais: ["Indigena", "PCD", "Trans", "Quilombola"],
-            institucional: ["Servidor_UEFS", "Termo_SDR"]
+            institucional: ["Institucional", "Termo_SDR"]
         };
 
         this.quadroVagas = {
@@ -189,7 +189,7 @@ class VacancyAllocator {
                     else if (candidato.tags.includes("Quilombola")) candidato.grupo_concorrencia = "Quilombola";
                     else candidato.grupo_concorrencia = "Afirmativa";
                 }
-                else if (this.hasTag(candidato, ["Servidor_UEFS"])) candidato.grupo_concorrencia = "UEFS";
+                else if (this.hasTag(candidato, ["Institucional"])) candidato.grupo_concorrencia = "Institucional";
                 else if (this.hasTag(candidato, ["Termo_SDR"])) candidato.grupo_concorrencia = "SDR";
                 else candidato.grupo_concorrencia = "Ampla";
             }
@@ -274,7 +274,7 @@ class VacancyAllocator {
             if (tag === "Institucional") {
                 let candidatosInst = fila.filter(c => this.hasTag(c, this.grupos.institucional));
                 let vagasRestantes = qtd;
-                let totalInst = this.vagasExtras; // Assumindo número
+                let totalInst = (typeof this.vagasExtras === 'number') ? this.vagasExtras : (this.vagasExtras["Institucional"] || qtd);
                 for (let cand of candidatosInst) {
                     if (vagasRestantes > 0) {
                         let current = usedExtras.get("Institucional") + 1;
@@ -294,7 +294,7 @@ class VacancyAllocator {
                         let current = (usedExtras.get(tag) || 0) + 1;
                         usedExtras.set(tag, current);
                         
-                        let label = tag === "Servidor_UEFS" ? "UEFS" : (tag === "Termo_SDR" ? "Vaga Cooperação – SDR" : tag);
+                        let label = tag === "Institucional" ? "Institucional" : (tag === "Termo_SDR" ? "Vaga Cooperação – SDR" : tag);
                         aprovar(cand, `${label} (${current}/${totalTag})`, "Classificação Específica");
                         
                         vagasRestantesTag--;
@@ -334,7 +334,7 @@ class VacancyAllocator {
                 usedExtras.set(tag, current);
                 let totalTag = this.vagasExtras[tag] || (typeof this.vagasExtras === 'number' ? this.vagasExtras : 0);
                 
-                let label = tag === "Servidor_UEFS" ? "UEFS" : (tag === "Termo_SDR" ? "Vaga Cooperação – SDR" : tag);
+                let label = tag === "Institucional" ? "Institucional" : (tag === "Termo_SDR" ? "Vaga Cooperação – SDR" : tag);
                 if (tag === "Institucional") label = "Vaga Institucional";
 
                 aprovar(cand, `${label} - Ocupado por ampla (${current}/${totalTag})`, "Reversão de Sobras", "Ampla");

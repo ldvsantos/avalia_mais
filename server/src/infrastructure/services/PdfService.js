@@ -45,8 +45,8 @@ class PdfService {
     const topY = 40;
     const rightX = doc.page.width - 50;
 
-    const hasPlanter = fs.existsSync(this.planterLogoPath);
-    const hasUefs = fs.existsSync(this.uefsLogoPath);
+    const hasPlanter = false;
+    const hasUefs = false;
 
     if (hasPlanter) {
       doc.image(this.planterLogoPath, leftX, topY, { width: 110 });
@@ -58,13 +58,13 @@ class PdfService {
     }
 
     doc.font('Helvetica-Bold').fontSize(11).fillColor('black');
-    doc.text('UNIVERSIDADE ESTADUAL DE FEIRA DE SANTANA', leftX, topY + 5, {
+    doc.text('INSTITUIÇÃO EXEMPLO', leftX, topY + 5, {
       width: doc.page.width - 100,
       align: 'center',
     });
 
     doc.font('Helvetica').fontSize(10);
-    doc.text('Programa de Pós-Graduação em Planejamento Territorial', {
+    doc.text('Programa de Pós-Graduação', {
       width: doc.page.width - 100,
       align: 'center',
     });
@@ -126,7 +126,7 @@ class PdfService {
       const y2 = Math.min(Math.max(0, bottomPadding), Math.max(0, height - 1));
       const y1 = Math.min(y2 + lineGap, Math.max(0, height - 1));
 
-      const line1 = 'ASSINADO DIGITALMENTE PELO SISTEMA PLANTERR';
+      const line1 = 'ASSINADO DIGITALMENTE PELO SISTEMA AVALIA+';
       const line2 = `Data: ${createdStr}${hash ? ` | Hash: ${hash}` : ''}`;
 
       const hasLogo = Boolean(avaliaSquareImage);
@@ -188,7 +188,7 @@ class PdfService {
     const topY = 45;
     const rightX = doc.page.width - 50;
 
-    const hasPlanter = fs.existsSync(this.planterLogoPath);
+    const hasPlanter = false;
     const hasAvalia = fs.existsSync(this.avaliaLogoPath);
 
     if (hasPlanter) {

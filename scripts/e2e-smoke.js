@@ -1,5 +1,5 @@
 /*
-E2E smoke test (local) no sistem Planterr.
+E2E smoke test (local) no sistem AVALIA+.
 - Inicia o servidor em uma porta temporária
 - Testa páginas públicas + login de administrador + ciclo de vida de eventos + regras de certificado
 - Restaura o arquivo server/data/events.json para evitar problemas na árvore de diretórios

@@ -663,7 +663,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
             <a href="/secret/${ADMIN_SECRET}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </a>
             <h1>Calendário do Edital (Workflow)</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
@@ -2817,7 +2817,7 @@ app.get('/eventos/:id', async (req, res) => {
         <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
               <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
-                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
               </a>
               <h1>Inscrição em Evento</h1>
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
@@ -3104,7 +3104,7 @@ app.get('/consulta', (req, res) => {
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
-      <title>Consultar Inscrição - PLANTERR</title>
+      <title>Consultar Inscrição - AVALIA+</title>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <style>
@@ -3277,12 +3277,12 @@ app.get('/consulta', (req, res) => {
         })}
         <div class="auth-header">
           <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR">
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+">
           </a>
           <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+">
         </div>
         <h1 class="auth-title">Consultar Inscrição</h1>
-        <p class="auth-subtitle">Acompanhe o status da sua candidatura no Processo Seletivo PLANTERR - AVALIA+</p>
+        <p class="auth-subtitle">Acompanhe o status da sua candidatura no Processo Seletivo AVALIA+ - AVALIA+</p>
 
         ${error ? `<div class="error-msg">${escapeHtml(error)}</div>` : ''}
 
@@ -3293,7 +3293,7 @@ app.get('/consulta', (req, res) => {
         <form method="POST" action="/consulta">
           <div class="form-group">
             <label for="protocol">Número do Protocolo</label>
-            <input id="protocol" type="text" name="protocol" placeholder="Ex.: PLANTERR-2025-ABC123" required>
+            <input id="protocol" type="text" name="protocol" placeholder="Ex.: AVALIA-2025-ABC123" required>
             <div class="form-hint">Você recebeu este número ao finalizar a inscrição</div>
           </div>
           <div class="form-group">
@@ -3491,7 +3491,7 @@ app.get('/candidato/status', async (req, res) => {
       <!DOCTYPE html>
       <html lang="pt-BR">
       <head>
-        <title>Minha Inscrição - PLANTERR</title>
+        <title>Minha Inscrição - AVALIA+</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="/style.css" />
@@ -3666,11 +3666,11 @@ app.get('/candidato/status', async (req, res) => {
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
               <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
-                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
               </a>
               <div>
                 <h1 style="margin:0; font-size: 1.5em;">Portal do Candidato</h1>
-                <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Acompanhe sua inscrição no Processo Seletivo PLANTERR</p>
+                <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Acompanhe sua inscrição no Processo Seletivo AVALIA+</p>
               </div>
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
@@ -4091,7 +4091,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
     <body>
       <div class="auth-container">
         <div class="auth-header">
-          <img src="/img/logo_planter.png" alt="Logo PLANTERR">
+          <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+">
           <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+">
         </div>
         <h1 class="auth-title">Acesso Restrito</h1>
@@ -4328,7 +4328,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/faq`, checkAdminIP, adminAuth, (req, res)
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px; flex-wrap:wrap;">
             <a href="/secret/${ADMIN_SECRET}/admin" aria-label="Voltar ao admin" style="display:inline-block;">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </a>
             <div style="text-align:center;">
               <h1 style="margin:0; font-size: 1.5em;">FAQ / Ajuda</h1>
@@ -4668,7 +4668,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, 
         <div class="container">
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
               <h1>Inscritos no Evento</h1>
               <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
@@ -4843,7 +4843,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, async (req
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
             <a href="/secret/${ADMIN_SECRET}/admin" aria-label="Voltar ao painel administrativo">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </a>
             <h1>Comissão - Avaliações</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
@@ -4976,7 +4976,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, as
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
             <a href="/secret/${ADMIN_SECRET}/admin">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </a>
             <h1>Resultados (Ranking)</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
@@ -5266,7 +5266,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
             <a href="/secret/${ADMIN_SECRET}/admin" aria-label="Voltar ao painel administrativo">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </a>
             <h1>Avaliação de Projeto</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
@@ -5882,7 +5882,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminA
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             <h1>Gerador de Certificado (Teste)</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -6138,7 +6138,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
       <div class="container">
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-            <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             <h1>Administração de Inscrições - AVALIA+</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
           </div>
@@ -6388,7 +6388,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
             <a href="/secret/${ADMIN_SECRET}/admin">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </a>
             <h1>Credenciais de Acesso - Avaliadores</h1>
             <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
@@ -6600,7 +6600,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, async (re
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
             <a href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}" aria-label="Recarregar Painel">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </a>
             <div style="text-align:center;">
               <h1 style="margin:0;">Painel do Avaliador ${num}</h1>
@@ -6792,7 +6792,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
         <header class="main-header">
           <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
             <a href="/secret/${ADMIN_SECRET}/evaluator/${line}/${num}" aria-label="Voltar ao Painel">
-              <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </a>
             <div style="text-align:center;">
               <h1 style="margin:0;">Projeto e Avaliação</h1>

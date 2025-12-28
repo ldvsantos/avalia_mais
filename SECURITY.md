@@ -17,7 +17,7 @@ Este documento define práticas para reduzir risco de adulteração, sequestro d
 Envie para: <PREENCHER_EMAIL_SEGURANCA>
 
 ## Titularidade
-Direitos reservados ao PLANTERR/UEFS.
+Direitos reservados ao AVALIA+.
 
 ## Limitações
 - Nenhum mecanismo impede alguém de copiar código se ele tiver acesso. As medidas aqui ajudam a **provar autenticidade** e **detectar adulteração**, e complementam o licenciamento.

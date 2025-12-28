@@ -31,11 +31,11 @@ class AdminDashboardPresenter {
             
             if (sit.includes('ampla')) return 'row-ampla';
             if (sit.includes('negros')) return 'row-negro';
-            if (sit.includes('uefs')) return 'row-uefs';
+            if (sit.includes('institucional')) return 'row-institucional';
             if (sit.includes('sdr')) return 'row-sdr';
             if (sit.includes('pcd') || sit.includes('indígena') || sit.includes('trans')) return 'row-demais';
             
-            if (grp.includes('uefs')) return 'row-uefs';
+            if (grp.includes('institucional')) return 'row-institucional';
             if (grp.includes('sdr')) return 'row-sdr';
             if (grp.includes('afirmativa')) return 'row-negro';
             if (grp.includes('pcd')) return 'row-demais';

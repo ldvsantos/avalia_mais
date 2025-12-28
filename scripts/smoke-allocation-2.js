@@ -18,7 +18,7 @@ const candidatos = [
 ];
 
 const totalVagas = 10;
-const vagasExtras = { "Servidor_UEFS": 2, "Termo_SDR": 2 };
+const vagasExtras = { "Institucional": 2, "Termo_SDR": 2 };
 
 console.log("=== SMOKE TEST 2: NOVA LISTA ===");
 console.log(`Total Vagas: ${totalVagas}`);

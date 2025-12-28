@@ -1,6 +1,6 @@
 # Copyright
 
-Copyright (c) 2025 PLANTERR/UEFS
+Copyright (c) 2025 AVALIA+
 
 Todos os direitos reservados.
 

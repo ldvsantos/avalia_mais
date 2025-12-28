@@ -18,7 +18,7 @@ const securityLogger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'planterr-security' },
+  defaultMeta: { service: 'avalia-security' },
   transports: [
     // Arquivo de segurança
     new winston.transports.File({

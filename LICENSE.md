@@ -1,8 +1,8 @@
 # Licença Proprietária (Todos os direitos reservados)
 
-Direitos reservados ao **PLANTERR/UEFS**.
+Direitos reservados ao **AVALIA+**.
 
-Copyright (c) 2025 PLANTERR/UEFS
+Copyright (c) 2025 AVALIA+
 
 ## 1) Escopo
 Este repositório e todo o seu conteúdo (incluindo, sem limitação, código-fonte, templates, documentação, imagens, artefatos de build, arquivos de dados e configuração) são de uso restrito, protegidos por direitos autorais e demais legislações aplicáveis.

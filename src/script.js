@@ -17,7 +17,7 @@ function updateCounter(element, maxLimit) {
 function generateRegistrationNumber() {
     const timestamp = Date.now().toString().slice(-6);
     const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `2025-PLANTERR-${timestamp}-${random}`;
+    return `2025-AVALIA-${timestamp}-${random}`;
 }
 
 function formatCPF(value) {
@@ -769,8 +769,8 @@ async function generateDraft() {
             <!-- PÁGINA 1: FICHA DE INSCRIÇÃO -->
             <div class="page-1">
                 <div class="header-container">
-                    <div class="header-left"><img src="/img/logo_planter.png" alt="Logo PLANTERR"></div>
-                    <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO RASCUNHO (SEM VALIDADE)</div>
+                    <div class="header-left"></div>
+                    <div class="header-center">FICHA DE INSCRIÇÃO RASCUNHO (SEM VALIDADE)</div>
                     <div class="header-right">
                         <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:60px; margin-bottom:5px;">
                         <div><strong>Processo:</strong> ${registrationNumber}</div>
@@ -816,7 +816,7 @@ async function generateDraft() {
             <!-- PÁGINA 2: ANTEPROJETO -->
             <div class="page-2">
                 <div class="header-container">
-                    <div class="header-left"><img src="/img/logo_planter.png" alt="Logo PLANTERR"></div>
+                    <div class="header-left"></div>
                     <div class="header-center">ANTEPROJETO (RASCUNHO)</div>
                     <div class="header-right">
                         <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
@@ -825,7 +825,7 @@ async function generateDraft() {
                 </div>
 
                 <div class="section">
-                    <div class="section-title">ANEXO IV - Anteprojeto</div>
+                    <div class="section-title">Anteprojeto</div>
                     <div class="field"><div class="field-label">Título:</div><div class="field-value">${escapeHtml(formData.titulo_pt)}</div></div>
                     <div class="field"><div class="field-label">Linha:</div><div class="field-value">${escapeHtml(formData.area)}</div></div>
                 </div>
@@ -1009,7 +1009,7 @@ async function generatePDF() {
     if (!confirmed) return;
 
     /*
-    const submittedCPFs = JSON.parse(localStorage.getItem('planterr_submitted_cpfs') || '[]');
+    const submittedCPFs = JSON.parse(localStorage.getItem('avalia_submitted_cpfs') || '[]');
     if (submittedCPFs.includes(cpf)) {
         alert('Este CPF já possui uma inscrição gerada. Não é permitido gerar mais de uma inscrição.');
         return;
@@ -1160,7 +1160,7 @@ async function generatePDF() {
 
     const auditFooterHtml = `
         <div class="audit-footer">
-            Documento assinado digitalmente e auditado pelo sistema Planterr.<br>
+            Documento assinado digitalmente e auditado pelo sistema AVALIA+.<br>
             Gerado por: Sistema Automático | IP: ${serverReceipt.ip || 'N/A'} | Data: ${new Date(serverReceipt.createdAt).toLocaleString('pt-BR')}<br>
             Código de Verificação (Hash): ${serverReceipt.hash}
             Documento apenas com validade digital para o processo de seleção em curso.<br>
@@ -1387,8 +1387,8 @@ async function generatePDF() {
             <!-- PÁGINA 1: FICHA DE INSCRIÇÃO (TABELA) -->
             <div class="page-1">
                 <div class="header-container">
-                    <div class="header-left"><img src="/img/logo_planter.png" alt="Logo PLANTERR"></div>
-                    <div class="header-center">ANEXO I - FICHA DE INSCRIÇÃO</div>
+                    <div class="header-left"></div>
+                    <div class="header-center">FICHA DE INSCRIÇÃO</div>
                     <div class="header-right">
                         <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
                         <div><strong>Processo:</strong> ${registrationNumber}</div>
@@ -1485,7 +1485,7 @@ async function generatePDF() {
                     </tr>
                     <tr>
                         <td colspan="3">
-                            <span class="label">Candidato a Vaga Institucional (servidor docente ou técnico efetivo da UEFS):</span>
+                            <span class="label">Candidato a Vaga Institucional:</span>
                         </td>
                         <td>
                             <span class="value">${escapeHtml(formData.vaga_institucional)}</span>
@@ -1554,7 +1554,7 @@ async function generatePDF() {
                     <tr class="declaration-row">
                         <td colspan="4">
                             <div class="declaration-block" style="font-size:10px; line-height:1.4; text-align:justify;">
-                                Declaro que, em sendo aprovado/a no processo seletivo, tenho disponibilidade para realizar, de forma presencial nas dependências da UEFS, todas as atividades do Programa de Pós-Graduação em Planejamento Territorial (PLANTERR) – Mestrado Profissional.
+                                Declaro que, em sendo aprovado/a no processo seletivo, tenho disponibilidade para realizar, de forma presencial, todas as atividades do Programa.
                                 <br><br>
                                 <div style="display:flex; align-items:flex-start; gap:8px;">
                                     <span style="font-size:14px; line-height:1; margin-top:1px; color:${formData.termo_compromisso==='Concordo' ? '#003366' : '#000'};">${formData.termo_compromisso==='Concordo' ? '☑' : '☐'}</span>
@@ -1574,7 +1574,7 @@ async function generatePDF() {
                     </div>
                     <div class="qr-side-text">
                         Escaneie o QR Code ao lado para verificar a autenticidade desta inscrição.<br>
-                        Inscrição registrada no sistema AVALIA+ do PLANTERR, mas condicionada à validação após o envio dos documentos à secretaria.<br>
+                        Inscrição registrada no sistema AVALIA+, mas condicionada à validação após o envio dos documentos à secretaria.<br>
                         Inscrição nº: <strong>${registrationNumber}</strong><br>
                         ${anexosCondicionantesHtml}
                     </div>
@@ -1589,8 +1589,8 @@ async function generatePDF() {
             <!-- PÁGINA 2: ANTEPROJETO (BLIND REVIEW - ESTILO ANTIGO) -->
             <div class="page-2">
                 <div class="header-container">
-                    <div class="header-left"><img src="/img/logo_planter.png" alt="Logo PLANTERR"></div>
-                    <div class="header-center">ANTEPROJETO DE TCC</div>
+                    <div class="header-left"></div>
+                    <div class="header-center">ANTEPROJETO</div>
                     <div class="header-right">
                         <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+ Logo" style="max-height:45px; margin-bottom:5px;">
                         <div><strong>Processo:</strong> ${registrationNumber}</div>
@@ -1698,7 +1698,7 @@ async function generatePDF() {
             
             // Salvar CPF após sucesso (ou tentativa)
             // submittedCPFs.push(cpf);
-            // localStorage.setItem('planterr_submitted_cpfs', JSON.stringify(submittedCPFs));
+            // localStorage.setItem('avalia_submitted_cpfs', JSON.stringify(submittedCPFs));
             
             if(btn) { btn.disabled = false; btn.innerText = originalText; }
             showSubmissionSuccess(serverReceipt, formData);
@@ -1912,11 +1912,11 @@ function fillExample() {
         // Detectar se é página de recurso
         if (document.getElementById('recurso-form')) {
             console.log('Preenchendo formulário de recurso...');
-            setVal('protocolo_inscricao', 'PLANTERR-2025-AB12');
+            setVal('protocolo_inscricao', 'AVALIA-2025-AB12');
             setVal('nome', 'Maria da Silva');
             setVal('cpf', '390.533.447-05');
             setVal('email', 'maria.silva@example.com');
-            setVal('titulo_projeto', 'Desenvolvimento de Sistema PlanTerr para Gestão de Projetos');
+            setVal('titulo_projeto', 'Desenvolvimento de Sistema AVALIA+ para Gestão de Projetos');
             setVal('linha_pesquisa', 'Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social');
             setVal('etapa_processo', 'Avaliação do Projeto');
             setVal('decisao_contestacao', 'A nota atribuída ao critério de metodologia não condiz com o detalhamento apresentado na seção 4 do projeto.');
@@ -1946,7 +1946,7 @@ function fillExample() {
         setVal('telefone_residencial', '(75) 3333-4444');
         setVal('email', 'maria.silva@example.com');
         setVal('curso_graduacao', 'Engenharia Agronômica');
-        setVal('instituicao', 'UEFS');
+        setVal('instituicao', 'Instituição Exemplo');
         setVal('ano_conclusao', '2015');
         checkRadio('vaga_institucional', 'Sim');
         checkRadio('vaga_cooperacao', 'Não');
@@ -1965,8 +1965,8 @@ function fillExample() {
         if (typeof updateTermoFeedback === 'function') updateTermoFeedback();
 
         // Projeto
-        setVal('titulo_pt', 'Desenvolvimento de Sistema PlanTerr para Gestão de Projetos');
-        setVal('titulo_en', 'PlanTerr System Development for Project Management');
+        setVal('titulo_pt', 'Desenvolvimento de Sistema AVALIA+ para Gestão de Projetos');
+        setVal('titulo_en', 'AVALIA+ System Development for Project Management');
         setVal('area', 'Linha de Pesquisa 2 – Políticas públicas, Planejamento Territorial e Participação Social');
         setVal('palavras_pt', 'gestão; projeto; inovação');
         setVal('palavras_en', 'management; project; innovation');

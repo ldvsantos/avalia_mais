@@ -21,7 +21,7 @@ function hmacSha256Hex(secret, input) {
   return crypto.createHmac('sha256', secret).update(input).digest('hex');
 }
 
-function generateProtocol(prefix = 'PLANTERR', year = '2025') {
+function generateProtocol(prefix = 'AVALIA', year = '2025') {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');

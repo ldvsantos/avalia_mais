@@ -16,10 +16,10 @@ param(
   [int]$SshConnectTimeoutSeconds = 15,
 
   [Parameter(Mandatory = $false)]
-  [string]$RemoteDir = '/opt/planterr',
+  [string]$RemoteDir = '/opt/avalia',
 
   [Parameter(Mandatory = $false)]
-  [string]$Pm2Name = 'planterr',
+  [string]$Pm2Name = 'avalia',
 
   [Parameter(Mandatory = $false)]
   [string]$Branch = '',
@@ -295,9 +295,17 @@ TS="__TS__"
 
 APP_USER="${SUDO_USER:-ubuntu}"
 
-STAGING="/opt/planterr_staging_$TS"
-BACKUP_DIR="/opt/planterr_backups"
-BACKUP_TGZ="$BACKUP_DIR/planterr-persist-$TS.tgz"
+STAGING="/opt/avalia_staging_$TS"
+BACKUP_DIR="/opt/avalia_backups"
+BACKUP_TGZ="$BACKUP_DIR/avalia-persist-$TS.tgz"
+
+# Migração automática de planterr -> avalia
+if [ ! -d "$REMOTE_DIR" ] && [ -d "/opt/planterr" ]; then
+  echo ">>> Migrando instalação antiga (/opt/planterr -> $REMOTE_DIR)..."
+  pm2 stop planterr || true
+  pm2 delete planterr || true
+  mv /opt/planterr "$REMOTE_DIR"
+fi
 
 mkdir -p "$BACKUP_DIR"
 

@@ -2,12 +2,12 @@ const VacancyAllocator = require('../server/vacancy_allocator');
 
 // Dados simulados baseados na tabela fornecida
 const candidatos = [
-    { nome: "IATIARA CHAVES DE OLIVEIRA RIBEIRO", nota: 9.62, tags: ["Servidor_UEFS"] }, // UEFS tag adjusted
+    { nome: "IATIARA CHAVES DE OLIVEIRA RIBEIRO", nota: 9.62, tags: ["Institucional"] }, // UEFS tag adjusted
     { nome: "LEONARDO PEDREIRA DE OLIVEIRA", nota: 9.26, tags: ["Negro"] },
     { nome: "MICKAELLY ESPÍRITO SANTO SANTOS", nota: 9.26, tags: ["Negro"] },
     { nome: "MARILUCE SANTOS DA SILVA", nota: 9.06, tags: ["Negro"] },
     { nome: "CAMILA MENEZES SOUZA", nota: 9.04, tags: ["Negro"] },
-    { nome: "TAÍNARA DA SILVA SANTOS", nota: 9.26, tags: ["Servidor_UEFS"] }, // UEFS tag adjusted
+    { nome: "TAÍNARA DA SILVA SANTOS", nota: 9.26, tags: ["Institucional"] }, // UEFS tag adjusted
     { nome: "FERNANDA GONÇALVES DE BRITO", nota: 9.45, tags: [] }, // Ampla
     { nome: "FABIANA CALHEIRA MENEZES RIOS", nota: 9.45, tags: ["PCD"] },
     { nome: "RAFAEL CARLOMAGNO SILVA NOVAIS", nota: 8.74, tags: ["Termo_SDR"] },
@@ -32,7 +32,7 @@ const candidatos = [
 ];
 
 const totalVagas = 10;
-const vagasExtras = { "Servidor_UEFS": 2, "Termo_SDR": 2 };
+const vagasExtras = { "Institucional": 2, "Termo_SDR": 2 };
 
 console.log("=== SMOKE TEST: ALOCAÇÃO DE VAGAS ===");
 console.log(`Total Vagas: ${totalVagas}`);
