@@ -18,12 +18,12 @@ const EVALUATORS_FILE = path.join(DATA_DIR, 'evaluators.json');
 const CONFIG_FILE = path.join(DATA_DIR, 'config.json');
 
 const DEFAULT_EVALUATORS = {
-  'av1-l1': { pass: 'planterr2025', line: '1', num: '1' },
-  'av2-l1': { pass: 'planterr2025', line: '1', num: '2' },
-  'av3-l1': { pass: 'planterr2025', line: '1', num: '3' },
-  'av1-l2': { pass: 'planterr2025', line: '2', num: '1' },
-  'av2-l2': { pass: 'planterr2025', line: '2', num: '2' },
-  'av3-l2': { pass: 'planterr2025', line: '2', num: '3' },
+  'av1-l1': { pass: 'avalia2025', line: '1', num: '1' },
+  'av2-l1': { pass: 'avalia2025', line: '1', num: '2' },
+  'av3-l1': { pass: 'avalia2025', line: '1', num: '3' },
+  'av1-l2': { pass: 'avalia2025', line: '2', num: '1' },
+  'av2-l2': { pass: 'avalia2025', line: '2', num: '2' },
+  'av3-l2': { pass: 'avalia2025', line: '2', num: '3' },
 };
 
 function ensureFile() {
