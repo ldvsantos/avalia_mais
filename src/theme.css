@@ -236,3 +236,163 @@ textarea {
     border-bottom: 1px solid #ccc;
     padding-bottom: 5px;
 }
+
+/* ============================================
+   MEDIA QUERIES PARA MOBILE
+   ============================================ */
+
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+        font-size: 12px;
+    }
+
+    .container {
+        padding: 8px;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    .main-header h1 {
+        font-size: 14px;
+    }
+
+    .main-header {
+        padding-bottom: 8px;
+    }
+
+    /* Tabelas responsivas */
+    table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        font-size: 10px;
+    }
+
+    table th,
+    table td {
+        padding: 4px;
+    }
+
+    /* Botões maiores em mobile */
+    .btn-primary,
+    .btn-secondary,
+    input[type="submit"],
+    input[type="button"],
+    button {
+        padding: 8px 12px !important;
+        font-size: 12px !important;
+        min-height: 44px; /* Touch target mínimo */
+    }
+
+    /* Forms mais espaçados */
+    .form-group {
+        margin-bottom: 12px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="number"],
+    textarea,
+    select {
+        font-size: 16px; /* Evita zoom no iOS */
+        padding: 8px;
+        min-height: 44px;
+    }
+
+    label {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    /* Panels */
+    .panel {
+        margin-bottom: 8px;
+    }
+
+    .panel-body {
+        padding: 8px;
+    }
+
+    .panel-header {
+        padding: 6px 8px;
+    }
+
+    /* Grid responsivo */
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    /* Cards de portal */
+    .portal-cards {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Event cards */
+    .event-card,
+    .portal-card,
+    .admin-card {
+        margin-bottom: 12px;
+    }
+
+    /* Imagens responsivas */
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    /* Textos */
+    .instructions,
+    .hint {
+        font-size: 11px;
+        padding: 8px;
+    }
+
+    /* Cabeçalhos de seção */
+    .section-header h2 {
+        font-size: 14px;
+    }
+
+    /* Ações administrativas */
+    .admin-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .admin-actions a,
+    .admin-actions button {
+        width: 100%;
+    }
+}
+
+/* Extra small devices (phones, menos de 480px) */
+@media (max-width: 480px) {
+    body {
+        padding: 5px;
+        font-size: 11px;
+    }
+
+    .container {
+        padding: 5px;
+        border: none;
+    }
+
+    .main-header h1 {
+        font-size: 13px;
+    }
+
+    table {
+        font-size: 9px;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        font-size: 11px !important;
+        padding: 6px 10px !important;
+    }
+}

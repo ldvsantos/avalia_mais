@@ -59,6 +59,65 @@
             font-size: 44px;
             color: #2e7d32;
         }
+
+        @media (max-width: 768px) {
+            .portal-home-container {
+                gap: 20px;
+                min-height: 50vh;
+                padding: 10px;
+            }
+
+            .portal-cards {
+                gap: 15px;
+                flex-direction: column;
+                width: 100%;
+                padding: 0 10px;
+            }
+
+            .portal-card {
+                width: 100%;
+                max-width: 400px;
+                padding: 20px;
+            }
+
+            .portal-card h2 {
+                font-size: 1.2rem;
+            }
+
+            .portal-card-icon {
+                font-size: 36px;
+            }
+
+            .main-header h1 {
+                font-size: 1.3em !important;
+            }
+
+            .main-header p {
+                font-size: 0.95em !important;
+            }
+
+            .main-header a {
+                font-size: 0.85em !important;
+            }
+
+            .main-header img {
+                max-height: 60px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .portal-card {
+                padding: 16px;
+            }
+
+            .portal-card h2 {
+                font-size: 1.1rem;
+            }
+
+            .portal-card-icon {
+                font-size: 32px;
+            }
+        }
     </style>
 </head>
 <body>
