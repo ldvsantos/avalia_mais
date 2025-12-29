@@ -589,6 +589,66 @@ body {
     background: white;
 }
 
+/* Nosso Diferencial (Por que escolher) background */
+#diferenciais {
+    position: relative;
+    overflow: hidden;
+}
+
+#diferenciais::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("img/landing/reuniao.png") center/cover no-repeat;
+    opacity: 0.08;
+    z-index: 0;
+    pointer-events: none;
+}
+
+#diferenciais::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.90) 100%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+#diferenciais .container {
+    position: relative;
+    z-index: 1;
+}
+
+/* Security (DeepTech) Section Background */
+.security-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.security-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("img/landing/protecao.png") center/cover no-repeat;
+    opacity: 0.10;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.security-section::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(0, 51, 102, 0.10) 0%, rgba(46, 125, 50, 0.08) 100%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.security-section .container {
+    position: relative;
+    z-index: 1;
+}
+
 .differentials-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
