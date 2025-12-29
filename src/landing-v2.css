@@ -600,7 +600,7 @@ body {
     position: absolute;
     inset: 0;
     background: url("img/landing/reuniao.png") center/cover no-repeat;
-    opacity: 0.08;
+    opacity: 0.16;
     z-index: 0;
     pointer-events: none;
 }
@@ -609,7 +609,7 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.90) 100%);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.82) 100%);
     z-index: 0;
     pointer-events: none;
 }
