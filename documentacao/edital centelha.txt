@@ -1,0 +1,85 @@
+Perfeito. A seguir, ajusto a proposta do **Centelha** deixando explícito o **modelo SaaS** e o nome empresarial **Avalia+Tec**, com texto pronto para “colar” nos campos do formulário e com um pitch coerente.
+
+---
+
+## 1) Nome do empreendimento e da solução
+
+**Nome do empreendimento (marca/empresa):** **Avalia+Tec**
+**Nome do produto (plataforma):** **AVALIA+**
+
+**One-liner (frase de posicionamento)**
+**Avalia+Tec (AVALIA+)** é um SaaS para inscrições e avaliação multicritério com consolidação auditável e ranking automatizado para processos seletivos educacionais e institucionais.
+
+---
+
+## 2) Trechos prontos para campos do Centelha (Fase 1)
+
+### 2.1. Título
+
+**Avalia+Tec — AVALIA+ (SaaS) para inscrição, avaliação multicritério e consolidação auditável de resultados em seleções educacionais**
+
+### 2.2. Resumo executivo (versão SaaS)
+
+O **AVALIA+**, produto da **Avalia+Tec**, é um **SaaS** que integra o ciclo de processos seletivos: **inscrição**, **gestão administrativa**, **avaliação por múltiplos avaliadores**, **consolidação por comissão**, **ranking por linha/modalidade** e **exportação de relatórios**. O sistema oferece painel administrativo com filtros por status e período, consulta de inscrições e exportação em CSV. 
+Na etapa avaliativa, permite consolidar notas por avaliador e por blocos (ex.: projeto, entrevista e prova), com cálculo automático de médias e nota final, registro de observações e marcação de eliminações, resultando em ranking e relatórios para publicação.  
+No Centelha, a Avalia+Tec propõe maturar o AVALIA+ como produto escalável, com parametrização de editais e critérios, trilhas de auditoria, reforço de segurança e conformidade (LGPD) e otimização de UX (mobile/desktop), visando atender instituições com seleções recorrentes.
+
+### 2.3. Público-alvo (com linguagem comercial clara)
+
+* **Clientes (pagadores):** programas de pós-graduação, universidades/faculdades, fundações de apoio, escolas de governo e organizações com processos seletivos periódicos (B2B/B2G).
+* **Usuários:** coordenações/secretarias, comissões/presidentes de banca e avaliadores.
+
+### 2.4. Modelo de negócio (SaaS)
+
+**SaaS por assinatura institucional**, com dois planos principais:
+
+1. **Assinatura anual** (pacote de editais/usuários + suporte padrão).
+2. **SaaS por ciclo seletivo** (cobrança por edital), com opção de add-ons.
+
+**Receitas adicionais (upsell):** implantação assistida, customização de formulários e critérios, treinamento, suporte premium (SLA), integrações e relatórios avançados.
+
+### 2.5. Diferencial (enxuto e convincente)
+
+O diferencial do AVALIA+ é converter um processo fragmentado (planilhas/e-mails) em um **workflow único**, com **consolidação automatizada**, **padronização de critérios** e **auditabilidade**, reduzindo inconsistências e acelerando o fechamento e a divulgação de resultados.
+
+### 2.6. Estágio atual (com prova operacional)
+
+O AVALIA+ já possui fluxo funcional documentado: painel de inscrições, filtros, exportação CSV, gestão de credenciais, consolidação por comissão e geração de ranking/resultados.  
+
+### 2.7. Papel do proponente (idealizador e gestor) — versão final
+
+Sou o **idealizador e gestor** da Avalia+Tec e responsável por governança do produto, definição de requisitos, validação com usuários, estruturação de pilotos e estratégia de implantação e comercialização do AVALIA+. Com o apoio do Centelha, estruturarei a equipe técnica e os processos necessários para elevar a solução ao nível de **SaaS escalável**, com foco em segurança, conformidade, parametrização e experiência do usuário.
+
+---
+
+## 3) Proposta de precificação (para você citar se o formulário pedir)
+
+* **Plano Institucional Anual (SaaS):** limitado por número de editais/ano + usuários avaliadores/admin.
+* **Plano por Edital:** taxa fixa por ciclo seletivo + opcionais (implantação, relatórios, suporte premium).
+* **Add-ons:** integrações, identidade visual institucional, exportações avançadas, auditoria estendida.
+
+(Se você quiser, eu transformo isso em números com faixas “Starter/Pro/Enterprise”, coerentes com o mercado brasileiro, sem exageros.)
+
+---
+
+## 4) Pitch (≈ 3 minutos) com Avalia+Tec + SaaS
+
+“Olá. Eu sou Diego, idealizador e gestor da **Avalia+Tec**. Nosso produto, o **AVALIA+**, é um **SaaS** que organiza inscrições e automatiza a avaliação e consolidação de resultados em processos seletivos educacionais, com rastreabilidade e transparência.
+
+Hoje, muitas seleções ainda dependem de planilhas e controles paralelos. Isso gera retrabalho, inconsistências, baixa auditabilidade e atrasos na publicação do resultado.
+
+O AVALIA+ integra todo o fluxo: no painel administrativo, a coordenação gerencia inscrições, filtra por status e período, consulta detalhes e exporta dados para conferência. 
+Na etapa de banca, a plataforma consolida notas por avaliador e por blocos, calcula automaticamente médias e nota final, registra observações e marca eliminações com justificativa.  
+Ao final, o sistema gera ranking e relatórios por linha, com exportação e impressão.
+
+O diferencial é transformar um processo fragmentado em um workflow padronizado e auditável, reduzindo erros e elevando a confiança institucional no resultado.
+
+O mercado é amplo: programas de pós-graduação, instituições educacionais e organizações com seleções recorrentes. Nosso modelo é SaaS por assinatura institucional, com opção por edital e serviços de implantação e suporte.
+
+Com o Centelha, a Avalia+Tec vai evoluir o AVALIA+ para produto escalável: reforçar segurança e LGPD, parametrizar critérios por edital, otimizar UX mobile/desktop, criar trilhas de auditoria e validar em instituições piloto.
+
+A Avalia+Tec entrega eficiência, transparência e governança para seleções. Obrigado.”
+
+---
+
+Se você me disser apenas **(i)** qual estado da região Nordeste será a **sede pretendida** (por causa do requisito de contratação do Centelha/FAPESB) e **(ii)** se você já tem **2–3 instituições-alvo** para piloto (pode ser “PPG X”, “faculdade Y”), eu ajusto o texto para ficar ainda mais forte na parte de **mercado e validação**.

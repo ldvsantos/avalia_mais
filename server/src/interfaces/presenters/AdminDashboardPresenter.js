@@ -195,7 +195,7 @@ class AdminDashboardPresenter {
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Painel Administrativo - PLANTERR</title>
+        <title>Painel Administrativo - AVALIA+</title>
         <link rel="stylesheet" href="/style.css" />
         <link rel="stylesheet" href="/theme.css" />
         <style>
@@ -254,10 +254,9 @@ class AdminDashboardPresenter {
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
               <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
               </a>
               <h1>Painel Administrativo</h1>
-              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
 
@@ -341,10 +340,9 @@ class AdminDashboardPresenter {
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
               <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
               </a>
               <h1>Administração de Recursos - AVALIA+</h1>
-              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
 
@@ -446,10 +444,9 @@ class AdminDashboardPresenter {
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
               <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
               </a>
               <h1>Gestão de Eventos</h1>
-              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
 
@@ -544,10 +541,9 @@ class AdminDashboardPresenter {
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
               <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
               </a>
               <h1>${isEdit ? 'Editar' : 'Novo'} Evento</h1>
-              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
 
@@ -869,10 +865,9 @@ class AdminDashboardPresenter {
           <header class="main-header">
             <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
               <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_planter.png" alt="Logo PLANTERR" style="max-height:80px; width:auto;">
+                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
               </a>
               <h1>Administração de Inscrições - AVALIA+</h1>
-              <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
             </div>
           </header>
 
