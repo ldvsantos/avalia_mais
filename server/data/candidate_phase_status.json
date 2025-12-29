@@ -66,6 +66,14 @@
       "status": "APROVADO",
       "score": null,
       "updatedAt": "2025-12-21T16:15:43.890Z"
+    },
+    {
+      "year": 2025,
+      "submissionProtocol": "FRANKENSTEIN-2025",
+      "phaseKey": "INSCRICAO",
+      "status": "APROVADO",
+      "score": null,
+      "updatedAt": "2025-12-29T00:04:05.950Z"
     }
   ]
 }
