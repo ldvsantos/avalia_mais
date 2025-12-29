@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="img/logo_avalia_quadrado.png">
+    <title>Portal do Candidato - AVALIA+</title>
+    <link rel="stylesheet" href="style.css?v=20251219-1">
+    <link rel="stylesheet" href="theme.css?v=20251219-1">
+    <script src="nav-back.js?v=20251221-1" defer></script>
+    <script src="public-nav.js?v=20251221-1" defer></script>
+    <style>
+        .portal-home-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 70vh;
+            gap: 40px;
+        }
+        .portal-cards {
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 6px;
+            padding-bottom: 6px;
+        }
+        .portal-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 28px;
+            width: 320px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+        .portal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+            border-color: #2e7d32;
+        }
+        .portal-card h2 {
+            margin: 0;
+            color: #2e7d32;
+            font-size: 1.4rem;
+        }
+        .portal-card p {
+            color: #666;
+            margin: 0;
+        }
+        .portal-card-icon {
+            font-size: 44px;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
+                <a href="/" class="js-back-link" data-fallback="/" aria-label="Voltar" style="display:inline-block;">
+                    <img src="img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
+                </a>
+                <div>
+                    <h1 style="margin:0; font-size: 1.5em;">Portal do Candidato</h1>
+                    <p style="margin:5px 0 0 0; font-size: 1em; color: #555;">Escolha o ambiente que deseja acessar</p>
+                    <p style="margin:5px 0 0 0;"><a href="index.html" style="font-size: 0.9em; color: #003366; text-decoration: underline;">Conheça o Projeto AVALIA+</a></p>
+                </div>
+            </div>
+        </header>
+
+        <div class="portal-home-container">
+            <section class="panel" style="max-width: 980px; width: 100%;">
+                <div class="panel-body">
+                    <p>Selecione abaixo se você deseja acessar o ambiente de <strong>Cursos/Eventos</strong> ou o ambiente do <strong>Processo Seletivo</strong>.</p>
+                </div>
+            </section>
+
+            <div class="portal-cards">
+                <a href="cursos.html" class="portal-card">
+                    <div class="portal-card-icon">📚</div>
+                    <h2>Cursos e Eventos</h2>
+                    <p>Veja os cursos ofertados e faça sua inscrição.</p>
+                </a>
+
+                <a href="selecao.html" class="portal-card">
+                    <div class="portal-card-icon">📋</div>
+                    <h2>Processo Seletivo</h2>
+                    <p>Inscrição, consulta, recursos e documentos do edital.</p>
+                </a>
+
+                <a href="suporte.html" class="portal-card">
+                    <div class="portal-card-icon">❓</div>
+                    <h2>Ajuda e Contato</h2>
+                    <p>Perguntas frequentes, problemas comuns e orientações.</p>
+                </a>
+            </div>
+        </div>
+
+        <footer style="text-align: center; margin-top: 40px; color: #777; font-size: 0.9em;">
+            <!-- Criado por Diego Vidal -->
+            <p>&copy; 2025 AVALIA+. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+</html>
