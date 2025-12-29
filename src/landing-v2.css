@@ -599,7 +599,7 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background: url("img/landing/reuniao.png") center/cover no-repeat;
+    background: url("img/landing/reuniao.png?v=20251229") center/cover no-repeat;
     opacity: 0.16;
     z-index: 0;
     pointer-events: none;
@@ -629,7 +629,7 @@ body {
     content: "";
     position: absolute;
     inset: 0;
-    background: url("img/landing/protecao.png") center/cover no-repeat;
+    background: url("img/landing/protecao.png?v=20251229") center/cover no-repeat;
     opacity: 0.10;
     z-index: 0;
     pointer-events: none;
