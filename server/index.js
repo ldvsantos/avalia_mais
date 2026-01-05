@@ -133,7 +133,10 @@ const ADMIN_PASS = process.env.ADMIN_PASS || 'admin';
 const HMAC_SECRET = process.env.HMAC_SECRET || 'dev-secret-change-me';
 const JWT_SECRET = process.env.JWT_SECRET || require('crypto').randomBytes(32).toString('hex');
 const ADMIN_IPS = (process.env.ADMIN_IPS || '').split(',').filter(Boolean);
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '').split(',').filter(Boolean);
+const ALLOWED_ORIGINS_ENV = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((s) => String(s || '').trim())
+  .filter(Boolean);
 
 // --- CLEAN ARCHITECTURE INITIALIZATION ---
 const dataDir = path.join(__dirname, 'data');
@@ -388,13 +391,86 @@ app.use(helmet({
 app.use(securityHeaders);
 
 // 2. CORS Restritivo
+function normalizeOriginValue(value) {
+  const v = String(value || '').trim();
+  if (!v) return '';
+  // Remove trailing slash (origins nunca incluem path)
+  return v.replace(/\/+$/, '');
+}
+
+function tryExtractOriginFromUrl(url) {
+  try {
+    if (!url) return '';
+    const u = new URL(String(url));
+    if (!u.protocol || !u.host) return '';
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return '';
+  }
+}
+
+function getCorsAllowedOrigins() {
+  const allowed = [...ALLOWED_ORIGINS_ENV];
+
+  // Auto-permitir o origin do próprio site (evita erro de configuração onde
+  // SITE_URL está correto, mas ALLOWED_ORIGINS ficou desatualizado).
+  const siteOrigin = tryExtractOriginFromUrl(SITE_URL);
+  if (siteOrigin) allowed.push(siteOrigin);
+
+  return [...new Set(allowed.map(normalizeOriginValue).filter(Boolean))];
+}
+
+function isOriginAllowed(origin, allowed) {
+  if (!origin) return true;
+  const normalizedOrigin = normalizeOriginValue(origin);
+  if (!normalizedOrigin) return true;
+
+  // Libera geral apenas quando explicitamente configurado.
+  if (allowed.includes('*')) return true;
+
+  let parsed;
+  try {
+    parsed = new URL(normalizedOrigin);
+  } catch {
+    parsed = null;
+  }
+
+  for (const entryRaw of allowed) {
+    const entry = normalizeOriginValue(entryRaw);
+    if (!entry) continue;
+
+    // Match exato por origin completo
+    if (entry === normalizedOrigin) return true;
+
+    // Wildcard simples por hostname: *.exemplo.com
+    if (entry.startsWith('*.') && parsed) {
+      const suffix = entry.slice(1).toLowerCase(); // ".exemplo.com"
+      const host = String(parsed.hostname || '').toLowerCase();
+      if (host.endsWith(suffix) || host === suffix.slice(1)) return true;
+      continue;
+    }
+
+    // Se o entry não tem scheme, tratar como host (com ou sem porta)
+    if (!entry.includes('://') && parsed) {
+      const entryLower = entry.toLowerCase();
+      const hostLower = String(parsed.host || '').toLowerCase(); // inclui porta
+      const hostnameLower = String(parsed.hostname || '').toLowerCase();
+      if (hostLower === entryLower || hostnameLower === entryLower) return true;
+    }
+  }
+
+  return false;
+}
+
 app.use(cors({
   origin: (origin, callback) => {
+    const allowedOrigins = getCorsAllowedOrigins();
+
     // Permitir requisições sem origin (como curl ou apps mobile) ou da whitelist
-    if (!origin || ALLOWED_ORIGINS.includes(origin) || ALLOWED_ORIGINS.length === 0) {
+    if (!origin || allowedOrigins.length === 0 || isOriginAllowed(origin, allowedOrigins)) {
       callback(null, true);
     } else {
-      logSecurityEvent('CORS_BLOCKED', { origin });
+      logSecurityEvent('CORS_BLOCKED', { origin, allowed: allowedOrigins });
       callback(new Error('Not allowed by CORS'));
     }
   },
