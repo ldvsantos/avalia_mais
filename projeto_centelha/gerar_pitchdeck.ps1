@@ -28,4 +28,13 @@ quarto render $qmd --to pptx
 
 quarto render $qmd --to revealjs
 
+# Copia para a pasta do site (para publicar via /projeto_centelha/...)
+$siteDir = Join-Path $pasta "..\src\projeto_centelha"
+if (-not (Test-Path -LiteralPath $siteDir)) {
+  New-Item -ItemType Directory -Path $siteDir | Out-Null
+}
+
+Copy-Item -LiteralPath $pptx -Destination (Join-Path $siteDir "PITCH_DECK.pptx") -Force
+Copy-Item -LiteralPath $html -Destination (Join-Path $siteDir "PITCH_DECK.html") -Force
+
 Get-Item -LiteralPath $pptx, $html | Select-Object Name, Length, FullName
