@@ -1,0 +1,134 @@
+---
+title: "Avalia+Tec"
+subtitle: "Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3 Bahia"
+author: "Diego"
+date: "05 jan 2026"
+lang: "pt-BR"
+format:
+  pptx:
+    reference-doc: "quarto/template_referencia.pptx"
+    slide-level: 1
+  revealjs:
+    theme: simple
+    slide-number: true
+    progress: true
+    controls: true
+    center: false
+    width: 1280
+    height: 720
+    slide-level: 1
+execute:
+  echo: false
+---
+
+![](../img/logo_avalia_horizontal.png){width="60%"}
+
+Plataforma SaaS para **inscrição**, **avaliação por banca** e **consolidação de resultados**.
+
+- Resultados com **evidências verificáveis** (protocolo + hash)
+- **Menos retrabalho** e risco operacional
+- **Privacidade/LGPD** como requisito do processo
+
+---
+
+# Problema
+
+- Processo disperso (planilhas, e-mail, versões)
+- Erros de consolidação e disputa por “qual arquivo vale”
+- Auditoria e resposta a recursos ficam difíceis
+- Maior exposição de dados pessoais (risco LGPD)
+
+---
+
+# Solução
+
+- Fluxo único: inscrição → avaliação → consolidação → ranking → comunicação
+- Avaliação multicritério por múltiplos avaliadores + comissão
+- Transparência para o candidato e governança para a organização
+- Privacidade por padrão e menos risco de conformidade
+
+# Evidência de integridade verificável
+
+PDF de protocolo com **hash SHA-256 verificável**.
+
+- Reduz disputa por versões
+- Comprova o que foi submetido
+
+![](../prints/manual/fig-17-pdf-protocolo-hash.png){width="85%"}
+
+
+# Privacidade e minimização de dados
+
+- Bloqueio de duplicidade por CPF via **HMAC** (sem CPF em claro)
+- **Blind review** reduz exposição de dados identificadores
+
+![](../prints/manual/fig-11-blind-review-alerta-dados-pessoais.png){width="85%"}
+
+---
+
+# Produto e viabilidade técnica
+
+- Núcleo funcional em **Node.js (Express)** + frontend
+- Inscrição, avaliação e recursos já operacionais
+- PDF (protocolo + hash), e-mails transacionais e exportação CSV
+- Storage em JSON (com opção de **PostgreSQL** por configuração)
+
+---
+
+# Painel administrativo e rastreabilidade
+
+- Acompanha inscrições, avaliações e resultados
+- Trilha auditável: logs estruturados + ID de requisição + histórico
+- Calendário por edital e bloqueio fora de janela
+
+![](../prints/manual/fig-24-admin-dashboard-tabela-protocolo.png){width="90%"}
+
+---
+
+# Mercado e clientes
+
+- Universidades, IFs, fundações, incubadoras e programas de inovação
+- Órgãos públicos com chamadas/seleções e necessidade de prestação de contas
+- Dor recorrente: equipe enxuta + exigência de rastreabilidade e conformidade
+
+---
+
+# Modelo de negócio
+
+- Assinatura SaaS **por edital (ciclo)** ou **anual** (múltiplas seleções)
+- Varia por volume de inscrições e nº de avaliadores
+- Implantação: configuração + orientação + suporte durante o ciclo
+
+---
+
+# Roadmap com recursos do Centelha
+
+- Configuração completa por edital (critérios, pesos, escalas, rubricas por fase)
+- Multicliente e isolamento por organização (replicável)
+- Consolidação em PostgreSQL quando aplicável + segurança em repouso
+- Relatórios e reforço da trilha auditável (padrão de eventos)
+
+---
+
+# Time e governança
+
+- **Diego**: produto, validação com usuários, implantação e pilotos
+- **Catuxe Varjão de Santana Oliveira**: engenharia, qualidade (MPS.BR) e controles (HMAC)
+- **Dulce Paloma Vidal**: jurídico/compliance, LGPD e aderência legal do processo
+
+---
+
+# Impacto esperado
+
+- Menos retrabalho e erros de consolidação
+- Menos reenvios, papel e deslocamentos
+- Menor exposição de dados pessoais (HMAC + blind review)
+
+---
+
+# Encerramento
+
+No Centelha: transformar o núcleo funcional em produto **replicável e escalável**.
+
+- Configuração por edital, relatórios e melhor UX
+- Controles e evidências auditáveis com foco em integridade e conformidade
