@@ -1,0 +1,251 @@
+/* Tema executivo (RevealJS/Quarto) para o pitch do Avalia+Tec.
+   Objetivo: visual “business”, elegante e consistente, usando a paleta já existente do projeto.
+*/
+
+/*-- scss:defaults --*/
+:root {
+  /* Paleta já usada no site (ver src/landing-v2.css) */
+  --brand-green: #2e7d32;
+  --brand-blue: #003366;
+  --brand-blue-dark: #001a33;
+
+  --ink: #0f172a;
+  --ink-muted: #475569;
+  --surface: #ffffff;
+  --surface-2: #f6f7f9;
+
+  /* Reveal tokens */
+  --r-background-color: var(--surface);
+  --r-main-color: var(--ink);
+  --r-heading-color: var(--brand-blue);
+  --r-link-color: var(--brand-green);
+  --r-link-color-hover: var(--brand-blue);
+
+  --r-main-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --r-heading-font: var(--r-main-font);
+  --r-code-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+
+  /* Tipografia mais “executiva” (menos gigantona) */
+  --r-main-font-size: 32px;
+  --r-heading-text-transform: none;
+  --r-heading-font-weight: 750;
+  --r-heading-line-height: 1.08;
+  --r-heading-letter-spacing: -0.01em;
+
+  --r-block-margin: 16px;
+
+  /* Layout */
+  --slide-radius: 12px;
+  --slide-border: rgba(0, 26, 51, 0.10);
+  --slide-pad-x: 56px;
+  --slide-pad-y: 44px;
+
+  /* Barras e linhas */
+  --hairline: rgba(0, 26, 51, 0.10);
+  --accent: rgba(46, 125, 50, 0.95);
+}
+
+/*-- scss:rules --*/
+
+/* Alinhamento */
+.reveal .slides {
+  text-align: left;
+}
+
+/* Um “canvas” neutro */
+.reveal-viewport {
+  background: var(--surface-2);
+}
+
+/* Slides de conteúdo (nível 1, exceto título) como cartões discretos */
+.reveal .slides section.level1:not(#title-slide) {
+  /* IMPORTANTE: Não usar position: relative aqui para não quebrar o RevealJS */
+  box-sizing: border-box;
+  padding: var(--slide-pad-y) var(--slide-pad-x);
+  background: var(--surface);
+  border: 1px solid var(--slide-border);
+  border-radius: var(--slide-radius);
+  height: 100%; /* Garante que o slide ocupe a altura correta */
+}
+
+/* Barra superior de marca (discreta) */
+.reveal .slides section.level1:not(#title-slide)::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 6px;
+  border-top-left-radius: var(--slide-radius);
+  border-top-right-radius: var(--slide-radius);
+  background: linear-gradient(90deg, rgba(0, 51, 102, 0.95), rgba(46, 125, 50, 0.95));
+  z-index: 1; /* Garante que fique acima do conteúdo se necessário */
+}
+
+/* (Removido estilo de section.section pois não usamos mais slides de divisória) */
+
+
+/* Títulos e hierarquia */
+.reveal h1 {
+  font-size: 1.9em;
+  margin: 0 0 0.35em 0;
+}
+
+.reveal h2 {
+  font-size: 1.25em;
+  margin: 0 0 0.4em 0;
+  padding-bottom: 0.22em;
+  border-bottom: 2px solid var(--hairline);
+}
+
+.reveal h3 {
+  font-size: 1.05em;
+  margin: 0 0 0.35em 0;
+}
+
+.reveal p {
+  line-height: 1.25;
+}
+
+.reveal .slide p,
+.reveal .slide li {
+  color: var(--ink);
+}
+
+.reveal strong {
+  color: var(--brand-blue);
+}
+
+.reveal a {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.reveal .slide ul,
+.reveal .slide ol {
+  margin: 0.35em 0 0.2em 0;
+}
+
+.reveal .slide ul li,
+.reveal .slide ol li {
+  margin: 0.16em 0;
+}
+
+.reveal .slide ul li::marker {
+  color: var(--accent);
+}
+
+/* Imagens */
+.reveal section img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  background: #fff;
+}
+
+/* Footer (plugin do Quarto) */
+.reveal .footer {
+  font-size: 0.42em;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.reveal .footer.footer-default {
+  width: calc(100% - 48px);
+  margin: 0 auto 8px auto;
+  border-top: 1px solid rgba(0, 26, 51, 0.10);
+  padding-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reveal .footer .footer-left {
+  font-weight: 650;
+  color: rgba(0, 51, 102, 0.85);
+}
+
+.reveal .footer .footer-right {
+  color: rgba(71, 85, 105, 0.85);
+}
+
+/* Slide number + progress */
+.reveal .slide-number {
+  font-size: 0.42em;
+  opacity: 0.50;
+}
+
+.reveal .progress {
+  height: 6px;
+  background: rgba(0, 26, 51, 0.08);
+}
+
+.reveal .progress span {
+  background: linear-gradient(90deg, rgba(0, 51, 102, 0.95), rgba(46, 125, 50, 0.95));
+}
+
+/* Title slide (quando usando template parcial) */
+.reveal #title-slide {
+  /* Fundo transparente para permitir ver o pseudo-elemento */
+  background: transparent !important;
+}
+
+/* Imagem de fundo desfocada na capa */
+.reveal #title-slide::before {
+  content: "";
+  position: absolute;
+  top: -20px; left: -20px; right: -20px; bottom: -20px;
+  /* Caminho relativo ao CSS compilado (que fica em libs/revealjs/dist/theme) */
+  /* Mas como o Quarto copia assets, o caminho pode variar. */
+  /* Vamos tentar usar o caminho relativo à raiz do site se possível, ou relativo ao CSS */
+  /* Se o CSS está em PITCH_DECK_files/libs/..., e a imagem em img/..., precisamos subir muitos níveis */
+  /* ../../../../../img/landing/... é arriscado. */
+  /* Melhor estratégia: usar style block no QMD para a imagem, e aqui só a estrutura */
+  /* Mas o usuário pediu para corrigir. Vamos tentar o caminho que funcionou antes ou usar style block no QMD de forma correta */
+  z-index: -2;
+}
+
+/* Overlay branco na capa */
+.reveal #title-slide::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  z-index: -1;
+}
+
+.reveal #title-slide .title-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 28px;
+  align-items: center;
+  padding: 56px 56px 42px 56px;
+}
+
+.reveal #title-slide .title {
+  font-size: 2.1em;
+  margin: 0;
+  color: var(--brand-blue);
+}
+
+.reveal #title-slide .subtitle {
+  margin: 0.55em 0 0 0;
+  font-size: 0.95em;
+  color: var(--ink-muted);
+  line-height: 1.2;
+}
+
+.reveal #title-slide .meta {
+  margin-top: 1.1em;
+  font-size: 0.70em;
+  color: rgba(15, 23, 42, 0.65);
+}
+
+.reveal #title-slide .title-logo {
+  width: 100%;
+  height: auto;
+  border: none;
+  background: transparent;
+}

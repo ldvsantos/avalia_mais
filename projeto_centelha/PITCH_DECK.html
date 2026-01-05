@@ -9,8 +9,8 @@
 <link href="PITCH_DECK_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.8.25">
 
-  <meta name="author" content="Diego">
-  <meta name="dcterms.date" content="2026-01-05">
+  <meta name="author" content="Equipe Avalia+">
+  <meta name="dcterms.date" content="2026-01-01">
   <title>Avalia+Tec</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -30,7 +30,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="PITCH_DECK_files/libs/revealjs/dist/theme/quarto-0fde88a82f0356838740f155f1088782.css">
+  <link rel="stylesheet" href="PITCH_DECK_files/libs/revealjs/dist/theme/quarto-08f5b0537edc8bce5f1437b7995fb5c1.css">
   <link href="PITCH_DECK_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="PITCH_DECK_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="PITCH_DECK_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -46,6 +46,7 @@
     }
     .reveal .slide:not(.center) {
       height: 100%;
+      overflow-y: auto;
     }
     .reveal .slide.scrollable {
       overflow-y: auto;
@@ -122,142 +123,191 @@
       margin-right: 0; 
     }
   </style>
+  <style>
+  /* Blur the background video of the title slide */
+  .reveal.title-page .slide-background.present video {
+    filter: blur(6px);
+  }
+
+  /* Add white overlay on top of the blurred background */
+  .reveal.title-page .slide-background.present::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    z-index: 1;
+  }
+  </style>
 </head>
 <body class="quarto-light">
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Avalia+Tec</h1>
-  <p class="subtitle">Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3 Bahia</p>
+<section id="title-slide" class="slide level1 center" data-state="title-page" data-background-video="img/video_curto.mp4" data-background-video-loop="true" data-background-video-muted="true" data-background-size="cover">
+  <div class="title-grid">
+    <div>
+            <h1 class="title">Avalia+Tec</h1>
+                  <p class="subtitle">Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3 Bahia</p>
+      
+      <div class="meta">
+        <span class="author">Equipe Avalia+</span>
+        <span class="date"> · 2026-01-01</span>
+      </div>
+    </div>
 
-<div class="quarto-title-authors">
-<div class="quarto-title-author">
-<div class="quarto-title-author-name">
-Diego 
-</div>
-</div>
-</div>
-
-  <p class="date">2026-01-05</p>
+    <div>
+      <img class="title-logo" src="../img/logo_avalia_horizontal.png" alt="Avalia+">
+    </div>
+  </div>
 </section>
-<section class="slide level1">
+<section id="a-solução-definitiva-para-governança-em-seleções" class="slide level1">
+<h1>A Solução Definitiva para Governança em Seleções</h1>
 
-
-<img data-src="../img/logo_avalia_horizontal.png" style="width:60.0%" class="r-stretch"><p>Plataforma SaaS para <strong>inscrição</strong>, <strong>avaliação por banca</strong> e <strong>consolidação de resultados</strong>.</p>
-<ul>
-<li>Resultados com <strong>evidências verificáveis</strong> (protocolo + hash)</li>
-<li><strong>Menos retrabalho</strong> e risco operacional</li>
-<li><strong>Privacidade/LGPD</strong> como requisito do processo</li>
-</ul>
+<img data-src="img/logo_avalia_horizontal.png" style="width:60.0%" class="r-stretch"><p><strong>Transformamos processos seletivos vulneráveis em fluxos auditáveis, seguros e 100% digitais.</strong></p>
+<p>Plataforma SaaS para <strong><a href="../inscricao.html" target="_blank">inscrição</a></strong>, <strong><a href="../selecao.html" target="_blank">avaliação</a></strong> e <strong><a href="../selecao.html" target="_blank">consolidação</a></strong> com integridade jurídica.</p>
 </section>
-<section id="problema" class="slide level1">
-<h1>Problema</h1>
+<section id="o-problema-o-caos-da-gestão-manual" class="slide level1">
+<h1>O Problema: O Caos da Gestão Manual</h1>
+<p>Processos seletivos geridos por e-mail e planilhas são uma <strong>bomba-relógio jurídica e operacional</strong>.</p>
 <ul>
-<li>Processo disperso (planilhas, e-mail, versões)</li>
-<li>Erros de consolidação e disputa por “qual arquivo vale”</li>
-<li>Auditoria e resposta a recursos ficam difíceis</li>
-<li>Maior exposição de dados pessoais (risco LGPD)</li>
-</ul>
-</section>
-<section id="solução" class="slide level1">
-<h1>Solução</h1>
-<ul>
-<li>Fluxo único: inscrição → avaliação → consolidação → ranking → comunicação</li>
-<li>Avaliação multicritério por múltiplos avaliadores + comissão</li>
-<li>Transparência para o candidato e governança para a organização</li>
-<li>Privacidade por padrão e menos risco de conformidade</li>
+<li><strong>Risco Jurídico Imediato:</strong> Falta de rastreabilidade abre margem para recursos e anulação de editais.</li>
+<li><strong>Ineficiência Operacional:</strong> Horas perdidas consolidando versões conflitantes de planilhas.</li>
+<li><strong>Vulnerabilidade LGPD:</strong> Dados sensíveis de candidatos circulando sem controle em caixas de e-mail.</li>
 </ul>
 </section>
-<section id="evidência-de-integridade-verificável" class="slide level1">
-<h1>Evidência de integridade verificável</h1>
-<p>PDF de protocolo com <strong>hash SHA-256 verificável</strong>.</p>
+<section id="a-solução-centralização-com-rastreabilidade" class="slide level1">
+<h1>A Solução: Centralização com Rastreabilidade</h1>
+<p>Um ambiente único que garante <strong>governança</strong> do início ao fim.</p>
 <ul>
-<li>Reduz disputa por versões</li>
-<li>Comprova o que foi submetido</li>
+<li><strong>Fluxo End-to-End:</strong> <a href="../inscricao.html" target="_blank">Inscrição</a> → <a href="../selecao.html" target="_blank">Avaliação</a> → Consolidação → Resultado.</li>
+<li><strong>Transparência Total:</strong> O candidato acompanha cada etapa, reduzindo a desconfiança e a judicialização.</li>
+<li><strong>Eficiência:</strong> Eliminação de retrabalho manual e erros de consolidação.</li>
 </ul>
 
-<img data-src="../prints/manual/fig-17-pdf-protocolo-hash.png" style="width:85.0%" class="r-stretch"></section>
-<section id="privacidade-e-minimização-de-dados" class="slide level1">
-<h1>Privacidade e minimização de dados</h1>
+<img data-src="prints/manual/fig-46-comissao-campos-notas-calculadas.png" style="width:60.0%" class="r-stretch"></section>
+<section id="diferencial-blindagem-jurídica-tecnologia" class="slide level1">
+<h1>Diferencial: Blindagem Jurídica (Tecnologia)</h1>
+<p>Não é apenas software, é <strong>segurança jurídica</strong> via tecnologia.</p>
 <ul>
-<li>Bloqueio de duplicidade por CPF via <strong>HMAC</strong> (sem CPF em claro)</li>
-<li><strong>Blind review</strong> reduz exposição de dados identificadores</li>
+<li><strong>Prova de Integridade (Hash SHA-256):</strong> Cada documento recebe um selo criptográfico imutável. Garantia matemática de que o avaliado é o submetido.</li>
+<li><strong>Auditoria Instantânea:</strong> Em caso de recurso, a prova técnica está pronta em segundos.</li>
+<li><strong>Fim das Disputas:</strong> Elimina dúvidas sobre “qual versão vale”.</li>
 </ul>
 
-<img data-src="../prints/manual/fig-11-blind-review-alerta-dados-pessoais.png" style="width:85.0%" class="r-stretch"></section>
-<section id="produto-e-viabilidade-técnica" class="slide level1">
-<h1>Produto e viabilidade técnica</h1>
+<img data-src="prints/manual/fig-17-pdf-protocolo-hash.png" style="width:60.0%" class="r-stretch"></section>
+<section id="privacidade-e-compliance-lgpd" class="slide level1">
+<h1>Privacidade e Compliance (LGPD)</h1>
+<p>Proteção de dados como <strong>vantagem competitiva</strong>, não apenas obrigação.</p>
 <ul>
-<li>Núcleo funcional em <strong>Node.js (Express)</strong> + frontend</li>
-<li>Inscrição, avaliação e recursos já operacionais</li>
-<li>PDF (protocolo + hash), e-mails transacionais e exportação CSV</li>
-<li>Storage em JSON (com opção de <strong>PostgreSQL</strong> por configuração)</li>
+<li><strong>Blind Review Real:</strong> Avaliadores focam no mérito, sem acesso a dados pessoais (viés reduzido).</li>
+<li><strong>Anonimização Segura (HMAC):</strong> Validação de unicidade (CPF) sem expor o dado real.</li>
+<li><strong>Segurança por Design:</strong> Minimização de dados desde a arquitetura.</li>
+</ul>
+
+<img data-src="prints/manual/fig-10-blind-review-exemplo-dados-pessoais.png" style="width:60.0%" class="r-stretch"></section>
+<section id="mercado-busca-por-conformidade" class="slide level1">
+<h1>Mercado: Busca por Conformidade</h1>
+<p>Um oceano azul em meio a ferramentas genéricas de eventos.</p>
+<ul>
+<li><strong>TAM (Mercado Total):</strong> <strong>R$ 14,6 Bilhões</strong> (Orçamento MCTI 2024 para Ciência e Tecnologia).</li>
+<li><strong>SAM (Nosso Foco):</strong> <strong>+100 Fundações de Apoio</strong> (CONFIES) e <strong>110 Instituições Federais</strong> (69 Univ. + 41 IFs) que gerem esses recursos.</li>
+<li><strong>SOM (Meta 2 anos):</strong> Validar em 5 Fundações (Bahia/Nordeste) e expandir para 50 instituições.</li>
 </ul>
 </section>
-<section id="painel-administrativo-e-rastreabilidade" class="slide level1">
-<h1>Painel administrativo e rastreabilidade</h1>
-<ul>
-<li>Acompanha inscrições, avaliações e resultados</li>
-<li>Trilha auditável: logs estruturados + ID de requisição + histórico</li>
-<li>Calendário por edital e bloqueio fora de janela</li>
-</ul>
-
-<img data-src="../prints/manual/fig-24-admin-dashboard-tabela-protocolo.png" style="width:90.0%" class="r-stretch"></section>
-<section id="mercado-e-clientes" class="slide level1">
-<h1>Mercado e clientes</h1>
-<ul>
-<li>Universidades, IFs, fundações, incubadoras e programas de inovação</li>
-<li>Órgãos públicos com chamadas/seleções e necessidade de prestação de contas</li>
-<li>Dor recorrente: equipe enxuta + exigência de rastreabilidade e conformidade</li>
-</ul>
+<section id="por-que-o-avaliatec-concorrência" class="slide level1">
+<h1>Por que o Avalia+Tec? (Concorrência)</h1>
+<p>Ferramentas de <strong>eventos</strong> não entregam <strong>segurança jurídica</strong>.</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 26%">
+<col style="width: 26%">
+<col style="width: 26%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Característica</th>
+<th style="text-align: center;">Even3 / Doity</th>
+<th style="text-align: center;">Google Forms</th>
+<th style="text-align: center;"><strong>Avalia+Tec</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Foco Principal</strong></td>
+<td style="text-align: center;">Congressos/Eventos</td>
+<td style="text-align: center;">Pesquisas</td>
+<td style="text-align: center;"><strong>Seleções/Editais</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Gestão de Banca</strong></td>
+<td style="text-align: center;">Foco Acadêmico</td>
+<td style="text-align: center;">Manual</td>
+<td style="text-align: center;"><strong>Auditável</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Integridade</strong></td>
+<td style="text-align: center;">Nenhuma</td>
+<td style="text-align: center;">Nenhuma</td>
+<td style="text-align: center;"><strong>Hash SHA-256</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Risco Jurídico</strong></td>
+<td style="text-align: center;">Médio</td>
+<td style="text-align: center;">Alto</td>
+<td style="text-align: center;"><strong>Blindado</strong></td>
+</tr>
+</tbody>
+</table>
 </section>
 <section id="modelo-de-negócio" class="slide level1">
-<h1>Modelo de negócio</h1>
+<h1>Modelo de Negócio</h1>
+<p>SaaS B2B flexível para a realidade dos editais.</p>
 <ul>
-<li>Assinatura SaaS <strong>por edital (ciclo)</strong> ou <strong>anual</strong> (múltiplas seleções)</li>
-<li>Varia por volume de inscrições e nº de avaliadores</li>
-<li>Implantação: configuração + orientação + suporte durante o ciclo</li>
+<li><strong>Licença por Edital:</strong> Para demandas pontuais (Ticket médio: R$ Xk).</li>
+<li><strong>Assinatura Anual:</strong> Para instituições com fluxo recorrente (Ticket médio: R$ Yk/ano).</li>
+<li><strong>Setup + Suporte:</strong> Consultoria na configuração do certame.</li>
 </ul>
 </section>
-<section id="roadmap-com-recursos-do-centelha" class="slide level1">
-<h1>Roadmap com recursos do Centelha</h1>
+<section id="estágio-atual-e-tração" class="slide level1">
+<h1>Estágio Atual e Tração</h1>
+<p><strong>MVP Funcional e Validado.</strong></p>
 <ul>
-<li>Configuração completa por edital (critérios, pesos, escalas, rubricas por fase)</li>
-<li>Multicliente e isolamento por organização (replicável)</li>
-<li>Consolidação em PostgreSQL quando aplicável + segurança em repouso</li>
-<li>Relatórios e reforço da trilha auditável (padrão de eventos)</li>
+<li>Módulos de <a href="../inscricao.html" target="_blank">Inscrição</a> e <a href="../selecao.html" target="_blank">Avaliação</a> operacionais.</li>
+<li>Sistema de Recursos e Resultados implementado.</li>
+<li>Arquitetura escalável (Node.js + JSON/PostgreSQL).</li>
+<li>Próximo passo: Validação comercial com pilotos pagos.</li>
+</ul>
+
+<img data-src="prints/manual/fig-24-admin-dashboard-tabela-protocolo.png" style="width:60.0%" class="r-stretch"></section>
+<section id="roadmap-e-uso-do-recurso-centelha" class="slide level1">
+<h1>Roadmap e Uso do Recurso (Centelha)</h1>
+<p><strong>Objetivo:</strong> Transformar o MVP em Produto de Mercado.</p>
+<ul>
+<li><strong>Meta (6 meses):</strong> Finalizar módulo de relatórios gerenciais e executar <strong>3 pilotos pagos</strong>.</li>
+<li><strong>Investimento (R$ 60k):</strong>
+<ul>
+<li>50% Desenvolvimento (Finalização de features).</li>
+<li>30% Marketing e Vendas (Aquisição de pilotos).</li>
+<li>20% Infraestrutura e Jurídico.</li>
+</ul></li>
 </ul>
 </section>
-<section id="time-e-governança" class="slide level1">
-<h1>Time e governança</h1>
+<section id="a-equipe" class="slide level1">
+<h1>A Equipe</h1>
+<p>Quem faz acontecer.</p>
 <ul>
-<li><strong>Diego</strong>: produto, validação com usuários, implantação e pilotos</li>
-<li><strong>Catuxe Varjão de Santana Oliveira</strong>: engenharia, qualidade (MPS.BR) e controles (HMAC)</li>
-<li><strong>Dulce Paloma Vidal</strong>: jurídico/compliance, LGPD e aderência legal do processo</li>
-</ul>
-</section>
-<section id="impacto-esperado" class="slide level1">
-<h1>Impacto esperado</h1>
-<ul>
-<li>Menos retrabalho e erros de consolidação</li>
-<li>Menos reenvios, papel e deslocamentos</li>
-<li>Menor exposição de dados pessoais (HMAC + blind review)</li>
-</ul>
-</section>
-<section id="encerramento" class="slide level1">
-<h1>Encerramento</h1>
-<p>No Centelha: transformar o núcleo funcional em produto <strong>replicável e escalável</strong>.</p>
-<ul>
-<li>Configuração por edital, relatórios e melhor UX</li>
-<li>Controles e evidências auditáveis com foco em integridade e conformidade</li>
+<li><strong>Diego</strong>: Produto, validação com usuários, implantação e pilotos.</li>
+<li><strong>Catuxe Varjão</strong>: Engenharia, qualidade (MPS.BR) e controles (HMAC).</li>
+<li><strong>Dulce Paloma</strong>: Jurídico/Compliance, LGPD e aderência legal.</li>
+<li><strong>Everaldo Fontes</strong>: Programação e validação com usuários.</li>
 </ul>
 
 </section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-
+<p><span class="footer-left"><a href="../index.html" target="_blank" style="color: inherit; text-decoration: none;">Avalia+Tec</a></span><span class="footer-right"> - Centelha 3 Bahia</span></p>
 </div>
 </div></div>
 
@@ -415,14 +465,14 @@ Diego
         previewLinks: false,
 
         // Transition style (none/fade/slide/convex/concave/zoom)
-        transition: 'none',
+        transition: 'fade',
 
         // Transition speed (default/fast/slow)
-        transitionSpeed: 'default',
+        transitionSpeed: 'fast',
 
         // Transition style for full page slide backgrounds
         // (none/fade/slide/convex/concave/zoom)
-        backgroundTransition: 'none',
+        backgroundTransition: 'fade',
 
         // Number of slides away from the current that are visible
         viewDistance: 3,
