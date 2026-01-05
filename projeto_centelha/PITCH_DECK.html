@@ -30,7 +30,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="PITCH_DECK_files/libs/revealjs/dist/theme/quarto-08f5b0537edc8bce5f1437b7995fb5c1.css">
+  <link rel="stylesheet" href="PITCH_DECK_files/libs/revealjs/dist/theme/quarto-d37770245728b229df01285c402c83ae.css">
   <link href="PITCH_DECK_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="PITCH_DECK_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="PITCH_DECK_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -46,7 +46,6 @@
     }
     .reveal .slide:not(.center) {
       height: 100%;
-      overflow-y: auto;
     }
     .reveal .slide.scrollable {
       overflow-y: auto;
@@ -137,7 +136,40 @@
     background: rgba(255, 255, 255, 0.85);
     z-index: 1;
   }
+
+  /* Scroll apenas em slides com figura (evita travar slides só de texto) */
+  .reveal .slides section.slide.has-figure {
+    overflow-y: auto;
+    padding-right: 12px;
+  }
+
+  .reveal .slides section.slide.has-figure::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .reveal .slides section.slide.has-figure::-webkit-scrollbar-thumb {
+    background: rgba(0, 26, 51, 0.20);
+    border-radius: 8px;
+  }
   </style>
+
+  <script>
+  (function () {
+    function markSlidesWithFigures() {
+      var slides = document.querySelectorAll('.reveal .slides section');
+      slides.forEach(function (slide) {
+        var hasFigure = !!slide.querySelector('img, figure');
+        if (hasFigure) slide.classList.add('has-figure');
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', markSlidesWithFigures);
+    } else {
+      markSlidesWithFigures();
+    }
+  })();
+  </script>
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -295,13 +327,62 @@
 </section>
 <section id="a-equipe" class="slide level1">
 <h1>A Equipe</h1>
-<p>Quem faz acontecer.</p>
+<div class="{=html}">
+<div class="team-grid">
+<div class="team-card">
+<img class="team-avatar" src="img/team/diego.png" alt="Diego" loading="lazy">
+<div class="team-name">
+Diego
+</div>
+<div class="team-role">
+Produto, validação com usuários, implantação e pilotos
+</div>
+</div>
+<div class="team-card">
+<img class="team-avatar" src="img/team/catuxe.png" alt="Catuxe Varjão" loading="lazy">
+<div class="team-name">
+Catuxe Varjão
+</div>
+<div class="team-role">
+Engenharia, qualidade (MPS.BR) e controles (HMAC)
+</div>
+</div>
+<div class="team-card">
+<img class="team-avatar" src="img/team/dulce.png" alt="Dulce Paloma" loading="lazy">
+<div class="team-name">
+Dulce Paloma
+</div>
+<div class="team-role">
+Jurídico/Compliance, LGPD e aderência legal
+</div>
+</div>
+<div class="team-card">
+<img class="team-avatar" src="img/team/everaldo.png" alt="Everaldo Fontes" loading="lazy">
+<div class="team-name">
+Everaldo Fontes
+</div>
+<div class="team-role">
+Programação e validação com usuários
+</div>
+</div>
+</div>
+</div>
+<aside class="notes">
 <ul>
-<li><strong>Diego</strong>: Produto, validação com usuários, implantação e pilotos.</li>
-<li><strong>Catuxe Varjão</strong>: Engenharia, qualidade (MPS.BR) e controles (HMAC).</li>
-<li><strong>Dulce Paloma</strong>: Jurídico/Compliance, LGPD e aderência legal.</li>
-<li><strong>Everaldo Fontes</strong>: Programação e validação com usuários.</li>
+<li>Troque os placeholders em <code>projeto_centelha/img/team/</code> pelos retratos reais, mantendo os nomes: <code>diego.png</code>, <code>catuxe.png</code>, <code>dulce.png</code>, <code>everaldo.png</code>.</li>
+<li>Dica: fotos quadradas (ex.: 800x800) ficam melhores; o slide recorta em círculo automaticamente.</li>
 </ul>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
 
 </section>
     </div>

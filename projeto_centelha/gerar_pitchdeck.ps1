@@ -77,14 +77,31 @@ if (Test-Path -LiteralPath $imgSource) {
     if (-not (Test-Path -LiteralPath $imgDest)) {
         New-Item -ItemType Directory -Path $imgDest | Out-Null
     }
-    # Copia arquivos forçando sobrescrita, ignorando erros se arquivo estiver em uso (ex: video rodando)
-    Get-ChildItem -Path $imgSource | ForEach-Object {
-        try {
-            Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $imgDest $_.Name) -Force -ErrorAction Stop
-        } catch {
-            Write-Warning "Não foi possível copiar $($_.Name): $($_.Exception.Message)"
+
+  # Copia arquivos e pastas, sem apagar tudo (evita falhar se um arquivo estiver em uso, ex: video rodando)
+  Get-ChildItem -Path $imgSource | ForEach-Object {
+    try {
+      if ($_.PSIsContainer) {
+        $destSubdir = Join-Path $imgDest $_.Name
+        if (-not (Test-Path -LiteralPath $destSubdir)) {
+          New-Item -ItemType Directory -Path $destSubdir | Out-Null
         }
+
+        # Copiar CONTEÚDO da pasta (evita criar img/team/team quando já existe)
+        Copy-Item -Path (Join-Path $_.FullName "*") -Destination $destSubdir -Recurse -Force -ErrorAction Stop
+
+        # Limpeza de resíduo de cópia antiga (caso tenha criado pasta duplicada)
+        $nested = Join-Path $destSubdir $_.Name
+        if (Test-Path -LiteralPath $nested) {
+          Remove-Item -LiteralPath $nested -Recurse -Force
+        }
+      } else {
+        Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $imgDest $_.Name) -Force -ErrorAction Stop
+      }
+    } catch {
+      Write-Warning "Não foi possível copiar $($_.Name): $($_.Exception.Message)"
     }
+  }
 }
 
 # No site público, manter somente a versão HTML

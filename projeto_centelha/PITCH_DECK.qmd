@@ -23,7 +23,6 @@ format:
     transition: fade
     background-transition: fade
     transition-speed: fast
-    scrollable: true
     footer: '<span class="footer-left"><a href="../index.html" target="_blank" style="color: inherit; text-decoration: none;">Avalia+Tec</a></span><span class="footer-right"> - Centelha 3 Bahia</span>'
     slide-level: 1
     include-in-header:
@@ -42,7 +41,40 @@ format:
             background: rgba(255, 255, 255, 0.85);
             z-index: 1;
           }
+
+          /* Scroll apenas em slides com figura (evita travar slides só de texto) */
+          .reveal .slides section.slide.has-figure {
+            overflow-y: auto;
+            padding-right: 12px;
+          }
+
+          .reveal .slides section.slide.has-figure::-webkit-scrollbar {
+            width: 10px;
+          }
+
+          .reveal .slides section.slide.has-figure::-webkit-scrollbar-thumb {
+            background: rgba(0, 26, 51, 0.20);
+            border-radius: 8px;
+          }
           </style>
+
+          <script>
+          (function () {
+            function markSlidesWithFigures() {
+              var slides = document.querySelectorAll('.reveal .slides section');
+              slides.forEach(function (slide) {
+                var hasFigure = !!slide.querySelector('img, figure');
+                if (hasFigure) slide.classList.add('has-figure');
+              });
+            }
+
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', markSlidesWithFigures);
+            } else {
+              markSlidesWithFigures();
+            }
+          })();
+          </script>
 execute:
   echo: false
 ---
@@ -144,9 +176,35 @@ SaaS B2B flexível para a realidade dos editais.
 
 # A Equipe
 
-Quem faz acontecer.
+::: {=html}
+<div class="team-grid">
+<div class="team-card">
+<img class="team-avatar" src="img/team/diego.png" alt="Diego" loading="lazy" />
+<div class="team-name">Diego</div>
+<div class="team-role">Produto, validação com usuários, implantação e pilotos</div>
+</div>
 
-- **Diego**: Produto, validação com usuários, implantação e pilotos.
-- **Catuxe Varjão**: Engenharia, qualidade (MPS.BR) e controles (HMAC).
-- **Dulce Paloma**: Jurídico/Compliance, LGPD e aderência legal.
-- **Everaldo Fontes**: Programação e validação com usuários.
+<div class="team-card">
+<img class="team-avatar" src="img/team/catuxe.png" alt="Catuxe Varjão" loading="lazy" />
+<div class="team-name">Catuxe Varjão</div>
+<div class="team-role">Engenharia, qualidade (MPS.BR) e controles (HMAC)</div>
+</div>
+
+<div class="team-card">
+<img class="team-avatar" src="img/team/dulce.png" alt="Dulce Paloma" loading="lazy" />
+<div class="team-name">Dulce Paloma</div>
+<div class="team-role">Jurídico/Compliance, LGPD e aderência legal</div>
+</div>
+
+<div class="team-card">
+<img class="team-avatar" src="img/team/everaldo.jpg" alt="Everaldo Fontes" loading="lazy" />
+<div class="team-name">Everaldo Fontes</div>
+<div class="team-role">Programação e validação com usuários</div>
+</div>
+</div>
+:::
+
+::: notes
+- Troque os placeholders em `projeto_centelha/img/team/` pelos retratos reais, mantendo os nomes: `diego.png`, `catuxe.png`, `dulce.png`, `everaldo.png`.
+- Dica: fotos quadradas (ex.: 800x800) ficam melhores; o slide recorta em círculo automaticamente.
+:::
