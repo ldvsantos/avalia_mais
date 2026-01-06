@@ -424,6 +424,9 @@ function getCorsAllowedOrigins() {
   // Adicionar IP do servidor para evitar bloqueios locais/internos
   allowed.push('http://13.59.96.218');
   allowed.push('https://13.59.96.218');
+  
+  // Permitir origin "null" (vinda de redirects, iframes sandboxed ou scripts locais/headless)
+  allowed.push('null');
 
   return [...new Set(allowed.map(normalizeOriginValue).filter(Boolean))];
 }
