@@ -1,0 +1,90 @@
+:root {
+  --brand-green: #2e7d32;
+  --brand-blue: #003366;
+  --brand-blue-dark: #001a33;
+  --ink: #0f172a;
+  --ink-muted: #475569;
+  --surface: #ffffff;
+  --surface-2: #f6f7f9;
+  --hairline: rgba(0, 26, 51, 0.10);
+  --accent: rgba(46, 125, 50, 0.95);
+}
+
+/* Typography override */
+.slidev-layout h1 {
+  color: var(--brand-blue);
+  font-weight: 750;
+  line-height: 1.1;
+  margin-bottom: 0.5em;
+}
+
+.slidev-layout h2 {
+  color: var(--brand-blue);
+  border-bottom: 2px solid var(--hairline);
+  padding-bottom: 0.2em;
+  margin-bottom: 0.5em;
+}
+
+.slidev-layout strong {
+  color: var(--brand-blue);
+  font-weight: 700;
+}
+
+.slidev-layout a {
+  color: var(--brand-green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Custom Team Grid */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 18px;
+}
+
+.team-card {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 16px 14px;
+  text-align: center;
+}
+
+img.team-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--hairline);
+  background: var(--surface);
+  margin: 0 auto 12px auto;
+  display: block;
+}
+
+.team-name {
+  font-weight: 800;
+  color: var(--brand-blue);
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.team-role {
+  color: var(--ink-muted);
+  font-size: 0.85rem;
+  line-height: 1.2;
+  margin-top: 8px;
+}
+
+/* Table overrides to match Executive theme */
+.slidev-layout table {
+  font-size: 0.9em;
+  width: 100%;
+}
+
+.slidev-layout th {
+  background-color: var(--surface-2);
+  color: var(--brand-blue);
+  font-weight: 700;
+}
