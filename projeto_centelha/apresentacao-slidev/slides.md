@@ -80,7 +80,9 @@ Um ambiente único que garante **governança** do início ao fim.
 - **Eficiência:** Eliminação de retrabalho manual e erros de consolidação.
 
 <div class="flex justify-center mt-4">
-  <img src="/prints/manual/fig-46-comissao-campos-notas-calculadas.png" style="width: 60%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
+  <video controls class="w-3/5 rounded-lg shadow-lg">
+    <source src="/video/tela_processo_seletivo.mp4" type="video/mp4" />
+  </video>
 </div>
 
 ---
@@ -108,7 +110,9 @@ Proteção de dados como **vantagem competitiva**, não apenas obrigação.
 - **Segurança por Design:** Minimização de dados desde a arquitetura.
 
 <div class="flex justify-center mt-4">
-  <img src="/prints/manual/fig-10-blind-review-exemplo-dados-pessoais.png" style="width: 60%; border-radius: 8px;" />
+  <video controls class="w-3/5 rounded-lg shadow-lg">
+    <source src="/video/tela_avaliacao.mp4" type="video/mp4" />
+  </video>
 </div>
 
 ---
@@ -156,7 +160,9 @@ SaaS B2B flexível para a realidade dos editais.
 - Próximo passo: Validação comercial com pilotos pagos.
 
 <div class="flex justify-center mt-4">
-  <img src="/prints/manual/fig-24-admin-dashboard-tabela-protocolo.png" style="width: 60%; border-radius: 8px;" />
+  <video controls class="w-3/5 rounded-lg">
+    <source src="/video/tela_avaliacao.mp4" type="video/mp4" />
+  </video>
 </div>
 
 ---
