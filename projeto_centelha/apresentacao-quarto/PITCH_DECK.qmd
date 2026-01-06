@@ -81,7 +81,7 @@ execute:
 
 # A Solução Definitiva para Governança em Seleções
 
-![](img/logo_avalia_horizontal.png){width="60%"}
+![](../img/logo_avalia_horizontal.png){width="60%"}
 
 **Transformamos processos seletivos vulneráveis em fluxos auditáveis, seguros e 100% digitais.**
 
@@ -103,7 +103,7 @@ Um ambiente único que garante **governança** do início ao fim.
 - **Transparência Total:** O candidato acompanha cada etapa, reduzindo a desconfiança e a judicialização.
 - **Eficiência:** Eliminação de retrabalho manual e erros de consolidação.
 
-![](prints/manual/fig-46-comissao-campos-notas-calculadas.png){width="60%"}
+![](../prints/manual/fig-46-comissao-campos-notas-calculadas.png){width="60%"}
 
 # Diferencial: Blindagem Jurídica (Tecnologia)
 
@@ -113,7 +113,7 @@ Não é apenas software, é **segurança jurídica** via tecnologia.
 - **Auditoria Instantânea:** Em caso de recurso, a prova técnica está pronta em segundos.
 - **Fim das Disputas:** Elimina dúvidas sobre "qual versão vale".
 
-![](prints/manual/fig-17-pdf-protocolo-hash.png){width="60%"}
+![](../prints/manual/fig-17-pdf-protocolo-hash.png){width="60%"}
 
 # Privacidade e Compliance (LGPD)
 
@@ -123,7 +123,7 @@ Proteção de dados como **vantagem competitiva**, não apenas obrigação.
 - **Anonimização Segura (HMAC):** Validação de unicidade (CPF) sem expor o dado real.
 - **Segurança por Design:** Minimização de dados desde a arquitetura.
 
-![](prints/manual/fig-10-blind-review-exemplo-dados-pessoais.png){width="60%"}
+![](../prints/manual/fig-10-blind-review-exemplo-dados-pessoais.png){width="60%"}
 
 # Mercado: Busca por Conformidade
 
@@ -161,7 +161,7 @@ SaaS B2B flexível para a realidade dos editais.
 - Arquitetura escalável (Node.js + JSON/PostgreSQL).
 - Próximo passo: Validação comercial com pilotos pagos.
 
-![](prints/manual/fig-24-admin-dashboard-tabela-protocolo.png){width="60%"}
+![](../prints/manual/fig-24-admin-dashboard-tabela-protocolo.png){width="60%"}
 
 
 # Roadmap e Uso do Recurso (Centelha)
@@ -179,25 +179,25 @@ SaaS B2B flexível para a realidade dos editais.
 ::: {=html}
 <div class="team-grid">
 <div class="team-card">
-<img class="team-avatar" src="img/team/diego.png" alt="Diego" loading="lazy" />
+<img class="team-avatar" src="../img/team/diego.png" alt="Diego" loading="lazy" />
 <div class="team-name">Diego</div>
 <div class="team-role">Produto, validação com usuários, implantação e pilotos</div>
 </div>
 
 <div class="team-card">
-<img class="team-avatar" src="img/team/catuxe.png" alt="Catuxe Varjão" loading="lazy" />
+<img class="team-avatar" src="../img/team/catuxe.png" alt="Catuxe Varjão" loading="lazy" />
 <div class="team-name">Catuxe Varjão</div>
 <div class="team-role">Engenharia, qualidade (MPS.BR) e controles (HMAC)</div>
 </div>
 
 <div class="team-card">
-<img class="team-avatar" src="img/team/dulce.png" alt="Dulce Paloma" loading="lazy" />
+<img class="team-avatar" src="../img/team/dulce.png" alt="Dulce Paloma" loading="lazy" />
 <div class="team-name">Dulce Paloma</div>
 <div class="team-role">Jurídico/Compliance, LGPD e aderência legal</div>
 </div>
 
 <div class="team-card">
-<img class="team-avatar" src="img/team/everaldo.jpg" alt="Everaldo Fontes" loading="lazy" />
+<img class="team-avatar" src="../img/team/everaldo.jpg" alt="Everaldo Fontes" loading="lazy" />
 <div class="team-name">Everaldo Fontes</div>
 <div class="team-role">Programação e validação com usuários</div>
 </div>

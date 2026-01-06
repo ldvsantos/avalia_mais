@@ -22,6 +22,16 @@ Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3
   jan 2026 | Equipe Avalia+
 </div>
 
+<video 
+  autoplay 
+  loop 
+  muted 
+  playsinline
+  class="absolute top-0 left-0 w-full h-full object-cover -z-10 blur-sm opacity-80"
+>
+  <source src="/img/video_curto.mp4" type="video/mp4">
+</video>
+
 <!--
 Este é o slide de título.
 -->
@@ -33,7 +43,7 @@ layout: default
 # A Solução Definitiva para Governança em Seleções
 
 <div class="flex justify-center my-8">
-  <img src="./img/logo_avalia_horizontal.png" style="width: 60%;" />
+  <img src="/img/logo_avalia_horizontal.png" style="width: 60%;" />
 </div>
 
 **Transformamos processos seletivos vulneráveis em fluxos auditáveis, seguros e 100% digitais.**
@@ -61,7 +71,7 @@ Um ambiente único que garante **governança** do início ao fim.
 - **Eficiência:** Eliminação de retrabalho manual e erros de consolidação.
 
 <div class="flex justify-center mt-4">
-  <img src="./prints/manual/fig-46-comissao-campos-notas-calculadas.png" style="width: 60%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
+  <img src="/prints/manual/fig-46-comissao-campos-notas-calculadas.png" style="width: 60%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
 </div>
 
 ---
@@ -75,7 +85,7 @@ Não é apenas software, é **segurança jurídica** via tecnologia.
 - **Fim das Disputas:** Elimina dúvidas sobre "qual versão vale".
 
 <div class="flex justify-center mt-4">
-  <img src="./prints/manual/fig-17-pdf-protocolo-hash.png" style="width: 60%; border-radius: 8px;" />
+  <img src="/prints/manual/fig-17-pdf-protocolo-hash.png" style="width: 60%; border-radius: 8px;" />
 </div>
 
 ---
@@ -89,7 +99,7 @@ Proteção de dados como **vantagem competitiva**, não apenas obrigação.
 - **Segurança por Design:** Minimização de dados desde a arquitetura.
 
 <div class="flex justify-center mt-4">
-  <img src="./prints/manual/fig-10-blind-review-exemplo-dados-pessoais.png" style="width: 60%; border-radius: 8px;" />
+  <img src="/prints/manual/fig-10-blind-review-exemplo-dados-pessoais.png" style="width: 60%; border-radius: 8px;" />
 </div>
 
 ---
@@ -137,7 +147,7 @@ SaaS B2B flexível para a realidade dos editais.
 - Próximo passo: Validação comercial com pilotos pagos.
 
 <div class="flex justify-center mt-4">
-  <img src="./prints/manual/fig-24-admin-dashboard-tabela-protocolo.png" style="width: 60%; border-radius: 8px;" />
+  <img src="/prints/manual/fig-24-admin-dashboard-tabela-protocolo.png" style="width: 60%; border-radius: 8px;" />
 </div>
 
 ---
@@ -158,25 +168,25 @@ SaaS B2B flexível para a realidade dos editais.
 
 <div class="team-grid">
   <div class="team-card">
-    <img class="team-avatar" src="./img/team/diego.png" alt="Diego" loading="lazy" />
+    <img class="team-avatar" src="/img/team/diego.png" alt="Diego" loading="lazy" />
     <div class="team-name">Diego</div>
     <div class="team-role">Produto, validação com usuários, implantação e pilotos</div>
   </div>
 
   <div class="team-card">
-    <img class="team-avatar" src="./img/team/catuxe.png" alt="Catuxe Varjão" loading="lazy" />
+    <img class="team-avatar" src="/img/team/catuxe.png" alt="Catuxe Varjão" loading="lazy" />
     <div class="team-name">Catuxe Varjão</div>
     <div class="team-role">Engenharia, qualidade (MPS.BR) e controles (HMAC)</div>
   </div>
 
   <div class="team-card">
-    <img class="team-avatar" src="./img/team/dulce.png" alt="Dulce Paloma" loading="lazy" />
+    <img class="team-avatar" src="/img/team/dulce.png" alt="Dulce Paloma" loading="lazy" />
     <div class="team-name">Dulce Paloma</div>
     <div class="team-role">Jurídico/Compliance, LGPD e aderência legal</div>
   </div>
 
   <div class="team-card">
-    <img class="team-avatar" src="./img/team/everaldo.jpg" alt="Everaldo Fontes" loading="lazy" />
+    <img class="team-avatar" src="/img/team/everaldo.jpg" alt="Everaldo Fontes" loading="lazy" />
     <div class="team-name">Everaldo Fontes</div>
     <div class="team-role">Programação e validação com usuários</div>
   </div>
