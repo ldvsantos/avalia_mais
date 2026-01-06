@@ -27,7 +27,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Customize View Transition Duration */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation-duration: 2.5s;
+  animation-duration: 1.0s;
 }
 
 /* Keep the Team Grid Layout */

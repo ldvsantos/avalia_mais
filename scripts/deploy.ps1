@@ -370,6 +370,22 @@ mkdir -p "$STAGING"
 
 tar -xzf "$ARCHIVE" -C "$STAGING"
 
+# Libera espaço o quanto antes
+rm -f "$ARCHIVE" || true
+
+# Limpeza de temporários (evita ENOSPC em npm)
+rm -f /tmp/planterr-deploy-*.tgz 2>/dev/null || true
+rm -f /tmp/avalia-deploy-*.tgz 2>/dev/null || true
+
+# Mantém apenas os 5 backups mais recentes
+if [ -d "$BACKUP_DIR" ]; then
+  ls -1t "$BACKUP_DIR"/*.tgz 2>/dev/null | tail -n +6 | xargs -r rm -f || true
+fi
+
+# Limpa logs/cache do npm do usuário do app
+sudo -u "$APP_USER" -H bash -lc "rm -rf ~/.npm/_logs || true" || true
+sudo -u "$APP_USER" -H bash -lc "npm cache clean --force >/dev/null 2>&1 || true" || true
+
 # Deixa o staging no mesmo usuário que roda o app
 chown -R "$APP_USER:$APP_USER" "$STAGING" || true
 
