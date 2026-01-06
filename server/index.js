@@ -417,10 +417,13 @@ function getCorsAllowedOrigins() {
   allowed.push('https://avaliamais.tec.br');
   allowed.push('https://www.avaliamais.tec.br');
 
-  // Auto-permitir o origin do próprio site (evita erro de configuração onde
-  // SITE_URL está correto, mas ALLOWED_ORIGINS ficou desatualizado).
+  // Auto-permitir o origin do próprio site
   const siteOrigin = tryExtractOriginFromUrl(SITE_URL);
   if (siteOrigin) allowed.push(siteOrigin);
+
+  // Adicionar IP do servidor para evitar bloqueios locais/internos
+  allowed.push('http://13.59.96.218');
+  allowed.push('https://13.59.96.218');
 
   return [...new Set(allowed.map(normalizeOriginValue).filter(Boolean))];
 }
@@ -476,7 +479,9 @@ app.use(cors({
       callback(null, true);
     } else {
       logSecurityEvent('CORS_BLOCKED', { origin, allowed: allowedOrigins });
-      callback(new Error('Not allowed by CORS'));
+      const msg = `Not allowed by CORS: ${origin}`;
+      console.error(msg); // Imprime log direto no stdout para debug via 'pm2 logs'
+      callback(new Error(msg));
     }
   },
   credentials: true
