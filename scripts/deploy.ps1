@@ -36,11 +36,27 @@ param(
   [switch]$AutoCommit,
 
   [Parameter(Mandatory = $false)]
-  [string]$CommitMessage
+  [string]$CommitMessage,
+
+  # Modo de emergência: ignora Git e permite working tree suja.
+  # Útil quando o Git travou/rebase conflitou, mas você precisa publicar rápido.
+  [Parameter(Mandatory = $false)]
+  [switch]$Emergency,
+
+  # Se true, exige src/apresentacao/index.html localmente e valida no servidor.
+  [Parameter(Mandatory = $false)]
+  [bool]$DeployApresentacao = $true
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+if ($Emergency) {
+  Write-Host '*** MODO EMERGENCY: ignorando Git e permitindo estado local sujo ***' -ForegroundColor Yellow
+  $SkipGit = $true
+  $AllowDirty = $true
+  $AutoCommit = $false
+}
 
 function Fail([string]$Message) {
   Write-Host "ERRO: $Message" -ForegroundColor Red
@@ -151,6 +167,13 @@ foreach ($cmd in @('ssh', 'scp', 'tar')) {
 
 Push-Location $repoRoot
 try {
+  if ($DeployApresentacao) {
+    $apresentacaoIndex = Join-Path $repoRoot 'src\apresentacao\index.html'
+    if (-not (Test-Path $apresentacaoIndex)) {
+      Fail "DeployApresentacao=true, mas não encontrei '$apresentacaoIndex'.\n\nDica: gere/compile a apresentação antes do deploy (ou rode deploy.cmd emergency se você quer publicar mesmo sem ela)."
+    }
+  }
+
   # Testa SSH o quanto antes para evitar commits/push acidentais quando o servidor está inacessível.
   Write-Host "Testando conectividade SSH: ${Server}:$SshPort ..." -ForegroundColor DarkGray
   $timeoutMs = [Math]::Max(1000, $SshConnectTimeoutSeconds * 1000)
@@ -266,6 +289,23 @@ try {
     & tar -czf $archiveLocal @excludes .
   }
   if ($LASTEXITCODE -ne 0) { Fail 'Falha ao gerar o .tgz' }
+
+  if ($DeployApresentacao) {
+    # Verifica se o arquivo entrou no .tgz (evita surpresas de exclusão/paths)
+    $hasApresentacao = $false
+    try {
+      $list = & tar -tzf $archiveLocal
+      if ($LASTEXITCODE -eq 0 -and ($list -match '(^|\n)\.?/?src/apresentacao/index\.html(\r?\n|$)')) {
+        $hasApresentacao = $true
+      }
+    } catch {
+      $hasApresentacao = $false
+    }
+
+    if (-not $hasApresentacao) {
+      Fail "O pacote gerado não contém 'src/apresentacao/index.html'.\nIsso causaria 404 em /apresentacao.\n\nAção: verifique se a pasta 'src/apresentacao' existe e não está sendo excluída." 
+    }
+  }
 
   Write-Host ("Empacotamento concluído em {0:N2}s" -f $tarTime.TotalSeconds) -ForegroundColor DarkGray
 
@@ -427,6 +467,21 @@ done
 
 if [ "$ok" != "1" ]; then
   echo "HEALTHCHECK_FAILED"
+  exit 1
+fi
+
+# Validação da apresentação
+if [ -f "$REMOTE_DIR/src/apresentacao/index.html" ]; then
+  if ! curl -fsS http://127.0.0.1:3000/apresentacao/index.html > /dev/null 2>&1; then
+    echo "APRESENTACAO_LOCALHOST_FAILED"
+    echo "DEBUG: listando $REMOTE_DIR/src/apresentacao"
+    ls -la "$REMOTE_DIR/src/apresentacao" || true
+    exit 1
+  fi
+else
+  echo "APRESENTACAO_MISSING_ON_DISK"
+  echo "DEBUG: listando $REMOTE_DIR/src"
+  ls -la "$REMOTE_DIR/src" || true
   exit 1
 fi
 

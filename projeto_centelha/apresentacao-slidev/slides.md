@@ -9,7 +9,11 @@ info: |
   Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3 Bahia
 drawings:
   persist: false
+<<<<<<< HEAD
 transition: view-transition
+=======
+transition: fade-out
+>>>>>>> b1968e2 (chore: update slides and cors config)
 css: ./style.css
 title: Avalia+Tec
 themeConfig:
@@ -31,6 +35,9 @@ Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3
 </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> b1968e2 (chore: update slides and cors config)
 
 <!-- Background Video -->
 <div class="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden">
@@ -45,6 +52,7 @@ Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3
   </video>
 </div>
 
+<<<<<<< HEAD
 =======
 <video 
   autoplay 
@@ -56,6 +64,8 @@ Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3
   <source src="/img/video_curto.mp4" type="video/mp4">
 </video>
 >>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
+=======
+>>>>>>> b1968e2 (chore: update slides and cors config)
 
 <!--
 Este é o slide de título.
@@ -212,40 +222,56 @@ SaaS B2B flexível para a realidade dos editais.
 <div class="team-grid">
   <div class="team-card">
 <<<<<<< HEAD
+<<<<<<< HEAD
     <img class="team-avatar" src="/img/team/diego.jpeg" alt="Diego" loading="lazy" />
 =======
     <img class="team-avatar" src="/img/team/diego.png" alt="Diego" loading="lazy" />
 >>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
+=======
+    <img class="team-avatar" src="/img/team/diego.jpeg" alt="Diego" loading="lazy" />
+>>>>>>> b1968e2 (chore: update slides and cors config)
     <div class="team-name">Diego</div>
     <div class="team-role">Produto, validação com usuários, implantação e pilotos</div>
   </div>
 
   <div class="team-card">
 <<<<<<< HEAD
+<<<<<<< HEAD
     <img class="team-avatar" src="/img/team/catuxe.jpeg" alt="Catuxe Varjão" loading="lazy" />
 =======
     <img class="team-avatar" src="/img/team/catuxe.png" alt="Catuxe Varjão" loading="lazy" />
 >>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
+=======
+    <img class="team-avatar" src="/img/team/catuxe.jpeg" alt="Catuxe Varjão" loading="lazy" />
+>>>>>>> b1968e2 (chore: update slides and cors config)
     <div class="team-name">Catuxe Varjão</div>
     <div class="team-role">Engenharia, qualidade (MPS.BR) e controles (HMAC)</div>
   </div>
 
   <div class="team-card">
 <<<<<<< HEAD
+<<<<<<< HEAD
     <img class="team-avatar" src="/img/team/paloma.jpeg" alt="Dulce Paloma" loading="lazy" />
 =======
     <img class="team-avatar" src="/img/team/dulce.png" alt="Dulce Paloma" loading="lazy" />
 >>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
+=======
+    <img class="team-avatar" src="/img/team/paloma.jpeg" alt="Dulce Paloma" loading="lazy" />
+>>>>>>> b1968e2 (chore: update slides and cors config)
     <div class="team-name">Dulce Paloma</div>
     <div class="team-role">Jurídico/Compliance, LGPD e aderência legal</div>
   </div>
 
   <div class="team-card">
 <<<<<<< HEAD
+<<<<<<< HEAD
     <img class="team-avatar" src="/img/team/everaldo.jpeg" alt="Everaldo Fontes" loading="lazy" />
 =======
     <img class="team-avatar" src="/img/team/everaldo.jpg" alt="Everaldo Fontes" loading="lazy" />
 >>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
+=======
+    <img class="team-avatar" src="/img/team/everaldo.jpeg" alt="Everaldo Fontes" loading="lazy" />
+>>>>>>> b1968e2 (chore: update slides and cors config)
     <div class="team-name">Everaldo Fontes</div>
     <div class="team-role">Programação e validação com usuários</div>
   </div>
