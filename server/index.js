@@ -412,6 +412,11 @@ function tryExtractOriginFromUrl(url) {
 function getCorsAllowedOrigins() {
   const allowed = [...ALLOWED_ORIGINS_ENV];
 
+  // Whitelist hardcoded para garantir funcionamento na URL de produção
+  // mesmo se as variáveis de ambiente estiverem ausentes ou incorretas.
+  allowed.push('https://avaliamais.tec.br');
+  allowed.push('https://www.avaliamais.tec.br');
+
   // Auto-permitir o origin do próprio site (evita erro de configuração onde
   // SITE_URL está correto, mas ALLOWED_ORIGINS ficou desatualizado).
   const siteOrigin = tryExtractOriginFromUrl(SITE_URL);
