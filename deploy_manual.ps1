@@ -38,8 +38,8 @@ $Commands = "
     
     echo '--- Verificando .env ---'
     if [ ! -f /opt/avalia/server/.env ]; then
-        echo "⚠️ .env não encontrado em /opt/avalia/server. Tentando localizar..."
-        sudo find /opt -maxdepth 4 -name ".env" -exec cp {} /opt/avalia/server/.env \; -quit
+        echo 'WARN: .env not found in /opt/avalia/server. Searching...'
+        sudo find /opt -maxdepth 4 -name '.env' -exec cp {} /opt/avalia/server/.env \; -quit
     fi
     
     echo '--- Reiniciando Servidor ---'
