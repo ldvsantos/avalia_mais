@@ -1,5 +1,6 @@
 ---
-theme: default
+theme: slidev-theme-excali-slide
+layout: intro
 class: text-center
 highlighter: shiki
 lineNumbers: false
@@ -8,9 +9,12 @@ info: |
   Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3 Bahia
 drawings:
   persist: false
-transition: fade-out
+transition: view-transition
 css: ./style.css
 title: Avalia+Tec
+themeConfig:
+  primary-highlight: "#2e7d32"
+  secondary-highlight: "#003366"
 author: Equipe Avalia+
 favicon: './img/logo_avalia_quadrado.png'
 titleTemplate: '%s'
