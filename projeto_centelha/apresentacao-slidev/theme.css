@@ -8,21 +8,69 @@
   --surface-2: #f6f7f9;
   --hairline: rgba(0, 26, 51, 0.10);
   --accent: rgba(46, 125, 50, 0.95);
+  --slide-font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Typography override */
+/* Global Typography */
+body {
+  font-family: var(--slide-font-family);
+  color: var(--ink);
+}
+
+.slidev-layout {
+  background-color: var(--surface);
+  color: var(--ink);
+}
+
+/* Slide Card Effect (simulating the Executive Theme) */
+.slidev-layout.default {
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface);
+  /* Add padding to simulate the card look inside the viewport */
+  margin: 10px;
+  height: calc(100% - 20px);
+  width: calc(100% - 20px);
+  padding: 2rem 3rem;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top Gradient Bar for Default Slides */
+.slidev-layout.default::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, rgba(0, 51, 102, 0.95), rgba(46, 125, 50, 0.95));
+  z-index: 10;
+}
+
+/* Title Slide Specifics */
+.slidev-layout.center, .slidev-layout.text-center {
+  background: transparent !important; /* Allow video to show */
+  color: var(--brand-blue);
+  border: none;
+}
+
 .slidev-layout h1 {
   color: var(--brand-blue);
-  font-weight: 750;
+  font-weight: 800;
   line-height: 1.1;
   margin-bottom: 0.5em;
+  font-size: 2.5rem;
 }
 
 .slidev-layout h2 {
   color: var(--brand-blue);
   border-bottom: 2px solid var(--hairline);
   padding-bottom: 0.2em;
-  margin-bottom: 0.5em;
+  margin-bottom: 0.6em;
+  font-size: 1.8rem;
+  font-weight: 700;
 }
 
 .slidev-layout strong {
@@ -34,6 +82,26 @@
   color: var(--brand-green);
   text-decoration: underline;
   text-underline-offset: 3px;
+  border-bottom: none; /* override default slidev link style */
+}
+
+.slidev-layout a:hover {
+  color: var(--brand-blue);
+}
+
+.slidev-layout p {
+  line-height: 1.4;
+  margin-bottom: 0.8rem;
+  opacity: 0.9;
+}
+
+.slidev-layout ul {
+  line-height: 1.4;
+  margin-bottom: 0.8rem;
+}
+
+.slidev-layout li::marker {
+  color: var(--accent);
 }
 
 /* Custom Team Grid */
@@ -41,7 +109,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
-  margin-top: 18px;
+  margin-top: 2rem;
 }
 
 .team-card {
@@ -66,25 +134,39 @@ img.team-avatar {
 .team-name {
   font-weight: 800;
   color: var(--brand-blue);
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin: 0;
 }
 
 .team-role {
   color: var(--ink-muted);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   line-height: 1.2;
   margin-top: 8px;
 }
 
-/* Table overrides to match Executive theme */
+/* Table overrides */
 .slidev-layout table {
   font-size: 0.9em;
   width: 100%;
+  border-collapse: collapse;
 }
 
 .slidev-layout th {
   background-color: var(--surface-2);
   color: var(--brand-blue);
   font-weight: 700;
+  border-bottom: 2px solid var(--hairline);
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.slidev-layout td {
+  border-bottom: 1px solid var(--hairline);
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.slidev-layout td:first-child, .slidev-layout th:first-child {
+  text-align: left;
 }

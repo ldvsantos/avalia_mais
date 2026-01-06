@@ -514,6 +514,9 @@ const apiLimiter = rateLimit({
 });
 app.use('/api/', apiLimiter);
 
+// Serve the presentation explicitly (avoids 404 on some environments)
+app.use('/apresentacao', express.static(path.join(__dirname, '..', 'src', 'apresentacao')));
+
 // Serve the existing static site from /src
 app.use('/', express.static(path.join(__dirname, '..', 'src')));
 

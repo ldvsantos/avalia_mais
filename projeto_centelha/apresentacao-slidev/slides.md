@@ -30,6 +30,7 @@ Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3
   jan 2026 | Equipe Avalia+
 </div>
 
+<<<<<<< HEAD
 
 <!-- Background Video -->
 <div class="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden">
@@ -44,6 +45,17 @@ Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3
   </video>
 </div>
 
+=======
+<video 
+  autoplay 
+  loop 
+  muted 
+  playsinline
+  class="absolute top-0 left-0 w-full h-full object-cover -z-10 blur-sm opacity-80"
+>
+  <source src="/img/video_curto.mp4" type="video/mp4">
+</video>
+>>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
 
 <!--
 Este é o slide de título.
@@ -84,9 +96,13 @@ Um ambiente único que garante **governança** do início ao fim.
 - **Eficiência:** Eliminação de retrabalho manual e erros de consolidação.
 
 <div class="flex justify-center mt-4">
+<<<<<<< HEAD
   <video controls class="w-3/5 rounded-lg shadow-lg">
     <source src="/video/tela_processo_seletivo.mp4" type="video/mp4" />
   </video>
+=======
+  <img src="/prints/manual/fig-46-comissao-campos-notas-calculadas.png" style="width: 60%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);" />
+>>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
 </div>
 
 ---
@@ -114,9 +130,13 @@ Proteção de dados como **vantagem competitiva**, não apenas obrigação.
 - **Segurança por Design:** Minimização de dados desde a arquitetura.
 
 <div class="flex justify-center mt-4">
+<<<<<<< HEAD
   <video controls class="w-3/5 rounded-lg shadow-lg">
     <source src="/video/tela_avaliacao.mp4" type="video/mp4" />
   </video>
+=======
+  <img src="/prints/manual/fig-10-blind-review-exemplo-dados-pessoais.png" style="width: 60%; border-radius: 8px;" />
+>>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
 </div>
 
 ---
@@ -164,9 +184,13 @@ SaaS B2B flexível para a realidade dos editais.
 - Próximo passo: Validação comercial com pilotos pagos.
 
 <div class="flex justify-center mt-4">
+<<<<<<< HEAD
   <video controls class="w-3/5 rounded-lg">
     <source src="/video/tela_avaliacao.mp4" type="video/mp4" />
   </video>
+=======
+  <img src="/prints/manual/fig-24-admin-dashboard-tabela-protocolo.png" style="width: 60%; border-radius: 8px;" />
+>>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
 </div>
 
 ---
@@ -187,25 +211,41 @@ SaaS B2B flexível para a realidade dos editais.
 
 <div class="team-grid">
   <div class="team-card">
+<<<<<<< HEAD
     <img class="team-avatar" src="/img/team/diego.jpeg" alt="Diego" loading="lazy" />
+=======
+    <img class="team-avatar" src="/img/team/diego.png" alt="Diego" loading="lazy" />
+>>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
     <div class="team-name">Diego</div>
     <div class="team-role">Produto, validação com usuários, implantação e pilotos</div>
   </div>
 
   <div class="team-card">
+<<<<<<< HEAD
     <img class="team-avatar" src="/img/team/catuxe.jpeg" alt="Catuxe Varjão" loading="lazy" />
+=======
+    <img class="team-avatar" src="/img/team/catuxe.png" alt="Catuxe Varjão" loading="lazy" />
+>>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
     <div class="team-name">Catuxe Varjão</div>
     <div class="team-role">Engenharia, qualidade (MPS.BR) e controles (HMAC)</div>
   </div>
 
   <div class="team-card">
+<<<<<<< HEAD
     <img class="team-avatar" src="/img/team/paloma.jpeg" alt="Dulce Paloma" loading="lazy" />
+=======
+    <img class="team-avatar" src="/img/team/dulce.png" alt="Dulce Paloma" loading="lazy" />
+>>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
     <div class="team-name">Dulce Paloma</div>
     <div class="team-role">Jurídico/Compliance, LGPD e aderência legal</div>
   </div>
 
   <div class="team-card">
+<<<<<<< HEAD
     <img class="team-avatar" src="/img/team/everaldo.jpeg" alt="Everaldo Fontes" loading="lazy" />
+=======
+    <img class="team-avatar" src="/img/team/everaldo.jpg" alt="Everaldo Fontes" loading="lazy" />
+>>>>>>> c022e7a (fix: add hardcoded production origins to CORS whitelist)
     <div class="team-name">Everaldo Fontes</div>
     <div class="team-role">Programação e validação com usuários</div>
   </div>
