@@ -7,7 +7,7 @@ const escapeHtml = (unsafe) => {
     .replace(/'/g, "&#039;");
 };
 
-const { renderAdminNav } = require('./adminNav');
+const { renderAdminNav, renderAdminShell } = require('./adminNav');
 
 class AdminDashboardPresenter {
   constructor(adminSecret) {
@@ -131,13 +131,7 @@ class AdminDashboardPresenter {
         `;
     };
 
-    return `
-      <!doctype html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <title>Resultado da Alocação</title>
-        <link rel="stylesheet" href="/theme.css" />
+    const headExtra = `
         <style>
           .summary-box { background: #f8f9fa; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ddd; }
           .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
@@ -151,16 +145,13 @@ class AdminDashboardPresenter {
           .row-demais { background-color: #e2e3e5; }
           
           .admin-table th { background-color: #004d40; color: white; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <header class="main-header">
-            <h1>Resultado da Alocação de Vagas</h1>
-            <div style="text-align: center; margin-top: 15px;">
-              <a href="/secret/${this.adminSecret}/admin/allocation/pdf?v1=${v1}&v2=${v2}" class="btn btn-primary" target="_blank" style="background-color: #2e7d32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Baixar Relatório PDF (Assinado)</a>
-            </div>
-          </header>
+        </style>`;
+
+    const bodyContent = `
+          <h1>Resultado da Alocação de Vagas</h1>
+          <div style="text-align: center; margin-top: 15px; margin-bottom: 20px;">
+            <a href="/secret/${this.adminSecret}/admin/allocation/pdf?v1=${v1}&v2=${v2}" class="btn btn-primary" target="_blank" style="background-color: #2e7d32; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">Baixar Relatório PDF (Assinado)</a>
+          </div>
 
           <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-left: 4px solid #2e7d32; border-radius: 4px;">
             <h3 style="margin-top: 0; color: #2e7d32; font-size: 1.1em;">Nota Oficial da Coordenação</h3>
@@ -181,23 +172,19 @@ class AdminDashboardPresenter {
 
           ${renderLineSection('Linha de Pesquisa 1', data.linha1)}
           ${renderLineSection('Linha de Pesquisa 2', data.linha2)}
-
-        </div>
-      </body>
-      </html>
     `;
+
+    return renderAdminShell({
+      adminSecret: this.adminSecret,
+      active: 'selection',
+      title: 'Resultado da Alocação',
+      headExtra,
+      bodyContent,
+    });
   }
 
   renderIndex() {
-    return `
-      <!doctype html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Painel Administrativo - AVALIA+</title>
-        <link rel="stylesheet" href="/style.css" />
-        <link rel="stylesheet" href="/theme.css" />
+    const headExtra = `
         <style>
           .admin-home-container {
             display: flex;
@@ -247,20 +234,10 @@ class AdminDashboardPresenter {
             font-size: 48px;
             color: #2e7d32;
           }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <header class="main-header">
-            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
-              </a>
-              <h1>Painel Administrativo</h1>
-            </div>
-          </header>
+        </style>`;
 
-          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'home' })}
+    const bodyContent = `
+          <h1>Painel Administrativo</h1>
 
           <div class="admin-home-container">
             <div class="admin-cards">
@@ -283,10 +260,15 @@ class AdminDashboardPresenter {
               </a>
             </div>
           </div>
-        </div>
-      </body>
-      </html>
     `;
+
+    return renderAdminShell({
+      adminSecret: this.adminSecret,
+      active: 'home',
+      title: 'Painel Administrativo - AVALIA+',
+      headExtra,
+      bodyContent,
+    });
   }
 
   renderAppeals(appeals, filters) {
@@ -319,34 +301,17 @@ class AdminDashboardPresenter {
       `;
     }).join('');
 
-    return `
-      <!doctype html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Admin - Recursos AVALIA+</title>
-        <link rel="stylesheet" href="/theme.css" />
+    const headExtra = `
         <style>
           .hint { color: #003366; font-size: 11px; }
           .filters-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; align-items: end; }
           .filters-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 8px; }
           .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
           @media (max-width: 900px) { .filters-grid { grid-template-columns: 1fr; } }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <header class="main-header">
-            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
-              </a>
-              <h1>Administração de Recursos - AVALIA+</h1>
-            </div>
-          </header>
+        </style>`;
 
-          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'appeals' })}
+    const bodyContent = `
+          <h1>Administração de Recursos - AVALIA+</h1>
 
           <section class="panel">
             <div class="panel-header"><h2>Busca e filtros</h2></div>
@@ -399,10 +364,15 @@ class AdminDashboardPresenter {
               ${(appeals || []).length === 0 ? '<p style="text-align:center; color:#666; margin-top:10px;">Nenhum recurso encontrado.</p>' : ''}
             </div>
           </section>
-        </div>
-      </body>
-      </html>
     `;
+
+    return renderAdminShell({
+      adminSecret: this.adminSecret,
+      active: 'appeals',
+      title: 'Admin - Recursos AVALIA+',
+      headExtra,
+      bodyContent,
+    });
   }
 
   renderEventsList(events) {
@@ -430,27 +400,9 @@ class AdminDashboardPresenter {
       `;
     }).join('');
 
-    return `
-      <!doctype html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Admin - Eventos</title>
-        <link rel="stylesheet" href="/theme.css" />
-      </head>
-      <body>
-        <div class="container">
-          <header class="main-header">
-            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
-              </a>
-              <h1>Gestão de Eventos</h1>
-            </div>
-          </header>
+    const bodyContent = `
+          <h1>Gestão de Eventos</h1>
 
-          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'events' })}
           <section class="panel">
             <div class="panel-header"><h2>Eventos Cadastrados</h2></div>
             <div class="panel-body">
@@ -473,12 +425,17 @@ class AdminDashboardPresenter {
               </table>
             </div>
           </section>
-        </div>
 
-        <script src="/admin-events-confirm.js"></script>
-      </body>
-      </html>
+          <script src="/admin-events-confirm.js"></script>
     `;
+
+    return renderAdminShell({
+      adminSecret: this.adminSecret,
+      active: 'events',
+      title: 'Admin - Eventos',
+      headExtra: '',
+      bodyContent,
+    });
   }
 
   renderEventForm(event = {}) {
@@ -488,15 +445,8 @@ class AdminDashboardPresenter {
       : `/secret/${this.adminSecret}/admin/events`;
     
     const activitiesJson = JSON.stringify(event.activities || []);
-    
-    return `
-      <!doctype html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>${isEdit ? 'Editar' : 'Novo'} Evento</title>
-        <link rel="stylesheet" href="/theme.css" />
+
+    const headExtra = `
         <style>
           .activity-row {
             display: grid;
@@ -534,20 +484,10 @@ class AdminDashboardPresenter {
           .btn-add-activity:hover {
             background: #218838;
           }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <header class="main-header">
-            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
-              </a>
-              <h1>${isEdit ? 'Editar' : 'Novo'} Evento</h1>
-            </div>
-          </header>
+        </style>`;
 
-          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'events' })}
+    const bodyContent = `
+          <h1>${isEdit ? 'Editar' : 'Novo'} Evento</h1>
           
           <section class="panel">
             <div class="panel-body">
@@ -628,7 +568,6 @@ class AdminDashboardPresenter {
               </form>
             </div>
           </section>
-        </div>
         
         <script>
           // CSP do servidor bloqueia handlers inline (onclick/onchange) via: script-src-attr 'none'.
@@ -776,9 +715,15 @@ class AdminDashboardPresenter {
             renderActivities();
           }
         </script>
-      </body>
-      </html>
     `;
+
+    return renderAdminShell({
+      adminSecret: this.adminSecret,
+      active: 'events',
+      title: `${isEdit ? 'Editar' : 'Novo'} Evento`,
+      headExtra,
+      bodyContent,
+    });
   }
 
   render(submissions, evaluations, filters) {
@@ -844,34 +789,17 @@ class AdminDashboardPresenter {
     const startVal = toDateInput(registrationWindow?.startISO);
     const endVal = toDateInput(registrationWindow?.endISO);
 
-    return `
-      <!doctype html>
-      <html lang="pt-BR">
-      <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Admin - Inscrições AVALIA+</title>
-        <link rel="stylesheet" href="/theme.css" />
+    const headExtra = `
         <style>
           .hint { color: #003366; font-size: 11px; }
           .filters-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 0.8fr; gap: 8px; align-items: end; }
           .filters-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: center; margin-top: 8px; }
           .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
           @media (max-width: 900px) { .filters-grid { grid-template-columns: 1fr; } }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <header class="main-header">
-            <div style="display:flex; align-items:center; justify-content:center; gap:15px;">
-              <a href="/secret/${this.adminSecret}/admin" aria-label="Voltar ao painel administrativo" style="display:inline-block;">
-                <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+" style="max-height:80px; width:auto;">
-              </a>
-              <h1>Administração de Inscrições - AVALIA+</h1>
-            </div>
-          </header>
+        </style>`;
 
-          ${renderAdminNav({ adminSecret: this.adminSecret, active: 'selection' })}
+    const bodyContent = `
+          <h1>Administração de Inscrições - AVALIA+</h1>
 
           <section class="panel">
             <div class="panel-header"><h2>Ações Rápidas</h2></div>
@@ -1025,8 +953,7 @@ class AdminDashboardPresenter {
               ${submissions.length === 0 ? '<p style="text-align:center; color:#666; margin-top:10px;">Nenhuma inscrição encontrada.</p>' : ''}
             </div>
           </section>
-        </div>
-      </body>
+
       <script>
         (function() {
           const el = document.getElementById('reg-countdown');
@@ -1076,8 +1003,15 @@ class AdminDashboardPresenter {
           setInterval(tick, 1000);
         })();
       </script>
-      </html>
     `;
+
+    return renderAdminShell({
+      adminSecret: this.adminSecret,
+      active: 'selection',
+      title: 'Admin - Inscrições AVALIA+',
+      headExtra,
+      bodyContent,
+    });
   }
 }
 

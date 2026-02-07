@@ -716,7 +716,7 @@ function renderCalendarEditPage({ year, values, saved, error }) {
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Admin - Calendário do Edital</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
       <link rel="stylesheet" href="/vendor/flatpickr/flatpickr.min.css" />
       <style>
         .hint { color: #003366; font-size: 11px; }
@@ -2692,6 +2692,134 @@ app.get('/api/public-events', async (req, res) => {
   }
 });
 
+// ============================================================
+// API de Sincronização Desktop ↔ Web (JSON protegida por JWT)
+// ============================================================
+
+// GET /api/sync/submissions — todas as inscrições (admin auth via Bearer token)
+app.get(`/secret/${ADMIN_SECRET}/api/sync/submissions`, adminAuth, async (req, res) => {
+  try {
+    const subs = await Promise.resolve(submissionRepo.findAll());
+    return res.json(subs || []);
+  } catch (err) {
+    console.error('[sync] Falha ao listar submissions', err);
+    return res.status(500).json({ error: 'Falha ao listar inscrições' });
+  }
+});
+
+// GET /api/sync/evaluations — todas as avaliações
+app.get(`/secret/${ADMIN_SECRET}/api/sync/evaluations`, adminAuth, async (req, res) => {
+  try {
+    const evals = await Promise.resolve(evaluationRepo.getAll());
+    return res.json(evals || []);
+  } catch (err) {
+    console.error('[sync] Falha ao listar evaluations', err);
+    return res.status(500).json({ error: 'Falha ao listar avaliações' });
+  }
+});
+
+// GET /api/sync/appeals — todos os recursos
+app.get(`/secret/${ADMIN_SECRET}/api/sync/appeals`, adminAuth, async (req, res) => {
+  try {
+    const appeals = typeof appealRepo.findAll === 'function'
+      ? await Promise.resolve(appealRepo.findAll())
+      : [];
+    return res.json(appeals || []);
+  } catch (err) {
+    console.error('[sync] Falha ao listar appeals', err);
+    return res.status(500).json({ error: 'Falha ao listar recursos' });
+  }
+});
+
+// GET /api/sync/events — todos os eventos (incluindo fechados)
+app.get(`/secret/${ADMIN_SECRET}/api/sync/events`, adminAuth, async (req, res) => {
+  try {
+    const events = await Promise.resolve(eventRepo.findAll());
+    return res.json(events || []);
+  } catch (err) {
+    console.error('[sync] Falha ao listar events', err);
+    return res.status(500).json({ error: 'Falha ao listar eventos' });
+  }
+});
+
+// GET /api/sync/evaluators — credenciais dos avaliadores
+app.get(`/secret/${ADMIN_SECRET}/api/sync/evaluators`, adminAuth, async (req, res) => {
+  try {
+    const evaluators = evaluatorRepo.getAll ? evaluatorRepo.getAll() : [];
+    return res.json(evaluators || []);
+  } catch (err) {
+    console.error('[sync] Falha ao listar evaluators', err);
+    return res.status(500).json({ error: 'Falha ao listar avaliadores' });
+  }
+});
+
+// GET /api/sync/config — configurações do sistema
+app.get(`/secret/${ADMIN_SECRET}/api/sync/config`, adminAuth, (req, res) => {
+  try {
+    const rw = storage.getRegistrationWindow();
+    const year = storage.getActiveEditalYear();
+    return res.json({ registrationWindow: rw, activeEditalYear: year });
+  } catch (err) {
+    console.error('[sync] Falha ao ler config', err);
+    return res.status(500).json({ error: 'Falha ao ler configurações' });
+  }
+});
+
+// GET /api/sync/phase-status — status de fase dos candidatos
+app.get(`/secret/${ADMIN_SECRET}/api/sync/phase-status`, adminAuth, async (req, res) => {
+  try {
+    const all = typeof phaseStatusRepo.getAll === 'function'
+      ? await Promise.resolve(phaseStatusRepo.getAll())
+      : [];
+    return res.json(all || []);
+  } catch (err) {
+    console.error('[sync] Falha ao listar phase-status', err);
+    return res.status(500).json({ error: 'Falha ao listar status de fases' });
+  }
+});
+
+// GET /api/sync/full — dump completo para sincronização inicial
+app.get(`/secret/${ADMIN_SECRET}/api/sync/full`, adminAuth, async (req, res) => {
+  try {
+    const [subs, evals, appeals, events, calendar, faq, files, phaseStatus] = await Promise.all([
+      Promise.resolve(submissionRepo.findAll()),
+      Promise.resolve(evaluationRepo.getAll()),
+      typeof appealRepo.findAll === 'function' ? Promise.resolve(appealRepo.findAll()) : Promise.resolve([]),
+      Promise.resolve(eventRepo.findAll()),
+      Promise.resolve(calendarRepo.getOrCreateYear(storage.getActiveEditalYear(), { seedRegistrationWindow: storage.getRegistrationWindow() })),
+      Promise.resolve(faqRepo.get()),
+      Promise.resolve(publicFileRepo.getAll()),
+      typeof phaseStatusRepo.getAll === 'function' ? Promise.resolve(phaseStatusRepo.getAll()) : Promise.resolve([]),
+    ]);
+
+    const evaluators = evaluatorRepo.getAll ? evaluatorRepo.getAll() : [];
+    const rw = storage.getRegistrationWindow();
+    const year = storage.getActiveEditalYear();
+
+    return res.json({
+      timestamp: new Date().toISOString(),
+      activeEditalYear: year,
+      registrationWindow: rw,
+      submissions: subs || [],
+      evaluations: evals || [],
+      appeals: appeals || [],
+      events: events || [],
+      calendar: calendar || {},
+      faq: faq || [],
+      publicFiles: files || [],
+      evaluators: evaluators || [],
+      phaseStatus: phaseStatus || [],
+    });
+  } catch (err) {
+    console.error('[sync] Falha no dump completo', err);
+    return res.status(500).json({ error: 'Falha na sincronização completa' });
+  }
+});
+
+// ============================================================
+// Fim da API de Sincronização
+// ============================================================
+
 app.post(`/secret/${ADMIN_SECRET}/admin/public-files`, checkAdminIP, adminAuth, uploadPublic.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).send('Nenhum arquivo enviado');
@@ -2901,8 +3029,7 @@ app.get('/eventos/:id', async (req, res) => {
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>${escapeHtml(event.title)}</title>
-      <link rel="stylesheet" href="/style.css" />
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
     </head>
     <body>
       <div class="container">
@@ -2995,7 +3122,7 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
       return res.send(`
         <!doctype html>
         <html>
-        <head><link rel="stylesheet" href="/theme.css" /></head>
+        <head><link rel="stylesheet" href="/system-modern.css" /></head>
         <body>
           <div class="container" style="text-align:center; margin-top:50px;">
             ${renderPublicNav({
@@ -3031,7 +3158,7 @@ app.post('/eventos/:id/inscrever', async (req, res) => {
   res.send(`
     <!doctype html>
     <html>
-    <head><link rel="stylesheet" href="/theme.css" /></head>
+    <head><link rel="stylesheet" href="/system-modern.css" /></head>
     <body>
       <div class="container" style="text-align:center; margin-top:50px;">
         ${renderPublicNav({
@@ -3069,7 +3196,7 @@ app.post('/eventos/:id/certificado', apiLimiter, async (req, res) => {
       return res.status(404).send(`
         <!doctype html>
         <html>
-        <head><link rel="stylesheet" href="/theme.css" /></head>
+        <head><link rel="stylesheet" href="/system-modern.css" /></head>
         <body>
           <div class="container" style="text-align:center; margin-top:50px;">
             ${renderPublicNav({
@@ -3108,7 +3235,7 @@ app.post('/eventos/:id/certificado', apiLimiter, async (req, res) => {
        return res.status(403).send(`
         <!doctype html>
         <html>
-        <head><link rel="stylesheet" href="/theme.css" /></head>
+        <head><link rel="stylesheet" href="/system-modern.css" /></head>
         <body>
           <div class="container" style="text-align:center; margin-top:50px;">
             ${renderPublicNav({
@@ -3136,7 +3263,7 @@ app.post('/eventos/:id/certificado', apiLimiter, async (req, res) => {
        return res.status(403).send(`
         <!doctype html>
         <html>
-        <head><link rel="stylesheet" href="/theme.css" /></head>
+        <head><link rel="stylesheet" href="/system-modern.css" /></head>
         <body>
           <div class="container" style="text-align:center; margin-top:50px;">
             ${renderPublicNav({
@@ -3200,204 +3327,60 @@ app.get('/consulta', (req, res) => {
       <link rel="icon" type="image/png" href="/img/logo_avalia_quadrado.png">
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="/system-modern.css" />
       <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #001f3f 0%, #003d73 50%, #0059a6 100%);
-          background-attachment: fixed;
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
-        }
-        body::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-image: url('/img/back_index.jpg');
-          background-size: cover;
-          background-position: center;
-          opacity: 0.3;
-          z-index: 0;
-        }
-        .auth-container {
-          position: relative;
-          z-index: 1;
-          width: 100%;
-          max-width: 460px;
-          background: rgba(255, 255, 255, 0.98);
-          border-radius: 16px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-          padding: 40px 32px;
-        }
-        .auth-header {
-          text-align: center;
-          margin-bottom: 10px;
-        }
-        .auth-header img {
-          max-height: 64px;
-          width: auto;
-          margin: 0 8px;
-        }
-        .auth-title {
-          color: #003366;
-          font-size: 22px;
-          font-weight: 600;
-          margin: 16px 0 8px;
-          text-align: center;
-        }
-        .auth-subtitle {
-          color: #666;
-          font-size: 14px;
-          text-align: center;
-          margin-bottom: 28px;
-          line-height: 1.5;
-        }
-        .form-group {
-          margin-bottom: 20px;
-        }
-        .form-group label {
-          display: block;
-          color: #333;
-          font-size: 14px;
-          font-weight: 500;
-          margin-bottom: 6px;
-        }
-        .form-group input {
-          width: 100%;
-          padding: 12px 16px;
-          font-size: 15px;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          background: #fff;
-          transition: all 0.2s;
-          outline: none;
-        }
-        .form-group input:focus {
-          border-color: #003366;
-          box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
-        }
-        .form-hint {
-          font-size: 12px;
-          color: #777;
-          margin-top: 4px;
-        }
-        .btn-submit {
-          width: 100%;
-          padding: 14px;
-          background: linear-gradient(135deg, #003366 0%, #004d99 100%);
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s;
-          margin-top: 8px;
-        }
-        .btn-submit:hover:not(:disabled) {
-          background: linear-gradient(135deg, #002244 0%, #003d73 100%);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 51, 102, 0.3);
-        }
-        .btn-submit:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-        .btn-secondary {
-          display: block;
-          width: 100%;
-          padding: 12px;
-          background: #fff;
-          color: #003366;
-          border: 2px solid #003366;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 600;
-          text-align: center;
-          text-decoration: none;
-          cursor: pointer;
-          transition: all 0.3s;
-          margin-top: 12px;
-        }
-        .btn-secondary:hover {
-          background: #f0f5fa;
-        }
-        .error-msg {
-          background: #fee;
-          border-left: 4px solid #c33;
-          color: #c33;
-          padding: 12px 16px;
-          border-radius: 6px;
-          font-size: 14px;
-          margin-bottom: 16px;
-        }
+        body { margin: 0; padding: 0; }
+        .form-hint { font-size: 12px; color: #64748b; margin-top: 4px; }
         .info-box {
-          background: #e3f2fd;
-          border-left: 4px solid #2196f3;
-          color: #1565c0;
-          padding: 12px 16px;
-          border-radius: 6px;
-          font-size: 13px;
-          margin-bottom: 20px;
-          line-height: 1.5;
-        }
-        @media (max-width: 480px) {
-          .auth-container { padding: 32px 24px; }
-          .auth-header img { max-height: 48px; }
+          background: #eff6ff; border-left: 4px solid #2563eb;
+          color: #1e40af; padding: 12px 16px; border-radius: 8px;
+          font-size: 13px; margin-bottom: 20px; line-height: 1.5;
         }
       </style>
     </head>
     <body>
-      <div class="auth-container">
-        ${renderPublicNav({
-          active: 'consulta',
-          toggleIdSuffix: 'consulta',
-          title: 'Menu',
-          ariaLabel: 'Menu',
-          buttonOffsetTop: 10,
-          items: [
-            { key: 'home', href: '/', label: 'Início' },
-            { key: 'consulta', href: '/consulta', label: 'Consultar inscrição' },
-          ],
-        })}
-        <div class="auth-header">
-          <a href="/" aria-label="Voltar para a página inicial" style="display:inline-block;">
-            <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+">
-          </a>
-          <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+">
-        </div>
-        <h1 class="auth-title">Consultar Inscrição</h1>
-        <p class="auth-subtitle">Acompanhe o status da sua candidatura no Processo Seletivo AVALIA+ - AVALIA+</p>
-
-        ${error ? `<div class="error-msg">${escapeHtml(error)}</div>` : ''}
-
-        <div class="info-box">
-          📋 Para consultar sua inscrição, informe o <strong>número do protocolo</strong> e seu <strong>CPF</strong> cadastrados no momento da inscrição.
-        </div>
-
-        <form method="POST" action="/consulta">
-          <div class="form-group">
-            <label for="protocol">Número do Protocolo</label>
-            <input id="protocol" type="text" name="protocol" placeholder="Ex.: AVALIA-2025-ABC123" required>
-            <div class="form-hint">Você recebeu este número ao finalizar a inscrição</div>
+      <div class="login-page">
+        <div class="login-box" style="max-width:460px;">
+          ${renderPublicNav({
+            active: 'consulta',
+            toggleIdSuffix: 'consulta',
+            title: 'Menu',
+            ariaLabel: 'Menu',
+            buttonOffsetTop: 10,
+            items: [
+              { key: 'home', href: '/', label: 'Início' },
+              { key: 'consulta', href: '/consulta', label: 'Consultar inscrição' },
+            ],
+          })}
+          <div class="login-logo">
+            <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+"
+                 onerror="this.style.display='none'">
           </div>
-          <div class="form-group">
-            <label for="cpf">CPF</label>
-            <input id="cpf" type="text" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
-            <div class="form-hint">Digite apenas números ou com pontuação</div>
-          </div>
-          <button class="btn-submit" type="submit">Consultar</button>
-        </form>
+          <h1 class="login-title">Consultar Inscrição</h1>
+          <p class="login-subtitle">Acompanhe o status da sua candidatura no Processo Seletivo</p>
 
-        <a href="/" class="btn-secondary">← Voltar para página inicial</a>
+          ${error ? `<div class="login-error" style="display:block;">${escapeHtml(error)}</div>` : ''}
+
+          <div class="info-box">
+            📋 Para consultar sua inscrição, informe o <strong>número do protocolo</strong> e seu <strong>CPF</strong> cadastrados no momento da inscrição.
+          </div>
+
+          <form method="POST" action="/consulta">
+            <div class="form-group">
+              <label for="protocol">Número do Protocolo</label>
+              <input id="protocol" type="text" name="protocol" placeholder="Ex.: AVALIA-2025-ABC123" required>
+              <div class="form-hint">Você recebeu este número ao finalizar a inscrição</div>
+            </div>
+            <div class="form-group">
+              <label for="cpf">CPF</label>
+              <input id="cpf" type="text" name="cpf" placeholder="000.000.000-00" maxlength="14" required>
+              <div class="form-hint">Digite apenas números ou com pontuação</div>
+            </div>
+            <button class="btn-primary btn-block btn-lg" type="submit" style="margin-top:8px;">Consultar</button>
+          </form>
+
+          <a href="/" class="btn-outline btn-block" style="margin-top:12px; text-decoration:none; text-align:center;">← Voltar para página inicial</a>
+        </div>
       </div>
       <script>
         // Máscara de CPF
@@ -3588,8 +3571,7 @@ app.get('/candidato/status', async (req, res) => {
         <link rel="icon" type="image/png" href="/img/logo_avalia_quadrado.png">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/style.css" />
-        <link rel="stylesheet" href="/theme.css" />
+        <link rel="stylesheet" href="/system-modern.css" />
         <style>
           .status-badge {
             display: inline-block;
@@ -4045,167 +4027,45 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
       // Token inválido, continua para login
     }
   }
-  // Servir página de login (gradiente azul estilo Sagres/UEFS, centralizado, campos arredondados)
+  // Servir página de login (design moderno - igual ao desktop)
   res.send(`
     <!DOCTYPE html>
     <html lang="pt-BR">
     <head>
-      <title>Acesso Restrito</title>
+      <title>Acesso Restrito - AVALIA+</title>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="/system-modern.css" />
       <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-          min-height: 100vh;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #001f3f 0%, #003d73 50%, #0059a6 100%);
-          background-attachment: fixed;
-          padding: 20px;
-          position: relative;
-          overflow: hidden;
-        }
-        body::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background-image: url('/img/back_index.jpg');
-          background-size: cover;
-          background-position: center;
-          opacity: 0.3;
-          z-index: 0;
-        }
-        .auth-container {
-          position: relative;
-          z-index: 1;
-          width: 100%;
-          max-width: 420px;
-          background: rgba(255, 255, 255, 0.98);
-          border-radius: 16px;
-          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-          padding: 40px 32px;
-        }
-        .auth-header {
-          text-align: center;
-          margin-bottom: 10px;
-        }
-        .auth-header img {
-          max-height: 64px;
-          width: auto;
-          margin: 0 8px;
-        }
-        .auth-title {
-          color: #003366;
-          font-size: 20px;
-          font-weight: 600;
-          margin: 16px 0 8px;
-          text-align: center;
-        }
-        .auth-subtitle {
-          color: #666;
-          font-size: 14px;
-          text-align: center;
-          margin-bottom: 28px;
-        }
-        .form-group {
-          margin-bottom: 20px;
-        }
-        .form-group label {
-          display: block;
-          color: #333;
-          font-size: 14px;
-          font-weight: 500;
-          margin-bottom: 6px;
-        }
-        .form-group input {
-          width: 100%;
-          padding: 12px 16px;
-          font-size: 15px;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          background: #fff;
-          transition: all 0.2s;
-          outline: none;
-        }
-        .form-group input:focus {
-          border-color: #003366;
-          box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
-        }
-        .btn-submit {
-          width: 100%;
-          padding: 14px;
-          background: linear-gradient(135deg, #003366 0%, #004d99 100%);
-          color: #fff;
-          border: none;
-          border-radius: 8px;
-          font-size: 16px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.3s;
-          margin-top: 8px;
-        }
-        .btn-submit:hover:not(:disabled) {
-          background: linear-gradient(135deg, #002244 0%, #003d73 100%);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(0, 51, 102, 0.3);
-        }
-        .btn-submit:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-        }
-        .error-msg {
-          background: #fee;
-          border-left: 4px solid #c33;
-          color: #c33;
-          padding: 12px 16px;
-          border-radius: 6px;
-          font-size: 14px;
-          margin-bottom: 16px;
-          display: none;
-        }
-        .error-msg.show { display: block; }
-
-        .auth-footer {
-          margin-top: 18px;
-          text-align: center;
-          font-size: 12px;
-          color: #666;
-        }
-        @media (max-width: 480px) {
-          .auth-container { padding: 32px 24px; }
-          .auth-header img { max-height: 48px; }
-        }
+        body { margin: 0; padding: 0; }
       </style>
     </head>
     <body>
-      <div class="auth-container">
-        <div class="auth-header">
-          <img src="/img/logo_avalia_horizontal.png" alt="Logo AVALIA+">
-          <img src="/img/logo_avalia_quadrado.png" alt="Logo AVALIA+">
+      <div class="login-page">
+        <div class="login-box">
+          <div class="login-logo">
+            <img src="/img/logo_avalia_quadrado.png" alt="AVALIA+"
+                 onerror="this.style.display='none'">
+          </div>
+          <h1 class="login-title">AVALIA+</h1>
+          <p class="login-subtitle">Administração do Processo Seletivo</p>
+
+          <div id="error-msg" class="login-error" style="display:none;"></div>
+
+          <form id="login-form">
+            <div class="form-group">
+              <label for="username">Usuário</label>
+              <input id="username" type="text" name="username" required autocomplete="username" placeholder="seu.usuario">
+            </div>
+            <div class="form-group">
+              <label for="password">Senha</label>
+              <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••">
+            </div>
+            <button class="btn-primary btn-block btn-lg" type="submit" id="btn-submit" style="margin-top:8px;">Entrar</button>
+          </form>
+
+          <div class="login-footer">&copy; ${new Date().getFullYear()} Avalia Mais. Todos os direitos reservados.</div>
         </div>
-        <h1 class="auth-title">Acesso Restrito</h1>
-        <p class="auth-subtitle">Administração do Processo Seletivo - AVALIA+</p>
-
-        <div id="error-msg" class="error-msg"></div>
-
-        <form id="login-form">
-          <div class="form-group">
-            <label for="username">Usuário</label>
-            <input id="username" type="text" name="username" required autocomplete="username">
-          </div>
-          <div class="form-group">
-            <label for="password">Senha</label>
-            <input id="password" type="password" name="password" required autocomplete="current-password">
-          </div>
-          <button class="btn-submit" type="submit" id="btn-submit">Entrar</button>
-        </form>
-
-        <div class="auth-footer">&copy; ${new Date().getFullYear()} Avalia Mais. Todos os direitos reservados.</div>
       </div>
       <script>
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -4216,7 +4076,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           
           btn.disabled = true;
           btn.textContent = 'Entrando...';
-          errDiv.classList.remove('show');
+          errDiv.style.display = 'none';
           
           const formData = new FormData(e.target);
           const data = {};
@@ -4233,7 +4093,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
             if (!contentType || !contentType.includes("application/json")) {
               const text = await res.text();
               console.error("Resposta não-JSON recebida:", text);
-              throw new Error("Erro de comunicação com o servidor (CORS ou erro interno).");
+              throw new Error("Erro de comunicação com o servidor.");
             }
             
             const result = await res.json();
@@ -4247,7 +4107,7 @@ app.get(`/secret/${ADMIN_SECRET}/`, (req, res) => {
           } catch (err) {
             console.error(err);
             errDiv.textContent = err.message || 'Erro de conexão. Tente novamente.';
-            errDiv.classList.add('show');
+            errDiv.style.display = 'block';
             btn.disabled = false;
             btn.textContent = 'Entrar';
           }
@@ -4404,8 +4264,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/faq`, checkAdminIP, adminAuth, (req, res)
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Admin - FAQ / Ajuda</title>
-      <link rel="stylesheet" href="/style.css" />
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
       <style>
         .hint { color: #003366; font-size: 11px; }
         .faq-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -4756,7 +4615,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/events/:id/registrations`, checkAdminIP, 
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Inscritos - ${escapeHtml(event.title)}</title>
-        <link rel="stylesheet" href="/theme.css" />
+        <link rel="stylesheet" href="/system-modern.css" />
       </head>
       <body>
         <div class="container">
@@ -4930,7 +4789,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee`, checkAdminIP, adminAuth, async (req
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Comissão - Avaliações</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
     </head>
     <body>
       <div class="container">
@@ -5063,7 +4922,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/results`, checkAdminIP, adminAuth, as
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Comissão - Resultados</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
     </head>
     <body>
       <div class="container">
@@ -5329,7 +5188,7 @@ app.get(`/secret/${ADMIN_SECRET}/committee/evaluate/:protocol`, checkAdminIP, ad
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Avaliação - ${escapeHtml(protocol)}</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
       <style>
         .muted { color: #003366; }
         .sectionTitle { margin: 10px 0 6px; }
@@ -5970,7 +5829,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, adminA
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Teste de Certificado</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
     </head>
     <body>
       <div class="container">
@@ -6202,7 +6061,7 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Admin - ${escapeHtml(protocol)}</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
       <style>
         .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
         .muted { color: #003366; }
@@ -6465,7 +6324,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator-links`, checkAdminIP, adminAuth, (req
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Credenciais dos Avaliadores</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
       <style>
         .link-box { background: white; padding: 15px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
         .link-url { font-family: monospace; background: #f5f5f5; padding: 8px; border: 1px solid #ccc; display: block; margin-top: 5px; word-break: break-all; width: 100%; box-sizing: border-box; }
@@ -6685,7 +6544,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num`, evaluatorAuth, async (re
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Avaliador ${num} - Linha ${line}</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
       <script src="/nav-back.js" defer></script>
       <script src="/public-nav.js" defer></script>
     </head>
@@ -6841,7 +6700,7 @@ app.get(`/secret/${ADMIN_SECRET}/evaluator/:line/:num/project/:protocol`, evalua
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>Projeto e Avaliação - ${escapeHtml(protocol)}</title>
-      <link rel="stylesheet" href="/theme.css" />
+      <link rel="stylesheet" href="/system-modern.css" />
       <script src="/nav-back.js" defer></script>
       <script src="/public-nav.js" defer></script>
       <style>
