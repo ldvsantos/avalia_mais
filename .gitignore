@@ -75,3 +75,4 @@ out/
 # ===== Deploy local (Windows) =====
 scripts/deploy-config.ps1
 *.tgz
+downloads/

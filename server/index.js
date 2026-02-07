@@ -5935,6 +5935,33 @@ app.post(`/secret/${ADMIN_SECRET}/admin/certificados/teste`, checkAdminIP, admin
   }
 });
 
+// Download do comprovante (PDF) da inscrição — Admin
+app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol/pdf`, checkAdminIP, adminAuth, async (req, res) => {
+  try {
+    const protocol = req.params.protocol;
+    const submission = await Promise.resolve(submissionRepo.findByProtocol(protocol));
+    if (!submission) return res.status(404).send('Inscrição não encontrada.');
+
+    const auditInfo = {
+      ip: getClientIP(req),
+      user: { username: req.session?.adminUser || 'admin' },
+      userAgent: req.get('User-Agent') || 'unknown',
+      createdAt: submission.createdAt ? new Date(submission.createdAt) : new Date(),
+      hash: submission.hash,
+    };
+
+    const pdfBuffer = await pdfService.generateSubmissionPdf(submission, auditInfo);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="inscricao-${protocol}.pdf"`);
+    res.setHeader('Cache-Control', 'no-store');
+    return res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Erro ao gerar comprovante (admin):', err);
+    return res.status(500).send('Erro ao gerar comprovante.');
+  }
+});
+
 app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, adminAuth, async (req, res) => {
   const protocol = req.params.protocol;
   const record = await Promise.resolve(submissionRepo.findByProtocol(protocol));
@@ -6101,9 +6128,12 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
 
         <div class="admin-actions" style="justify-content: center; margin-bottom: 10px; gap: 8px;">
           <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/selection">← Voltar para Lista</a>
-          <button class="btn-secondary" type="button" id="print-btn">Imprimir / Salvar em PDF</button>
+          <a class="btn-secondary" href="/secret/${ADMIN_SECRET}/admin/submission/${encodeURIComponent(protocol)}/pdf" target="_blank" rel="noopener">Baixar PDF</a>
           <span class="admin-badge">Protocolo: <span class="mono" id="protocol">${escapeHtml(protocol)}</span></span>
-          <span class="admin-badge">Status integridade: ${hashValid ? 'Íntegra (hash confere)' : 'Atenção: hash não confere'}</span>
+          <span class="admin-badge mono" style="font-size:11px;" title="Hash de verificação">Hash: ${escapeHtml((record.hash || '').substring(0, 16))}…
+            <button class="btn-secondary" type="button" data-copy="#hash-full" style="padding:1px 6px; font-size:10px; margin-left:4px;">Copiar</button>
+            <span id="hash-full" style="display:none;">${escapeHtml(record.hash)}</span>
+          </span>
         </div>
 
         <section class="panel">
@@ -6115,7 +6145,6 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
               <div><strong>Nome:</strong> ${safeValue(record.identified?.nome)}</div>
               <div><strong>Email:</strong> ${safeValue(record.identified?.email)}</div>
               <div><strong>Versão do formulário:</strong> ${safeValue(record.formVersion)}</div>
-              <div><strong>Verificação (JSON):</strong> <a href="${verifyUrl}">${verifyUrl}</a></div>
               <div style="grid-column: 1 / -1; margin-top: 8px; padding: 8px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px;">
                 <strong>Situação Atual:</strong> ${situationDisplay}
               </div>
@@ -6142,16 +6171,6 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
                 </div>
               </div>
             </form>
-
-            <div class="sectionTitle"><strong>Código de verificação (hash)</strong></div>
-            <div class="admin-box">
-              <div class="mono" style="word-break: break-word;" id="hash">${escapeHtml(record.hash)}</div>
-              <div class="muted" style="margin-top: 6px;">Use este código para conferir se o registro/PDF não foi alterado.</div>
-              <div class="admin-actions" style="justify-content:center; margin-top: 8px;">
-                <button class="btn-secondary" type="button" data-copy="#protocol">Copiar protocolo</button>
-                <button class="btn-secondary" type="button" data-copy="#hash">Copiar hash</button>
-              </div>
-            </div>
           </div>
         </section>
 
@@ -6291,13 +6310,6 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
           btn.textContent = ok ? 'Copiado' : 'Falhou';
           setTimeout(() => { btn.textContent = old; }, 900);
         });
-
-        const printBtn = document.getElementById('print-btn');
-        if (printBtn) {
-          printBtn.addEventListener('click', () => {
-            window.print();
-          });
-        }
       </script>
     </body>
     </html>
