@@ -200,6 +200,17 @@ body {
     transform: translateY(-2px);
 }
 
+.btn-nav-download {
+    background: #1565C0;
+    color: white !important;
+    gap: 6px;
+}
+
+.btn-nav-download:hover {
+    background: #0D47A1;
+    transform: translateY(-2px);
+}
+
 /* Hero Section */
 .hero-section {
     position: relative;
