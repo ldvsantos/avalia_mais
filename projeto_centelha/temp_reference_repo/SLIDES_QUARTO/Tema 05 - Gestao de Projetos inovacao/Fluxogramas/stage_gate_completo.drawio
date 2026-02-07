@@ -1,0 +1,248 @@
+<mxfile host="65bd71144e">
+    <diagram id="stage_gate_complete" name="Stage-Gate Completo">
+        <mxGraphModel dx="1500" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                
+                <!-- INÍCIO - IDEIA -->
+                <mxCell id="inicio" value="💡 IDEIA" style="ellipse;whiteSpace=wrap;html=1;fillColor=#003366;strokeColor=#001a33;strokeWidth=2;color:#fff;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="20" y="50" width="80" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- GATE 0: TRIAGEM -->
+                <mxCell id="gate0" value="🚪 GATE 0&#xa;TRIAGEM" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC6600;strokeWidth=2;color:#fff;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="130" y="40" width="80" height="80" as="geometry"/>
+                </mxCell>
+                
+                <!-- STAGE 1: ESCOPO -->
+                <mxCell id="stage1" value="📋 STAGE 1&#xa;ESCOPO&#xa;(TRL 1-2)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0066CC;strokeColor=#003366;strokeWidth=2;color:#fff;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="240" y="50" width="100" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- Detalhes Stage 1 -->
+                <mxCell id="stage1_det" value="• Busca preliminar anterioridade&#xa;• Disclosure de invenção&#xa;• Segredo ou publicação?" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f4fd;strokeColor=#0066CC;fontSize=9;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="240" y="130" width="180" height="50" as="geometry"/>
+                </mxCell>
+                
+                <!-- GATE 1: ANÁLISE PI -->
+                <mxCell id="gate1" value="🚪 GATE 1&#xa;ANÁLISE PI" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC6600;strokeWidth=2;color=#fff;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="370" y="40" width="80" height="80" as="geometry"/>
+                </mxCell>
+                
+                <!-- STAGE 2: BUSINESS CASE -->
+                <mxCell id="stage2" value="💼 STAGE 2&#xa;BUSINESS CASE&#xa;(TRL 3-4)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0066CC;strokeColor=#003366;strokeWidth=2;color:#fff;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="50" width="100" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- Detalhes Stage 2 -->
+                <mxCell id="stage2_det" value="• Busca completa anterioridade&#xa;• Análise FTO&#xa;• Estratégia territorial&#xa;• Orçamento PI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f4fd;strokeColor=#0066CC;fontSize=9;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="130" width="180" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- GATE 2: VIABILIDADE -->
+                <mxCell id="gate2" value="🚪 GATE 2&#xa;VIABILIDADE" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC6600;strokeWidth=2;color=#fff;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="610" y="40" width="80" height="80" as="geometry"/>
+                </mxCell>
+                
+                <!-- STAGE 3: DESENVOLVIMENTO -->
+                <mxCell id="stage3" value="🔧 STAGE 3&#xa;DESENVOLVIMENTO&#xa;(TRL 5-6)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00A859;strokeColor=#004D2E;strokeWidth=2;color:#fff;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="720" y="50" width="110" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- Detalhes Stage 3 -->
+                <mxCell id="stage3_det" value="• Depósito patente provisório&#xa;• Validação técnica&#xa;• Patente definitiva + PCT?&#xa;• Prototipagem" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5f1;strokeColor=#00A859;fontSize=9;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="720" y="130" width="180" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- GATE 3: TESTE -->
+                <mxCell id="gate3" value="🚪 GATE 3&#xa;TESTE" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC6600;strokeWidth=2;color:#fff;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="860" y="40" width="80" height="80" as="geometry"/>
+                </mxCell>
+                
+                <!-- STAGE 4: VALIDAÇÃO -->
+                <mxCell id="stage4" value="✅ STAGE 4&#xa;VALIDAÇÃO&#xa;(TRL 7-8)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#00A859;strokeColor=#004D2E;strokeWidth=2;color:#fff;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="970" y="50" width="100" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- Detalhes Stage 4 -->
+                <mxCell id="stage4_det" value="• Proteção complementar&#xa;• Design industrial + marca&#xa;• Valoração de ativos&#xa;• Testes de mercado" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5f1;strokeColor=#00A859;fontSize=9;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="970" y="130" width="180" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- GATE 4: LANÇAMENTO -->
+                <mxCell id="gate4" value="🚪 GATE 4&#xa;LANÇAMENTO" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC6600;strokeWidth=2;color:#fff;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="1100" y="40" width="80" height="80" as="geometry"/>
+                </mxCell>
+                
+                <!-- STAGE 5: COMERCIALIZAÇÃO -->
+                <mxCell id="stage5" value="🚀 STAGE 5&#xa;COMERCIALIZAÇÃO&#xa;(TRL 9)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0066CC;strokeColor=#003366;strokeWidth=2;color=#fff;fontStyle=1;fontSize=10;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="1210" y="50" width="120" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- Detalhes Stage 5 -->
+                <mxCell id="stage5_det" value="• Licenciamento&#xa;• Spin-off&#xa;• Exploração direta&#xa;• Royalties e receitas" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f4fd;strokeColor=#0066CC;fontSize=9;align=left;" vertex="1" parent="1">
+                    <mxGeometry x="1210" y="130" width="180" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- DECISÕES KILL/HOLD -->
+                <mxCell id="kill" value="❌ KILL" style="ellipse;whiteSpace=wrap;html=1;fillColor=#CC0000;strokeColor=#990000;strokeWidth=2;color:#fff;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="300" width="60" height="40" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="hold" value="⏸️ HOLD" style="ellipse;whiteSpace=wrap;html=1;fillColor=#CCCC00;strokeColor=#999900;strokeWidth=2;color:#000;fontStyle=1;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="400" y="300" width="60" height="40" as="geometry"/>
+                </mxCell>
+                
+                <!-- SUCESSO -->
+                <mxCell id="sucesso" value="🎯 SUCESSO&#xa;COMERCIAL" style="ellipse;whiteSpace=wrap;html=1;fillColor=#006633;strokeColor=#004422;strokeWidth=2;color:#fff;fontStyle=1;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="1240" y="250" width="100" height="60" as="geometry"/>
+                </mxCell>
+                
+                <!-- ESCALA TRL LATERAL -->
+                <mxCell id="trl_title" value="TECHNOLOGY READINESS LEVEL (TRL)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f0f0;strokeColor=#808080;fontStyle=1;fontSize=12;rotation=0;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="400" width="300" height="30" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="trl1" value="TRL 1-2&#xa;Princípios básicos" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffebee;strokeColor=#c62828;fontSize=9;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="450" width="80" height="40" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="trl3" value="TRL 3-4&#xa;Prova conceito" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#e65100;fontSize=9;" vertex="1" parent="1">
+                    <mxGeometry x="140" y="450" width="80" height="40" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="trl5" value="TRL 5-6&#xa;Validação" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3e5f5;strokeColor=#7b1fa2;fontSize=9;" vertex="1" parent="1">
+                    <mxGeometry x="230" y="450" width="80" height="40" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="trl7" value="TRL 7-8&#xa;Demonstração" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e8;strokeColor=#388e3c;fontSize=9;" vertex="1" parent="1">
+                    <mxGeometry x="320" y="450" width="80" height="40" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="trl9" value="TRL 9&#xa;Operacional" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#1976d2;fontSize=9;" vertex="1" parent="1">
+                    <mxGeometry x="410" y="450" width="80" height="40" as="geometry"/>
+                </mxCell>
+                
+                <!-- CONECTORES PRINCIPAIS -->
+                <mxCell id="conn1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="inicio" target="gate0">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="gate0" target="stage1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="stage1" target="gate1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="gate1" target="stage2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="stage2" target="gate2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="gate2" target="stage3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="stage3" target="gate3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="gate3" target="stage4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="stage4" target="gate4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="gate4" target="stage5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeWidth=2;" edge="1" parent="1" source="stage5" target="sucesso">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <!-- CONECTORES KILL/HOLD -->
+                <mxCell id="conn_kill1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#CC0000;strokeWidth=2;dashed=1;" edge="1" parent="1" source="gate1" target="kill">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn_hold" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#CCCC00;strokeWidth=2;dashed=1;" edge="1" parent="1" source="gate2" target="hold">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <!-- CONECTORES DETALHES -->
+                <mxCell id="conn_det1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0066CC;dashed=1;" edge="1" parent="1" source="stage1" target="stage1_det">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn_det2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0066CC;dashed=1;" edge="1" parent="1" source="stage2" target="stage2_det">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn_det3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00A859;dashed=1;" edge="1" parent="1" source="stage3" target="stage3_det">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn_det4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#00A859;dashed=1;" edge="1" parent="1" source="stage4" target="stage4_det">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="conn_det5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0066CC;dashed=1;" edge="1" parent="1" source="stage5" target="stage5_det">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                
+                <!-- LABELS E ANOTAÇÕES -->
+                <mxCell id="label_go" value="GO" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;color=#00A859;" vertex="1" parent="1">
+                    <mxGeometry x="170" y="20" width="30" height="20" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="label_kill" value="KILL" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;color=#CC0000;" vertex="1" parent="1">
+                    <mxGeometry x="370" y="200" width="30" height="20" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="label_hold" value="HOLD" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=10;fontStyle=1;color=#CCCC00;" vertex="1" parent="1">
+                    <mxGeometry x="610" y="200" width="30" height="20" as="geometry"/>
+                </mxCell>
+                
+                <!-- TÍTULO -->
+                <mxCell id="titulo" value="MODELO STAGE-GATE COMPLETO COM INTEGRAÇÃO DE PI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#003366;strokeColor=#001a33;color=#fff;fontStyle=1;fontSize=16;align=center;" vertex="1" parent="1">
+                    <mxGeometry x="400" y="10" width="600" height="25" as="geometry"/>
+                </mxCell>
+                
+                <!-- LEGENDA -->
+                <mxCell id="legenda_title" value="LEGENDA:" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="520" width="80" height="20" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="leg_stage" value="🔷 STAGES (Estágios)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0066CC;strokeColor=#003366;color=#fff;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="550" width="120" height="25" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="leg_gate" value="🚪 GATES (Decisões)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#FF8C00;strokeColor=#CC6600;color=#fff;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="190" y="545" width="80" height="35" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="leg_kill" value="❌ KILL" style="ellipse;whiteSpace=wrap;html=1;fillColor=#CC0000;strokeColor=#990000;color=#fff;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="290" y="550" width="60" height="25" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="leg_hold" value="⏸️ HOLD" style="ellipse;whiteSpace=wrap;html=1;fillColor=#CCCC00;strokeColor=#999900;color:#000;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="370" y="550" width="60" height="25" as="geometry"/>
+                </mxCell>
+                
+                <mxCell id="leg_success" value="🎯 SUCESSO" style="ellipse;whiteSpace=wrap;html=1;fillColor=#006633;strokeColor=#004422;color:#fff;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="450" y="550" width="80" height="25" as="geometry"/>
+                </mxCell>
+                
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

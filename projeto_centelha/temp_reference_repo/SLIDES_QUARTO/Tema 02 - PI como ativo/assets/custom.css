@@ -1,0 +1,328 @@
+/* Cores Oficiais UFS - Padrão Cromático Manual de Marca */
+:root {
+  --ufs-amarelo: #FDB913;      /* Pantone 1235 C - Cor Principal */
+  --ufs-vermelho: #ED1C24;     /* Pantone 1788 C - Cor Secundária */
+  --ufs-azul: #034EA2;         /* Pantone 2728 C - Cor Secundária */
+  --ufs-cinza-escuro: #58595B;
+  --ufs-cinza-claro: #D1D3D4;
+}
+
+.reveal .slides section.title-slide {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+#title-slide {
+  background-color: var(--ufs-azul) !important;
+  background-image: url('fundo.png') !important;
+  background-size: auto 100% !important;
+  background-position: left center !important;
+  background-repeat: no-repeat !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#title-slide::before {
+  content: "";
+  display: block;
+  width: 300px;
+  height: 100px;
+  background-image: url('logo-ufs.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  margin-bottom: 2em;
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+}
+
+#title-slide .title {
+  font-size: 1.3em !important;
+  color: white !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-weight: 700 !important;
+  margin-bottom: 0.3em !important;
+  line-height: 1.2 !important;
+  text-shadow: 2px 2px 6px rgba(241, 9, 9, 0.452);
+}
+
+#title-slide .subtitle {
+  font-size: 1.1em !important;
+  color: white !important;
+  margin-top: 0.3em !important;
+  margin-bottom: 1.5em !important;
+  font-weight: 500 !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+#title-slide .author,
+#title-slide .institute {
+  font-size: 1.1em !important;
+  color: white !important;
+  margin-top: -2em !important;
+  margin-bottom: 1.5em !important;
+  font-weight: 200 !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5) !important;
+}
+
+/* Garantir que todos os elementos da capa sejam brancos - todos os seletores possíveis */
+.reveal .slides section.title-slide .author,
+.reveal .slides section.title-slide .institute,
+.reveal .slides section.title-slide .date,
+.reveal .slides section.title-slide p,
+.reveal .slides section.title-slide h1.author,
+.reveal .slides section.title-slide h2.author,
+.reveal .slides section.title-slide h3.author,
+.reveal section.title-slide .author,
+.reveal section.title-slide .institute,
+.reveal section.title-slide .date,
+section.title-slide .author,
+section.title-slide .institute,
+section.title-slide .date,
+#title-slide p.author,
+#title-slide p.institute,
+#title-slide p.date,
+#title-slide h1.author,
+#title-slide h2.author,
+#title-slide h3.author,
+#title-slide h1.institute,
+#title-slide h2.institute,
+#title-slide h3.institute,
+.title-slide .author,
+.title-slide .institute,
+.title-slide .date,
+.reveal .slides .title-slide .author,
+.reveal .slides .title-slide .institute,
+.reveal .slides .title-slide .date {
+  color: white !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 0.8em !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5) !important;
+}
+
+.box {
+  margin-top: 10px;
+  margin-right: 10px;
+  border: 3px solid var(--ufs-azul);
+  padding: 15px;
+  font-size: 0.9em;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.info-box {
+  margin-top: 10px;
+  margin-right: 10px;
+  border-left: 8px solid var(--ufs-azul);
+  padding-left: 20px;
+  padding-right: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: rgba(3, 78, 162, 0.08);
+  border-radius: 5px;
+}
+
+.highlight-box {
+  background-color: rgba(253, 185, 19, 0.15);
+  border-left: 5px solid var(--ufs-amarelo);
+  padding: 10px 15px;
+  margin: 10px 0;
+  border-radius: 5px;
+}
+
+.circle {
+  border-radius: 50%;
+  width: 1.3em;
+  height: 1.3em;
+  line-height: 1.3em;
+  padding: 3px;
+  display: inline-block;
+  background: var(--ufs-amarelo);
+  color: var(--ufs-azul);
+  text-align: center;
+  font-weight: bold;
+  font-family: 'Ubuntu', sans-serif;
+  vertical-align: middle;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.section-header {
+  background: linear-gradient(90deg, var(--ufs-azul) 0%, var(--ufs-vermelho) 100%);
+  color: white;
+  font-size: 0.5em;
+  padding: 12px 24px;
+  font-family: 'Ubuntu', sans-serif;
+  font-weight: 700;
+  vertical-align: middle;
+  display: inline-block;
+  border-radius: 5px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.columns {
+  display: flex;
+  gap: 20px;
+}
+
+.column {
+  flex: 1;
+}
+
+.fragment.highlight-current-green.visible.current-fragment {
+  background-color: #c8e6c9;
+}
+
+.small-text {
+  font-size: 0.8em;
+}
+
+.smaller-text {
+  font-size: 0.7em;
+}
+
+.diagram-scroll {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border: 2px solid var(--ufs-verde);
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.diagram-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.diagram-scroll::-webkit-scrollbar-track {
+  background: var(--ufs-cinza-claro);
+  border-radius: 5px;
+}
+
+.diagram-scroll::-webkit-scrollbar-thumb {
+  background: var(--ufs-azul);
+  border-radius: 5px;
+  border: 2px solid var(--ufs-cinza-claro);
+}
+
+.diagram-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--ufs-vermelho);
+}
+
+/* Logo positioning and styling */
+.reveal .slide-logo {
+  display: none !important;
+}
+
+/* Footer styling with UFS branding */
+.reveal .footer {
+  background-color: var(--ufs-amarelo) !important;
+  color: var(--ufs-azul) !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-size: 0.5em !important;
+  font-weight: 500 !important;
+  padding: 3px 10px !important;
+  border-top: 2px solid var(--ufs-azul) !important;
+  box-shadow: 0 -1px 3px rgba(0,0,0,0.1) !important;
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 !important;
+  display: grid !important;
+  grid-template-columns: 70px 1fr 70px !important;
+  align-items: center !important;
+  gap: 10px !important;
+  z-index: 1000 !important;
+  height: auto !important;
+  min-height: 28px !important;
+}
+
+.reveal .footer::before {
+  content: "";
+  display: inline-block;
+  width: 70px;
+  height: 22px;
+  background-image: url('logo-ufs.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: left center;
+}
+
+/* Slide number styling - caixinha no rodapé */
+.reveal .slide-number {
+  position: fixed !important;
+  top: auto !important;
+  bottom: 5px !important;
+  right: 15px !important;
+  left: auto !important;
+  background-color: var(--ufs-azul) !important;
+  color: white !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-weight: 700 !important;
+  padding: 3px 8px !important;
+  font-size: 0.6em !important;
+  border-radius: 4px !important;
+  z-index: 2000 !important;
+}
+
+/* Remover estilos de title-slide dos slides de seção (section-header) */
+.reveal .slides section.title-slide.slide:not(#title-slide) {
+  margin: 0 !important;
+  padding: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  left: auto !important;
+  transform: none !important;
+}
+
+section.title-slide.slide.level1:has(.section-header) {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  padding: 40px 40px !important;
+  height: 100% !important;
+}
+
+section.title-slide.slide.level1:has(.section-header) h1 {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  flex-shrink: 0 !important;
+  margin-right: auto !important;
+}
+
+section.title-slide.slide.level1:has(.section-header) div {
+  margin-top: auto !important;
+  margin-bottom: 40px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Classe customizada para título reduzido - 30% menor que r-fit-text */
+.obrigado-fit-text {
+  font-size: clamp(1em, 4vw, 3.5em) !important;
+  line-height: 1.2 !important;
+  font-weight: bold !important;
+  display: block !important;
+  margin: 0.5em 0 !important;
+  text-align: center !important;
+}

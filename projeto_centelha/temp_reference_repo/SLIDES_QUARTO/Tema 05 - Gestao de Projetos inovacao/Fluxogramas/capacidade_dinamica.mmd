@@ -1,0 +1,41 @@
+flowchart LR
+    %% --- Estrutura principal do modelo de Capacidades Dinâmicas (Teece, 1997) ---
+
+    %% Bloco central
+    C([Capacidades Dinâmicas])
+
+    %% Elementos componentes à esquerda
+    A1[Comportamentos e habilidades de mudança e inovação] --> C
+    A2[Processos e rotinas de busca ou inovação] --> C
+    A3[Mecanismos de aprendizagem e governança do conhecimento] --> C
+
+    %% Indicadores à direita
+    C --> B1[Geração de ideias e introdução de rupturas no mercado]
+    C --> B2[Mudanças organizacionais]
+    C --> B3[Inovação e desenvolvimento de novos mercados]
+
+    %% Agrupamentos conceituais
+    subgraph E[Elementos Componentes]
+        direction TB
+        A1
+        A2
+        A3
+    end
+
+    subgraph I[Indicadores ou Índices de Capacidades Dinâmicas]
+        direction TB
+        B1
+        B2
+        B3
+    end
+
+    %% Estilos visuais - Cores UFS
+    classDef componente fill:#0099FF,stroke:#003366,stroke-width:2px,color:#fff,font-weight:bold
+    classDef central fill:#003366,stroke:#001a33,stroke-width:3px,color:#fff,font-weight:bold,font-size:16px
+    classDef indicador fill:#00A859,stroke:#004D2E,stroke-width:2px,color:#fff,font-weight:bold
+    classDef grupo fill:none,stroke:#FF8C00,stroke-width:2px,color:#FF8C00,font-weight:bold
+
+    class A1,A2,A3 componente
+    class B1,B2,B3 indicador
+    class C central
+    class E,I grupo

@@ -1,0 +1,37 @@
+graph TB
+    PME[PME Inovadora] --> V{Matriz<br/>VRIO}
+    
+    V --> V1[Valioso?<br/>Raro?<br/>Inimitável?<br/>Organizado?]
+    
+    V1 -->|Sim| E[Recurso<br/>Estratégico]
+    V1 -->|Não| NE[Não<br/>Estratégico]
+    
+    E --> R{Regime<br/>Apropriabilidade}
+    
+    R -->|Forte| RF[Patente<br/>Marca<br/>Design]
+    R -->|Fraco| RW[Segredo<br/>Velocidade<br/>Ativos Compl.]
+    
+    RF --> G[Gestão<br/>4 Fases]
+    RW --> G
+    
+    G --> G1[Diagnóstico]
+    G --> G2[Formulação]
+    G --> G3[Implementação]
+    G --> G4[Monitoramento]
+    
+    G --> Inst[Instrumentos<br/>Jurídicos]
+    
+    Inst --> I1[Contratos Trabalho]
+    Inst --> I2[NDA]
+    Inst --> I3[Cessões]
+    
+    G --> CV[Ciclo<br/>Vida PI]
+    
+    CV --> CV1[Análise<br/>Proteção<br/>Comercialização<br/>Manutenção]
+    
+    CV --> S[Captura<br/>de Valor]
+    
+    style PME fill:#003366,color:#fff
+    style E fill:#00A859,color:#fff
+    style G fill:#0066CC,color:#fff
+    style S fill:#FF8C00,color:#fff

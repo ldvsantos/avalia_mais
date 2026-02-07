@@ -1,0 +1,21 @@
+graph LR
+    I[Ideia] --> G0{Gate 0<br/>Triagem}
+    G0 -->|Go| S1[Stage 1<br/>Escopo]
+    G0 -->|Kill| K1[❌]
+    
+    S1 --> G1{Gate 1<br/>Análise PI}
+    G1 -->|Go| S2[Stage 2<br/>Business Case]
+    G1 -->|Kill| K2[❌]
+    
+    S2 --> G2{Gate 2<br/>Viabilidade}
+    G2 -->|Hold| H[⏸️]
+    
+    style I fill:#003366,color:#fff
+    style G0 fill:#FF8C00,color:#fff
+    style G1 fill:#FF8C00,color:#fff
+    style G2 fill:#FF8C00,color:#fff
+    style S1 fill:#0066CC,color:#fff
+    style S2 fill:#0066CC,color:#fff
+    style K1 fill:#CC0000,color:#fff
+    style K2 fill:#CC0000,color:#fff
+    style H fill:#CCCC00,color:#000

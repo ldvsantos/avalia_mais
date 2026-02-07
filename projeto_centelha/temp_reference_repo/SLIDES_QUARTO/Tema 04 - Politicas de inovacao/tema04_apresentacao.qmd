@@ -1,0 +1,1019 @@
+---
+title: "Concurso Edital 05/2025"
+subtitle: "Políticas de Inovação<br>Instrumentos e Sistemas Nacionais"
+author: "Luiz Diego Vidal Santos"
+institute: "Universidade Federal de Sergipe"
+format: 
+  revealjs:
+    logo: assets/logo-ufs.png
+    footer: "UFS - Universidade Federal de Sergipe | Tema 4 - Políticas de Inovação"
+    slide-number: true
+    theme: [simple, assets/ufs.scss]
+    controls: true
+    width: 1280
+    height: 720
+    css: assets/custom.css
+    transition: slide
+    background-transition: fade
+    preview-links: auto
+execute:
+  echo: false
+---
+
+## Visão Geral {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Tópicos Principais
+
+- [1]{.circle} Sistemas Nacionais de Inovação
+- [2]{.circle} Políticas Públicas de Inovação
+- [3]{.circle} Instrumentos de Apoio à Inovação
+- [4]{.circle} Marco Legal da Inovação
+- [5]{.circle} Avaliação de Políticas
+:::
+
+::: {.column width="50%"}
+::: {.info-box}
+**Objetivo Central**
+
+Analisar as políticas públicas de inovação e seus instrumentos de apoio ao desenvolvimento tecnológico.
+:::
+:::
+:::
+
+---
+
+## Fundamentos Teóricos: Inovação como Fenômeno Sistêmico {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Perspectiva Schumpeteriana
+
+::: {.fragment}
+- **Destruição Criativa** (Schumpeter, 1942)
+- Motor do desenvolvimento capitalista
+- Inovação como processo dinâmico
+:::
+
+### Abordagem Neo-Schumpeteriana
+
+::: {.fragment}
+- **Freeman (1987)**: Sistema japonês
+  - Redes de instituições públicas-privadas
+  - Aprendizado e capacitação coordenados
+:::
+
+::: {.fragment}
+- **Lundvall (1992)**: Aprendizado interativo
+  - *Learning-by-doing*
+  - *Learning-by-using*
+  - *Learning-by-interacting*
+:::
+:::
+
+::: {.column width="50%"}
+::: {.info-box .fragment}
+**Sistemas Nacionais de Inovação (SNI)**
+
+O sucesso tecnológico não deriva apenas de P&D, mas de uma rede de instituições que coordenam estratégias de aprendizado e capacitação.
+
+*Freeman (1987)*
+:::
+
+::: {.highlight-box .fragment}
+**Colaboração como Fonte**
+
+A colaboração entre empresas, fornecedores e clientes é a principal fonte de inovação em economias do conhecimento.
+
+*Lundvall (1992)*
+:::
+:::
+:::
+
+---
+
+## Evolução das Políticas: Três Perspectivas Complementares {.smaller-text}
+
+::: {.columns}
+::: {.column width="33%"}
+::: {.info-box}
+**Políticas Públicas**
+
+Lundvall & Johnson (1994)  
+Edquist (2001)
+
+**Três gerações** enfatizando mudança dos instrumentos de intervenção estatal
+:::
+:::
+
+::: {.column width="33%"}
+::: {.highlight-box}
+**Hélice Tríplice**
+
+Etzkowitz & Leydesdorff (2000)
+
+Reconfiguração das relações entre **universidade-indústria-governo**
+:::
+:::
+
+::: {.column width="33%"}
+::: {.warning-box}
+**Convergência**
+
+Óticas distintas que convergem na caracterização dos **mesmos fenômenos históricos**
+:::
+:::
+:::
+
+::: {.fragment}
+::: {.center-text}
+→ A articulação permite integrar: maturação dos instrumentos públicos + evolução dos processos empresariais + reconfiguração institucional
+:::
+:::
+
+---
+
+## 1ª Geração: Modelo Linear (1940-1970) {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Características Principais
+
+::: {.fragment}
+**Modelo Linear de *Science Push***
+
+- Foco em pesquisa básica
+- Financiamento público prioritário
+- Oferta de conhecimento
+- Pressuposto: ciência → tecnologia → inovação
+:::
+
+::: {.fragment}
+### O Paradoxo Europeu
+ 
+::: {.warning-box}
+**Comissão Europeia (1995)**
+
+Excelência científica **não garante** competitividade industrial
+
+→ Abordagem revelou-se insuficiente
+:::
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+### Hélice Tríplice: Configuração Estatista
+
+```{mermaid}
+%%| fig-width: 6
+graph TD
+    E[Estado<br/>Coordenador Central] --> U[Universidade]
+    E --> I[Indústria]
+    
+    style E fill:#e74c3c,stroke:#c0392b,color:#fff
+    style U fill:#95a5a6,stroke:#7f8c8d,color:#fff
+    style I fill:#95a5a6,stroke:#7f8c8d,color:#fff
+```
+
+- Estado como protagonista
+- Universidades e empresas sob orientação governamental
+- Separação entre esferas
+:::
+:::
+:::
+
+---
+
+## 2ª Geração: Transferência Tecnológica (1980-1990) {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Novos Instrumentos
+
+::: {.fragment}
+**Transferência de Tecnologia**
+
+- Legislações tipo **Bayh-Dole Act** (EUA, 1980)
+- Criação dos **NITs** (Núcleos de Inovação Tecnológica)
+- Fortalecimento da **propriedade intelectual**
+:::
+
+::: {.fragment}
+### Mudança de Paradigma
+
+::: {.info-box}
+Reconhecimento da necessidade de **conectar** ciência e mercado
+
+→ Mas ainda com separação institucional
+:::
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+### Hélice Tríplice: Configuração *Laissez-faire*
+
+```{mermaid}
+%%| fig-width: 6
+graph LR
+    U[Universidade] -.interações<br/>limitadas.-> I[Indústria]
+    I -.-> G[Governo]
+    G -.-> U
+    
+    style U fill:#3498db,stroke:#2980b9,color:#fff
+    style I fill:#e67e22,stroke:#d35400,color:#fff
+    style G fill:#2ecc71,stroke:#27ae60,color:#fff
+```
+
+- Esferas institucionais **separadas**
+- Interações limitadas
+- Corresponde à 2ª geração de políticas
+:::
+:::
+:::
+
+---
+
+## 3ª Geração: Visão Sistêmica (2000-presente) {.smaller-text .scrollable}
+
+::: {.columns}
+::: {.column width="50%"}
+### Abordagem Sistêmica
+
+::: {.fragment}
+**Enfoque em:**
+
+- Aprendizado contínuo
+- Colaboração multi-ator
+- Redes de conhecimento
+- Inovação aberta (Chesbrough, 2003)
+:::
+
+::: {.fragment}
+### *Learning Economy*
+
+::: {.highlight-box}
+**Lundvall & Johnson (1994)**
+
+Competitividade depende da capacidade de **aprender continuamente** e transformar conhecimento em valor econômico
+:::
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+### Hélice Tríplice: Configuração Balanceada
+
+```{mermaid}
+%%| fig-width: 6
+graph TD
+    U[Universidade<br/>Empreendedora] <-->|Colaboração<br/>Estratégica| I[Indústria<br/>P&D Longo Prazo]
+    I <-->|Redes de<br/>Conhecimento| G[Governo<br/>Facilitador]
+    G <-->|Financiamento<br/>Apoio| U
+    
+    style U fill:#3498db,stroke:#2980b9,color:#fff
+    style I fill:#e67e22,stroke:#d35400,color:#fff
+    style G fill:#2ecc71,stroke:#27ae60,color:#fff
+```
+
+- Autonomia institucional mantida
+- **Sobreposições organizacionais**
+- Exemplos: Silicon Valley, ecossistemas europeus
+:::
+:::
+:::
+
+---
+
+## Estado Empreendedor {.smaller-text .scrollable}
+
+::: {.columns}
+::: {.column width="60%"}
+### Mazzucato (2013): Novo Papel do Estado
+
+::: {.fragment}
+**Não apenas corretor de falhas de mercado**
+
+Estado como **agente ativo** que:
+
+1. Financia projetos de **alto risco**
+2. Coordena iniciativas de **elevado impacto social**
+3. Define **missões estratégicas**
+:::
+
+::: {.fragment}
+### Exemplos de Tecnologias
+
+::: {.success-box}
+**Investimentos públicos geraram:**
+
+- Internet (ARPANET - Departamento de Defesa, EUA)
+- GPS (Sistema militar → aplicação civil)
+- Telas sensíveis ao toque (pesquisa financiada publicamente)
+:::
+:::
+:::
+
+::: {.column width="40%"}
+::: {.fragment}
+### Políticas *Mission-Oriented*
+
+::: {.info-box}
+**Abordagem contemporânea:**
+
+- Enfrentar desafios sociais amplos
+- Transição energética
+- Saúde global
+- Articular ciência, indústria e mercado
+:::
+:::
+
+::: {.fragment}
+### Políticas pelo Lado da Demanda
+
+::: {.highlight-box}
+**IPEA (2017)**
+
+Mudança paradigmática: priorizar **criação de mercados** para produtos inovadores
+
+Instrumentos:
+- Compras públicas de inovação
+- Regulações baseadas em desempenho
+- Incentivos à adoção tecnológica
+:::
+:::
+:::
+:::
+
+---
+
+## Marco Regulatório Brasileiro: Evolução Legal (Parte 1) {.smaller-text}
+
+::: {.timeline}
+**2004 - Lei de Inovação (10.973/2004)**
+
+- Regulação da cooperação ICT-empresa
+- Criação dos NITs
+- Instrumentos de fomento, bolsas e compartilhamento de infraestrutura
+
+**2005 - Lei do Bem (11.196/2005)**
+
+- Incentivos fiscais automáticos para P&D
+- Dedução de despesas em IRPJ e CSLL (75% a 100%)
+- Principal instrumento de estímulo à PD&I empresarial
+
+**2016 - Novo Marco Legal de CT&I (13.243/2016)**
+
+- Flexibilização de parcerias público-privadas (compartilhamento de laboratórios e recursos humanos)
+- Regulamentação da remuneração de pesquisadores (flexibilizando regime de dedicação exclusiva)
+- Autorização de transferência de tecnologia e uso de bens públicos
+- Simplificação da importação de insumos para pesquisa e processos de compras públicas de inovação
+- Fortalecimento da autonomia das ICTs
+
+:::
+
+---
+
+## Marco Regulatório Brasileiro: Evolução Legal (Parte 2) {.smaller-text}
+
+::: {.timeline}
+**2018 - Decreto 9.283/2018**
+
+- Detalhamento de procedimentos
+- Gestão de ambientes de inovação
+
+**2021 - Nova Lei de Licitações (14.133/2021)**
+
+- Diálogo competitivo
+- Encomendas tecnológicas
+
+**2021 - Marco Legal das Startups (LC 182/2021)**
+
+- Instituição de ambiente regulatório experimental (*sandbox* regulatório): suspensão temporária de normas para testar modelos de negócio inovadores sob supervisão
+- Fortalecimento da segurança jurídica para investimento-anjo
+- Simplificação do ambiente para empresas emergentes
+
+:::
+
+---
+
+## Lei do Bem: Instrumento Estratégico {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Mecanismos Principais
+
+::: {.fragment}
+**1. Dedução Fiscal**
+
+- Abatimento em IRPJ e CSLL
+- 75% a 100% das despesas qualificadas em P&D
+- Incentivo automático (sem necessidade de aprovação prévia)
+:::
+
+::: {.fragment}
+**2. Créditos Fiscais**
+
+- Para empresas sem lucro tributável
+- Acesso mesmo em fases de desenvolvimento
+- Apoio a empresas com prejuízos temporários
+:::
+:::
+
+::: {.column width="50%"}
+::: {.fragment}
+### Despesas Elegíveis
+
+::: {.success-box}
+- Salários de pesquisadores
+- Aquisição/locação/manutenção de equipamentos
+- Materiais para projetos de P&D
+- Serviços de terceiros
+- Registro e manutenção de PI
+:::
+
+→ Alinhamento com **Manual de Oslo**
+:::
+
+::: {.fragment}
+### Desafios
+
+::: {.warning-box}
+- Utilização **abaixo do potencial**
+- Complexidade administrativa
+- Necessidade de capacitação empresarial
+- Baixa divulgação dos benefícios
+:::
+:::
+:::
+:::
+
+---
+
+## Desafios Estruturais do Sistema Brasileiro (Parte 1) {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Indicadores Preocupantes
+
+::: {.warning-box}
+**Investimento em P&D**
+
+Brasil: ~1,2% do PIB  
+Países desenvolvidos: 2,5% a 4% do PIB
+
+→ Gap de investimento significativo
+:::
+
+::: {.info-box}
+**Financiamento**
+
+- Predominantemente **público**
+- Participação empresarial reduzida
+- Necessidade de maior engajamento privado
+:::
+:::
+
+::: {.column width="50%"}
+### Capacidade Absortiva
+
+::: {.highlight-box}
+**Cohen & Levinthal (1990)**
+
+Habilidade de reconhecer, assimilar e aplicar conhecimento externo
+
+→ Construída por **investimentos internos em P&D**
+
+Sem P&D próprio, políticas de incentivo perdem impacto
+:::
+:::
+:::
+
+---
+
+## Desafios Estruturais do Sistema Brasileiro (Parte 2) {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.warning-box}
+**Conexões Frágeis**
+
+- Universidade ↔ Empresa
+- NITs com capacidades desiguais
+- Transferência de tecnologia limitada
+:::
+:::
+
+::: {.column width="50%"}
+### Consolidação do Sistema Requer:
+
+1. **Coordenação Estratégica**
+   - Articulação entre ministérios e agências
+   - Disseminação de informações sobre incentivos disponíveis
+:::
+:::
+
+---
+
+## Desafios Estruturais do Sistema Brasileiro (Parte 3) {.smaller-text}
+
+### Consolidação do Sistema Requer (continuação):
+
+2. **Estabilidade Orçamentária**
+   - Garantir financiamento de longo prazo
+   - Reduzir volatilidade de recursos para P&D
+
+3. **Estímulo à Inovação Privada**
+   - Múltiplos instrumentos: fiscal, creditício, subvencionado
+   - Incentivos à colaboração universidade-empresa
+
+4. **Simplificação Administrativa**
+   - Processos de certificação da Lei do Bem
+   - Redução de burocracia
+
+5. **Capacitação Empresarial**
+   - Reconhecimento de oportunidades inovadoras
+   - Estruturação de projetos de P&D
+
+---
+
+## Sistemas Nacionais de Inovação: Fundamentos Teóricos {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Premissa Central
+
+::: {.info-box}
+Inovação é um **fenômeno coletivo** e **institucionalmente condicionado**
+
+→ Não ocorre isoladamente nas empresas
+:::
+
+### Aprendizado Interativo
+
+**Freeman (1987) & Lundvall (1992)**
+
+- Trocas contínuas entre atores
+- Conhecimento tácito e codificado
+- Colaboração universidade-empresa-governo
+:::
+
+::: {.column width="50%"}
+### *Path-Dependence*
+
+**Nelson (1993)**
+
+Trajetórias nacionais são dependentes de:
+
+- História institucional
+- Estrutura industrial
+- Base de conhecimento acumulada
+
+::: {.highlight-box}
+**Implicação:**
+
+Cada país desenvolve seu SNI de forma única, influenciado por sua história e estrutura institucional
+:::
+:::
+:::
+
+---
+
+## Exemplos Históricos de SNI {.smaller-text .scrollable}
+
+::: {.columns}
+::: {.column width="33%"}
+::: {.success-box}
+**Japão**
+
+*Catching-up* tecnológico via MITI  
+Absorção e adaptação de tecnologias estrangeiras
+:::
+:::
+
+::: {.column width="33%"}
+::: {.success-box}
+**Coreia do Sul**
+
+*Chaebols* + universidades + agências governamentais  
+Capacidades inovativas coordenadas
+:::
+:::
+
+::: {.column width="33%"}
+::: {.success-box}
+**Estados Unidos**
+
+Universidades de pesquisa (MIT, Stanford)  
+Investimentos federais em defesa e saúde  
+Spin-offs comerciais
+:::
+:::
+:::
+
+---
+
+## Atores e Instituições do SNI {.smaller-text .scrollable}
+
+::: {.columns}
+::: {.column width="50%"}
+### Componentes Principais
+
+```{mermaid}
+%%| fig-width: 7
+graph TB
+    SNI[Sistema Nacional<br/>de Inovação]
+    
+    SNI --> E[Empresas]
+    SNI --> U[Universidades]
+    SNI --> G[Governo]
+    SNI --> IC[Infraestrutura<br/>Científica]
+    SNI --> IR[Instituições<br/>Regulatórias]
+    
+    E <-.interações.-> U
+    U <-.interações.-> G
+    G <-.interações.-> E
+    
+    style SNI fill:#e74c3c,stroke:#c0392b,color:#fff
+    style E fill:#3498db,stroke:#2980b9,color:#fff
+    style U fill:#2ecc71,stroke:#27ae60,color:#fff
+    style G fill:#f39c12,stroke:#e67e22,color:#fff
+    style IC fill:#9b59b6,stroke:#8e44ad,color:#fff
+    style IR fill:#1abc9c,stroke:#16a085,color:#fff
+```
+:::
+
+::: {.column width="50%"}
+### Instituições Brasileiras
+
+**Agências de Fomento:**
+
+- **FINEP** - Financiadora de Estudos e Projetos
+- **BNDES** - Banco Nacional de Desenvolvimento
+- **CNPq** - Conselho Nacional de Desenvolvimento Científico
+
+**NITs - Núcleos de Inovação Tecnológica:**
+
+- Intermediação universidade-empresa
+- Proteção de propriedade intelectual
+- Gestão de contratos de TT
+
+::: {.info-box}
+Essas instituições foram concebidas ou reforçadas pelo marco legal de inovação brasileiro, notadamente a Lei nº 10.973/2004, que criou os NITs.
+:::
+:::
+:::
+
+### Eficiência Depende de:
+
+::: {.highlight-box}
+✓ Intensidade das **interações**  
+✓ Qualidade **institucional**  
+✓ **Capacidade absortiva** das empresas
+:::
+
+---
+
+## Caso AGITTE - UFS (Parte 1) {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Agência de Inovação e Transferência de Tecnologia
+
+**Criação:** Lei de Inovação (10.973/2004)
+
+**Funções Estratégicas:**
+
+1. Proteção de propriedade intelectual
+2. Gestão de contratos de transferência de tecnologia
+3. Apoio à criação de empresas spin-offs
+4. Fomento de parcerias pesquisadores-setor produtivo sergipano
+:::
+
+::: {.column width="50%"}
+### Papel na Capacidade Absortiva
+
+::: {.info-box}
+**NITs como facilitadores:**
+
+Intermediam a transferência de tecnologia, construindo **capacidade absortiva regional**
+
+→ Conectam conhecimento acadêmico com demandas produtivas
+:::
+:::
+:::
+
+---
+
+## Caso AGITTE - UFS (Parte 2) {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Desafios Típicos dos NITs Brasileiros
+
+::: {.warning-box}
+- Necessidade de **capacitação de equipes**
+- Fortalecimento da **cultura empreendedora acadêmica**
+- Construção de pontes efetivas com **empresas locais de base tecnológica**
+- Recursos limitados
+- Processos burocráticos
+:::
+:::
+
+::: {.column width="50%"}
+### Contexto Sergipano
+
+::: {.highlight-box}
+AGITTE exemplifica o desafio de **aproximar** universidade e setor produtivo em **contextos regionais**
+
+Necessidade de:
+- Maior interação com empresas locais
+- Fortalecimento institucional
+- Visibilidade das competências da UFS
+:::
+:::
+:::
+
+---
+
+## Manual de Oslo: Framework de Avaliação {.smaller-text .scrollable}
+
+::: {.columns}
+::: {.column width="50%"}
+### Definições Padronizadas
+
+::: {.info-box}
+**OCDE/Eurostat (3ª ed.)**
+
+Framework conceitual essencial para:
+
+- Definições padronizadas
+- Indicadores comparáveis internacionalmente
+- Avaliação baseada em evidências
+:::
+
+### Três Categorias de Indicadores
+
+**1. Indicadores de *Input***
+
+- Gastos em P&D
+- Investimento em atividades de inovação
+- Pessoal dedicado
+
+**2. Indicadores de *Output***
+
+- % de empresas inovadoras
+- Receita de produtos novos
+- Patentes
+
+**3. Indicadores de Cooperação**
+
+- % de empresas em arranjos cooperativos
+- Parcerias universidade-empresa
+:::
+
+::: {.column width="50%"}
+### Visão Ampliada de Inovação
+
+::: {.highlight-box}
+**Atividades de inovação transcendem P&D:**
+
+- Aquisição de máquinas e equipamentos
+- Treinamento de pessoal
+- Aquisição de conhecimento externo
+- Atividades de design
+- Preparação para o mercado
+
+→ Políticas efetivas devem apoiar **todo o espectro**
+:::
+
+### Funções Essenciais do SNI
+
+**Edquist (2001)** identificou **10 funções:**
+
+1. Geração de conhecimento
+2. Desenvolvimento de competências
+3. Criação de mercados
+4. Formação de redes
+5. (entre outras...)
+
+→ Políticas devem endereçar múltiplas funções
+:::
+:::
+
+---
+
+## Comparação: Países Desenvolvidos vs. Emergentes {.smaller-text .scrollable}
+
+::: {.columns}
+::: {.column width="50%"}
+### Países Desenvolvidos
+
+::: {.success-box}
+**Foco: Fronteira Tecnológica**
+
+- Inovações radicais
+- P&D de ponta
+- Universidades de pesquisa classe mundial
+- Alto investimento privado em P&D
+- Ecossistemas maduros (Vale do Silício, Cambridge)
+:::
+
+**Exemplos:**
+
+- EUA: MIT, Stanford, DARPA
+- Alemanha: Fraunhofer Institutes
+- Japão: colaboração keiretsu
+:::
+
+::: {.column width="50%"}
+### Economias em Desenvolvimento
+
+::: {.info-box}
+**Foco: Absorção e Adaptação**
+
+Kim & Lee (2024)
+
+- Aprendizado tecnológico
+- Adaptação de tecnologias estrangeiras
+- Fortalecimento de capacidades
+- *Catching-up* estratégico
+- Prioridade em inovações incrementais
+:::
+
+**Desafio Brasileiro:**
+
+- Reduzir defasagem tecnológica
+- Fortalecer instituições
+- Aumentar investimento empresarial
+- Consolidar capacidades absortivas
+:::
+:::
+
+---
+
+# Síntese e Conclusões
+
+## Mensagens-Chave {.smaller-text .scrollable}
+
+::: {.columns}
+::: {.column width="50%"}
+### 1. Evolução Paradigmática
+
+**De Linear para Sistêmico**
+
+- 1ª geração: *science push* (oferta)
+- 2ª geração: transferência de tecnologia
+- 3ª geração: redes, aprendizado, colaboração
+
+→ Estado Empreendedor (Mazzucato)
+
+### 2. Hélice Tríplice
+
+**Configurações históricas:**
+
+- Estatista → Laissez-faire → Balanceada
+- Sobreposições organizacionais
+- Autonomia + colaboração estratégica
+
+### 3. Marco Legal Brasileiro
+
+- Arcabouço denso (2004-2021)
+- Lei do Bem como instrumento central
+- Desafios de implementação persistem
+:::
+
+::: {.column width="50%"}
+### 4. Capacidade Absortiva é Crítica
+
+::: {.highlight-box}
+**Cohen & Levinthal (1990)**
+
+Sem P&D interno, políticas de incentivo perdem impacto
+
+→ Necessidade de investimento empresarial
+:::
+
+### 5. SNI como Infraestrutura
+
+- Fenômeno coletivo e institucional
+- Dependente de trajetória (*path-dependent*)
+- Qualidade das interações determina eficácia
+
+### 6. Desafios Brasileiros
+
+::: {.warning-box}
+- Aumentar investimento (1,2% → 2,5%+ PIB)
+- Fortalecer conexões universidade-empresa
+- Consolidar NITs (ex.: AGITTE)
+- Simplificar processos (Lei do Bem)
+- Políticas de longo prazo com estabilidade
+:::
+:::
+:::
+
+---
+
+## Agenda de Fortalecimento do SNI Brasileiro {.smaller-text}
+
+1. **Coordenação Estratégica**
+   - Articulação entre ministérios e agências
+   - Disseminação de informações sobre incentivos disponíveis
+   - Alinhamento de políticas científica, industrial e tecnológica
+
+2. **Estabilidade Orçamentária**
+   - Garantir financiamento de longo prazo
+   - Reduzir volatilidade de recursos para P&D
+   - Políticas de Estado (não apenas de governo)
+
+3. **Estímulo à Inovação Privada**
+   - Múltiplos instrumentos: fiscal, creditício, subvencionado
+   - Simplificação da Lei do Bem
+   - Incentivos à colaboração universidade-empresa
+
+---
+
+## Agenda de Fortalecimento do SNI Brasileiro (continuação) {.smaller-text}
+
+4. **Capacitação Institucional**
+   - Fortalecimento dos NITs
+   - Capacitação empresarial para estruturação de projetos
+   - Cultura empreendedora acadêmica
+
+5. **Políticas pelo Lado da Demanda**
+   - Compras públicas de inovação
+   - Regulações indutoras
+   - Criação de mercados para produtos inovadores
+
+---
+
+## Inovação como Estratégia de Desenvolvimento {.smaller-text .scrollable}
+
+::: {.center-text}
+::: {.r-fit-text}
+**Não apenas vetor tecnológico**
+:::
+:::
+
+::: {.highlight-box}
+**Componente Essencial de Estratégia Nacional**
+
+Baseada em:
+
+- **Conhecimento** - Investimento em educação e P&D
+- **Sustentabilidade** - Tecnologias verdes e transição energética
+- **Inclusão Social** - Redução de desigualdades via inovação
+
+→ Articulação entre **aprendizado**, **instituições** e **políticas públicas**
+:::
+
+::: {.success-box}
+**Referências Teóricas:**
+
+Freeman (1987) | Lundvall (1992) | Nelson (1993) | Mazzucato (2013)
+
+**Economias desenvolvidas expandem fronteiras**  
+**Países emergentes reduzem defasagens**
+
+*O Brasil precisa consolidar seu SNI para competir no século XXI*
+:::
+
+---
+
+## Referências Principais {.smaller-text .scrollable}
+
+- Brasil, Lei nº 10.973/2004 (Lei de Inovação); Lei nº 11.196/2005 (Lei do Bem); Lei nº 13.243/2016 (Novo Marco Legal de CT&I); Decreto nº 9.283/2018
+- Chesbrough, H. (2003). *Open Innovation*
+- Cohen, W. L., & Levinthal, D. A. (1990). Absorptive capacity: A new perspective on learning and innovation
+- Comissão Europeia (1995). *Green Paper on Innovation*
+- Edquist, C. (2001). Innovation policy: a systemic approach
+- Etzkowitz, H., & Leydesdorff, L. (2000). The dynamics of innovation: from National Systems and "Mode 2" to a Triple Helix of university-industry-government relations
+- Etzkowitz, H. (2003). Innovation in Innovation: The Triple Helix of University-Industry-Government Relations
+- Freeman, C. (1987). *Technology and Economic Performance: Lessons from Japan*
+- IPEA (2017). Políticas de inovação pelo lado da demanda no Brasil
+- Kim, Y., & Lee, B. (2024). Comparative analysis of national innovation systems
+- Lundvall, B.-Å. (1992). *National Systems of Innovation: Towards a Theory of Innovation and Interactive Learning*
+- Lundvall, B.-Å., & Johnson, B. (1994). The learning economy
+- Mazzucato, M. (2013). *The Entrepreneurial State: Debunking Public vs. Private Sector Myths*
+- Nelson, R. R. (1993). *National Innovation Systems: A Comparative Analysis*
+- OCDE/Eurostat (2005). *Manual de Oslo: Diretrizes para Coleta e Interpretação de Dados sobre Inovação* (3ª ed.)
+- Schumpeter, J. A. (1942). *Capitalism, Socialism and Democracy*
+
+---
+
+## {.center-text}
+
+::: {.obrigado-fit-text}
+**Obrigado!**
+:::
+
+::: {.info-box}
+**Luiz Diego Vidal Santos**  
+Universidade Federal de Sergipe
+
+📧 vidal.center@academico.ufs.br
+:::
+
+

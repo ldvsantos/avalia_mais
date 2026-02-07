@@ -1,0 +1,407 @@
+---
+title: "Avalia+Tec"
+subtitle: "Pitch Deck para submissão na Fase 1 de Ideias Inovadoras do Programa Centelha 3 Bahia"
+author: "Equipe Avalia+"
+date: "jan 2026"
+lang: "pt-BR"
+format:
+  pptx:
+    reference-doc: "quarto/template_referencia.pptx"
+    slide-level: 1
+  revealjs:
+    theme:
+      - simple
+      - quarto/pitch-theme-pdf.scss
+    template-partials:
+      - quarto/title-slide.html
+    transition: slide
+    background-transition: fade
+    slide-number: c/t
+    progress: true
+    controls: true
+    center: false
+    width: 1280
+    height: 720
+    footer: '<span class="footer-left"><a href="../index.html" target="_blank" style="color: inherit; text-decoration: none;">Avalia+Tec</a></span><span class="footer-right"> - Centelha 3 Bahia</span>'
+    slide-level: 1
+    include-in-header:
+      - text: |
+          <style>
+          /* Blur the background video of the title slide */
+          .reveal.title-page .slide-background.present video {
+            filter: blur(6px);
+          }
+          
+          /* Add white overlay on top of the blurred background */
+          .reveal.title-page .slide-background.present::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            z-index: 1;
+          }
+
+          /* Correções para exportação em PDF via ?print-pdf (Chromium headless) */
+          .print-pdf .reveal .slide-background video {
+            display: none !important;
+          }
+
+          /* Evita fundo preto quando o vídeo não renderiza no headless */
+          .print-pdf .reveal .slide-background,
+          .print-pdf .reveal .slides section {
+            background: #fff !important;
+          }
+
+          /* PDF: slide "Evidências" compacto (evita quebra/overflow) */
+          .print-pdf .reveal .slides section.evidencias-slide {
+            font-size: 0.78em;
+          }
+
+          .print-pdf .reveal .slides section.evidencias-slide div.columns {
+            gap: 0.8em !important;
+          }
+
+          .print-pdf .reveal .slides section.evidencias-slide .case-card--tile {
+            padding: 0.45em !important;
+          }
+
+          .print-pdf .reveal .slides section.evidencias-slide .case-title {
+            line-height: 1.1;
+          }
+
+          .print-pdf .reveal .slides section.evidencias-slide .case-thumb--tile {
+            max-height: 200px;
+            width: 100%;
+            object-fit: cover;
+          }
+
+          /* PDF: rodapé centralizado e sem sublinhado */
+          .print-pdf .reveal .footer.footer-default p {
+            text-align: center !important;
+            margin: 0 !important;
+          }
+
+          .print-pdf .reveal .footer .footer-left,
+          .print-pdf .reveal .footer .footer-right {
+            float: none !important;
+            display: inline !important;
+          }
+
+          .print-pdf .reveal .footer a {
+            text-decoration: none !important;
+            border-bottom: 0 !important;
+          }
+
+          /* HTML: scroll vertical só em slides com imagem ou tabela */
+          .reveal .slides section.has-vscroll {
+            overflow-y: auto;
+            padding-right: 12px;
+            overscroll-behavior: contain;
+          }
+
+          .reveal .slides section.has-vscroll::-webkit-scrollbar {
+            width: 10px;
+          }
+
+          .reveal .slides section.has-vscroll::-webkit-scrollbar-thumb {
+            background: rgba(0, 26, 51, 0.20);
+            border-radius: 8px;
+          }
+
+          /* PDF: nunca usar scroll (evita impressão quebrada) */
+          .print-pdf .reveal .slides section.has-vscroll {
+            overflow: visible !important;
+            padding-right: 0 !important;
+          }
+          </style>
+
+          <script>
+          (function () {
+            function markSlidesWithVerticalScroll() {
+              try {
+                // No PDF não queremos scroll
+                var isPrintPdf = /(^|[?&])print-pdf(=|&|$)/i.test(window.location.search || '');
+                if (isPrintPdf) return;
+
+                var slides = document.querySelectorAll('.reveal .slides section');
+                slides.forEach(function (slide) {
+                  // Nunca habilitar scroll na capa
+                  if (slide && (slide.id === 'title-slide' || slide.getAttribute('data-state') === 'title-page')) {
+                    slide.classList.remove('has-vscroll');
+                    return;
+                  }
+
+                  // Só considerar slides que tenham tabela/figura/mídia (mantém intenção original)
+                  var hasMedia = !!(slide && slide.querySelector('img, figure, iframe'));
+                  var hasTable = !!(slide && slide.querySelector('table'));
+                  if (!hasMedia && !hasTable) {
+                    slide.classList.remove('has-vscroll');
+                    return;
+                  }
+
+                  // Só habilita scroll quando houver overflow real
+                  // (+2px para tolerar arredondamentos do Reveal)
+                  var needsScroll = (slide.scrollHeight - slide.clientHeight) > 2;
+                  if (needsScroll) {
+                    slide.classList.add('has-vscroll');
+                  } else {
+                    slide.classList.remove('has-vscroll');
+                  }
+                });
+              } catch (e) {
+                // sem-op
+              }
+            }
+
+            function prepareForPrintPdf() {
+              try {
+                var isPrintPdf = /(^|[?&])print-pdf(=|&|$)/i.test(window.location.search || '');
+
+                // SEMPRE força carregamento de imagens lazy (reveal usa data-src)
+                // Mesmo fora de print-pdf, para garantir que imagens apareçam
+                var lazyImgs = document.querySelectorAll('img[data-src]');
+                lazyImgs.forEach(function (img) {
+                  var src = img.getAttribute('data-src');
+                  if (src) {
+                    img.setAttribute('src', src);
+                    img.removeAttribute('data-src');
+                  }
+                });
+
+                if (!isPrintPdf) return;
+
+                // Evita background-video (no print costuma virar tela preta)
+                var videoBgSlides = document.querySelectorAll('section[data-background-video]');
+                videoBgSlides.forEach(function (slide) {
+                  slide.removeAttribute('data-background-video');
+                  slide.removeAttribute('data-background-video-loop');
+                  slide.removeAttribute('data-background-video-muted');
+                  slide.removeAttribute('data-background-size');
+                });
+              } catch (e) {
+                // sem-op
+              }
+            }
+
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', function () {
+                prepareForPrintPdf();
+                // Aguarda layout do Reveal antes de medir overflow
+                requestAnimationFrame(function () {
+                  requestAnimationFrame(markSlidesWithVerticalScroll);
+                });
+
+                // Recalcula ao trocar slide / ao ajustar layout
+                try {
+                  if (window.Reveal && typeof window.Reveal.on === 'function') {
+                    window.Reveal.on('ready', function () {
+                      requestAnimationFrame(function () {
+                        requestAnimationFrame(markSlidesWithVerticalScroll);
+                      });
+                    });
+                    window.Reveal.on('slidechanged', function () {
+                      requestAnimationFrame(function () {
+                        requestAnimationFrame(markSlidesWithVerticalScroll);
+                      });
+                    });
+                  }
+                } catch (e) {
+                  // sem-op
+                }
+
+                window.addEventListener('resize', function () {
+                  requestAnimationFrame(function () {
+                    requestAnimationFrame(markSlidesWithVerticalScroll);
+                  });
+                });
+              });
+            } else {
+              prepareForPrintPdf();
+              requestAnimationFrame(function () {
+                requestAnimationFrame(markSlidesWithVerticalScroll);
+              });
+            }
+          })();
+          </script>
+execute:
+  echo: false
+---
+
+# A Solução Definitiva para Governança em Seleções
+
+![](img/logo_avalia_horizontal.png){width="60%"}
+
+**Transformamos processos seletivos vulneráveis em fluxos auditáveis, seguros e 100% digitais.**
+
+Plataforma SaaS para **[**inscrição**](../inscricao.html){target="_blank"}**, **[**avaliação**](../selecao.html){target="_blank"}** e **[**consolidação**](../selecao.html){target="_blank"}** com integridade jurídica.
+
+# O Problema: O Caos da Gestão Manual
+
+Processos seletivos geridos por e-mail e planilhas são uma **bomba-relógio jurídica e operacional**.
+
+
+- **Risco Jurídico Imediato:** Falta de rastreabilidade abre margem para recursos e anulação de editais.
+- **Ineficiência Operacional:** Horas perdidas consolidando versões conflitantes de planilhas.
+- **Vulnerabilidade LGPD:** Dados sensíveis de candidatos circulando sem controle em caixas de e-mail.
+
+
+# Evidências {.evidencias-slide}
+
+::: columns
+::: column
+```{=html}
+<div class="case-card case-card--tile">
+  <div class="case-kicker">Fonte</div>
+  <div class="case-title">Migalhas (2024)</div>
+  <img class="case-thumb case-thumb--tile" src="prints/materias/migalhas.png" alt="Matéria do Migalhas" />
+  <div class="case-actions">
+    <a class="case-open" href="https://www.migalhas.com.br/depeso/415405/tudo-sobre-recursos-em-concursos-publicos" target="_blank" rel="noopener">Abrir ↗</a>
+  </div>
+</div>
+```
+
+```{=html}
+<div class="case-card case-card--tile">
+  <div class="case-kicker">Fonte</div>
+  <div class="case-title">O Globo (2014)</div>
+  <img class="case-thumb case-thumb--tile" src="prints/materias/oglobo.png" alt="Matéria do O Globo" />
+  <div class="case-actions">
+    <a class="case-open" href="https://oglobo.globo.com/economia/emprego/concursos-os-principais-erros-cometidos-pelas-bancas-12627033" target="_blank" rel="noopener">Abrir ↗</a>
+  </div>
+</div>
+```
+:::
+
+::: column
+```{=html}
+<div class="case-card case-card--tile">
+  <div class="case-kicker">Fonte</div>
+  <div class="case-title">ConJur (2025)</div>
+  <img class="case-thumb case-thumb--tile" src="prints/materias/conjur.png" alt="Matéria do ConJur" />
+  <div class="case-actions">
+    <a class="case-open" href="https://www.conjur.com.br/2025-abr-09/da-interferencia-do-judiciario-em-concursos-publicos/" target="_blank" rel="noopener">Abrir ↗</a>
+  </div>
+</div>
+```
+
+```{=html}
+<div class="case-card case-card--tile">
+  <div class="case-kicker">Fonte</div>
+  <div class="case-title">Teste do Congresso</div>
+  <img class="case-thumb case-thumb--tile" src="prints/materias/testedocongresso.png" alt="Matéria do Congresso em Foco" />
+  <div class="case-actions">
+    <a class="case-open" href="https://www2.testedocongresso.com.br/noticia/67895/aumentam-acoes-contra-concursos-na-justica" target="_blank" rel="noopener">Abrir ↗</a>
+  </div>
+</div>
+```
+:::
+:::
+
+# A Solução: Centralização com Rastreabilidade
+
+Um ambiente único que garante **governança** do início ao fim.
+
+- **Fluxo End-to-End:** [Inscrição](../inscricao.html){target="_blank"} → [Avaliação](../selecao.html){target="_blank"} → Consolidação → Resultado.
+- **Transparência Total:** O candidato acompanha cada etapa, reduzindo a desconfiança e a judicialização.
+- **Eficiência:** Eliminação de retrabalho manual e erros de consolidação.
+
+![](prints/manual/fig-46-comissao-campos-notas-calculadas.png){width="60%"}
+
+# Diferencial: Blindagem Jurídica (Tecnologia)
+
+Não é apenas software, é **segurança jurídica** via tecnologia.
+
+- **Prova de Integridade (Hash SHA-256):** Cada documento recebe um selo criptográfico imutável. Garantia matemática de que o avaliado é o submetido.
+- **Auditoria Instantânea:** Em caso de recurso, a prova técnica está pronta em segundos.
+- **Fim das Disputas:** Elimina dúvidas sobre "qual versão vale".
+
+![](prints/manual/fig-17-pdf-protocolo-hash.png){width="60%"}
+
+# Privacidade e Compliance (LGPD)
+
+Proteção de dados como **vantagem competitiva**, não apenas obrigação.
+
+- **Blind Review Real:** Avaliadores focam no mérito, sem acesso a dados pessoais (viés reduzido).
+- **Anonimização Segura (HMAC):** Validação de unicidade (CPF) sem expor o dado real.
+- **Segurança por Design:** Minimização de dados desde a arquitetura.
+
+![](prints/manual/fig-10-blind-review-exemplo-dados-pessoais.png){width="80%"}
+
+# Mercado: Busca por Conformidade
+
+Um oceano azul em meio a ferramentas genéricas de eventos.
+
+- **TAM (Mercado Total):** **R$ 14,6 Bilhões** (Orçamento MCTI 2024 para Ciência e Tecnologia).
+- **SAM (Nosso Foco):** **+100 Fundações de Apoio** (CONFIES) e **110 Instituições Federais** (69 Univ. + 41 IFs) que gerem esses recursos.
+- **SOM (Meta 2 anos):** Validar em 5 Fundações (Bahia/Nordeste) e expandir para 50 instituições.
+
+# Por que o Avalia+Tec? (Concorrência)
+
+Ferramentas de **eventos** não entregam **segurança jurídica**.
+
+| Característica | Even3 / Doity | Google Forms | **Avalia+Tec** |
+| :--- | :---: | :---: | :---: |
+| **Foco Principal** | Congressos/Eventos | Pesquisas | **Seleções/Editais** |
+| **Gestão de Banca** | Foco Acadêmico | Manual | **Auditável** |
+| **Integridade** | Nenhuma | Nenhuma | **Hash SHA-256** |
+| **Risco Jurídico** | Médio | Alto | **Blindado** |
+
+# Modelo de Negócio
+
+SaaS B2B flexível para a realidade dos editais.
+
+- **Licença por Edital:** Para demandas pontuais (Ticket médio: R$ 4,5k).
+- **Assinatura Anual:** Para instituições com fluxo recorrente (Ticket médio: R$ 30k/ano).
+- **Setup + Suporte:** Consultoria na configuração do certame (Incluso no plano anual).
+
+# Estágio Atual e Tração
+
+**MVP Funcional e Validado.**
+
+- Módulos de [Inscrição](../inscricao.html){target="_blank"} e [Avaliação](../selecao.html){target="_blank"} operacionais.
+- Sistema de Recursos e Resultados implementado.
+- Arquitetura escalável (Node.js + JSON/PostgreSQL).
+- Próximo passo: Validação comercial com pilotos pagos.
+
+![](prints/manual/fig-24-admin-dashboard-tabela-protocolo.png){width="70%"}
+
+
+# Roadmap e Uso do Recurso (Centelha)
+
+**Objetivo:** Transformar o MVP em Produto de Mercado.
+
+- **Meta (6 meses):** Finalizar módulo de relatórios gerenciais e executar **3 pilotos pagos**.
+- **Investimento (R$ 60k):**
+    - 50% Desenvolvimento (Finalização de features).
+    - 30% Marketing e Vendas (Aquisição de pilotos).
+    - 20% Infraestrutura e Jurídico.
+
+# A Equipe
+
+::: {=html}
+<div class="team-grid">
+<div class="team-card">
+<img class="team-avatar" src="img/team/diego.jpeg" alt="Diego" loading="lazy" />
+<div class="team-name">Diego</div>
+<div class="team-role">Produto, validação com usuários, implantação e pilotos</div>
+</div>
+
+<div class="team-card">
+  <img class="team-avatar" src="img/team/catuxe.jpeg" alt="Catuxe Varjão" loading="lazy" />
+<div class="team-name">Catuxe Varjão</div>
+<div class="team-role">Engenharia, qualidade (MPS.BR) e controles (HMAC)</div>
+</div>
+
+<div class="team-card">
+<img class="team-avatar" src="img/team/dulce.jpeg" alt="Dulce Paloma" loading="lazy" />
+<div class="team-name">Dulce Paloma</div>
+<div class="team-role">Jurídico/Compliance, LGPD e aderência legal</div>
+</div>
+
+<div class="team-card">
+<img class="team-avatar" src="img/team/everaldo.jpeg" alt="Everaldo Fontes" loading="lazy" />
+<div class="team-name">Everaldo Fontes</div>
+<div class="team-role">Programação e validação com usuários</div>
+</div>
+</div>
+:::

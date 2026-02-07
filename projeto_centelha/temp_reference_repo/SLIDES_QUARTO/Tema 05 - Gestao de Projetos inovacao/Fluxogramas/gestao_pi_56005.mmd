@@ -1,0 +1,139 @@
+flowchart TB
+
+%% ====== ESTRUTURA DE GESTÃO DA PI (4) - TOPO ======
+S4_Label["Estrutura de gestão da PI<br/>(4)"]
+
+subgraph S4_Grid["Elementos da Estrutura de Gestão"]
+direction TB
+A1["Comprometimento da organização e seu contexto (4.1)"]
+A2["Estabelecimento da gestão sistemática (4.2)"]
+A3["Responsabilidade pela GPI (4.3)"]
+A4["Cultura (4.4)"]
+A5["Capital humano (4.5)"]
+A6["Considerações financeiras (4.6)"]
+A7["Considerações legais (4.7)"]
+end
+
+S4_Label --> S4_Grid
+
+%% ====== ESTRATÉGIA DE PI (5) - MEIO ======
+S5_Label["Estratégia de PI<br/>(5)"]
+
+subgraph S5["Estratégia de PI (5)"]
+direction TB
+B1["Metas da estratégia de PI (5.1)"]
+B2["Desenvolvimento da estratégia de PI (5.2)"]
+B3["Implementação da estratégia de PI (5.3)"]
+end
+
+S4_Grid --> S5_Label
+S5_Label --> S5
+
+%% ====== DETALHES DAS ETAPAS DA ESTRATÉGIA ======
+subgraph M51["Metas da Estratégia de PI (5.1)"]
+direction TB
+M51_1["• Analisar registros próprios e de terceiros"]
+M51_2["• Avaliar riscos e oportunidades de PI"]
+M51_3["• Criar conceitos a partir de ideias promissoras"]
+M51_4["• Determinar oportunidades para nova PI"]
+M51_5["• Identificar potenciais parceiros e licenciados"]
+M51_6["• Selecionar melhores conceitos desenvolvidos"]
+M51_7["• Reter e manter informações documentadas"]
+end
+
+subgraph M52["Desenvolvimento da Estratégia de PI (5.2)"]
+direction TB
+M52_1["• Conduzir análises de riscos e oportunidades de PI"]
+M52_2["• Mitigar riscos identificados"]
+M52_3["• Cumprir obrigações contratuais pertinentes"]
+M52_4["• Manter a proteção da PI"]
+M52_5["• Atualizar registros de soluções viáveis"]
+M52_6["• Apoiar estratégias de branding e marcas registradas"]
+end
+
+B1 --> M51
+B2 --> M52
+B3 --> S5_Label
+
+%% ====== GESTÃO DA PI NO PROCESSO DE INOVAÇÃO (6) - BASE ======
+S6_Label["Gestão da PI no processo de inovação<br/>(6)"]
+
+subgraph ProcessoInovacao["Processo de Inovação (6)"]
+direction TB
+C1["Identificação de oportunidades (6.1)"]
+C2["Criação de conceitos (6.2)"]
+C3["Validação de conceitos (6.3)"]
+C4["Desenvolvimento de soluções (6.4)"]
+C5["Implantação de soluções (6.5)"]
+end
+
+S5 --> S6_Label
+S6_Label --> ProcessoInovacao
+
+%% ====== DETALHES DAS ETAPAS DO PROCESSO DE INOVAÇÃO ======
+subgraph D61["Identificação de Oportunidades (6.1)"]
+direction TB
+D61_1["• Capturar ideias por vários meios e armazenar dados"]
+D61_2["• Garantir comunicação entre PI, P&D e marketing"]
+D61_3["• Analisar portfólio interno de PI"]
+D61_4["• Conduzir análise do estado da arte"]
+end
+
+subgraph D62["Criação de Conceitos (6.2)"]
+direction TB
+D62_1["• Avaliar riscos e oportunidades da PI"]
+D62_2["• Mitigar riscos identificados"]
+D62_3["• Negociar com parceiros e licenciadores"]
+D62_4["• Assegurar manutenção da proteção da PI"]
+D62_5["• Atualizar registros dos conceitos"]
+end
+
+subgraph D63["Validação de Conceitos (6.3)"]
+direction TB
+D63_1["• Conduzir análises da PI para avaliar riscos e oportunidades"]
+D63_2["• Determinar formas de mitigação de riscos"]
+D63_3["• Negociar com colaboradores e licenciadores"]
+D63_4["• Assegurar proteção contínua da PI"]
+D63_5["• Atualizar registros validados"]
+end
+
+subgraph D64["Desenvolvimento de Soluções (6.4)"]
+direction TB
+D64_1["• Monitorar riscos e disputas de PI"]
+D64_2["• Analisar registros e tendências tecnológicas"]
+D64_3["• Avaliar utilidade dos ativos de PI"]
+D64_4["• Alavancar ativos e atualizar portfólio"]
+end
+
+subgraph D65["Implantação de Soluções (6.5)"]
+direction TB
+D65_1["• Monitorar riscos e disputas de PI"]
+D65_2["• Avaliar tendências e inovação técnica"]
+D65_3["• Compreender utilidade dos ativos de PI"]
+D65_4["• Alavancar ativos estratégicos"]
+D65_5["• Atualizar registros e informações do portfólio"]
+end
+
+C1 --> D61
+C2 --> D62
+C3 --> D63
+C4 --> D64
+C5 --> D65
+
+%% ====== CONEXÕES HIERÁRQUICAS ======
+S4_Grid --> S5
+S5 --> ProcessoInovacao
+C1 --> C2 --> C3 --> C4 --> C5
+
+%% ====== ESTILOS ======
+classDef estrutura fill:#ffffff,stroke:#424242,stroke-width:1.5px,color:#000,font-size:10px
+classDef estrategia fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,color:#000,font-weight:bold
+classDef balao fill:#fff3e0,stroke:#f57c00,stroke-width:2px,color:#000,font-weight:bold
+classDef detalhe fill:#f3e5f5,stroke:#7b1fa2,stroke-width:1px,color:#000,font-size:9px
+classDef label fill:#e8f5e8,stroke:#388e3c,stroke-width:2px,color:#000,font-weight:bold
+
+class A1,A2,A3,A4,A5,A6,A7 estrutura
+class S5_Label,B1,B2,B3 estrategia
+class C1,C2,C3,C4,C5 balao
+class D61,D62,D63,D64,D65,M51,M52,D61_1,D61_2,D61_3,D61_4,D62_1,D62_2,D62_3,D62_4,D62_5,D63_1,D63_2,D63_3,D63_4,D63_5,D64_1,D64_2,D64_3,D64_4,D65_1,D65_2,D65_3,D65_4,D65_5,M51_1,M51_2,M51_3,M51_4,M51_5,M51_6,M51_7,M52_1,M52_2,M52_3,M52_4,M52_5,M52_6 detalhe
+class S4_Label,S6_Label label

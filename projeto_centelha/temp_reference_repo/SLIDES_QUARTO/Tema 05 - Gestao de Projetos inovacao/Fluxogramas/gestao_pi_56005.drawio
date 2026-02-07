@@ -1,0 +1,118 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36" version="28.2.8">
+  <diagram id="Q2bRAm7pVH_XPTjCKzjp" name="Gestão de PI">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-5" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="720" y="290" width="1230" height="900" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-8" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="720" y="290" width="1230" height="420" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="720" y="90" width="1230" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="elem_4_1" value="(4.1) Comprometimento da organização e seu contexto" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#424242;rotation=-90;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="819.5" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="elem_4_2" value="(4.2) Estabelecimento da gestão sistemática" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#424242;rotation=-90;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="939.5" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="elem_4_3" value="(4.3) Responsabilidade pela GPI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#424242;rotation=-90;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="1059.5" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="elem_4_4" value="(4.4) Cultura" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#424242;rotation=-90;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="1179.5" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="elem_4_5" value="(4.5) Capital humano" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#424242;rotation=-90;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="1299.5" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="elem_4_6" value="(4.6) Considerações financeiras" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#424242;rotation=-90;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="1419.5" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="elem_4_7" value="(4.7) Considerações legais" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#424242;rotation=-90;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="1539.5" y="150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="s5_title" value="5. ESTRATÉGIA DE PI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontStyle=1;fontSize=17;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="1780" y="440" width="190" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="meta_5_1" target="meta_5_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="meta_5_1" value="(5.1) Metas da estratégia de PI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=light-dark(#1976D2,#FFFFFF);fontStyle=1;fontSize=17;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="819.5" y="338.75" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="meta_5_2" target="meta_5_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="meta_5_2" value="(5.2) Desenvolvimento da estratégia de PI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=light-dark(#1976D2,#FFFFFF);fontStyle=1;fontSize=17;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="1163" y="340" width="230" height="77.5" as="geometry" />
+        </mxCell>
+        <mxCell id="meta_5_3" value="(5.3) Implementação da estratégia de PI" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=light-dark(#1976D2,#FFFFFF);fontStyle=1;fontSize=17;sketch=1;curveFitting=1;jiggle=2;" vertex="1" parent="1">
+          <mxGeometry x="1490" y="340" width="275" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="det_5_1" value="• Analisar registros próprios e de terceiros&#xa;• Avaliar riscos e oportunidades de PI&#xa;• Criar conceitos a partir de ideias promissoras&#xa;• Determinar oportunidades para nova PI&#xa;• Identificar potenciais parceiros e licenciados&#xa;• Selecionar melhores conceitos desenvolvidos&#xa;• Reter e manter informações documentadas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=default;align=left;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="780" y="510" width="383" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="det_5_2" value="• Conduzir análises de riscos e oportunidades de PI&#xa;• Mitigar riscos identificados&#xa;• Cumprir obrigações contratuais pertinentes&#xa;• Manter a proteção da PI&#xa;• Atualizar registros de soluções viáveis&#xa;• Apoiar estratégias de branding e marcas registradas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=default;align=left;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1420" y="510" width="390" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="s6_title" value="6. GESTÃO DA PI NO PROCESSO DE INOVAÇÃO" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontStyle=1;fontSize=17;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="1740" y="900" width="292" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="proc_6_1" value="Identificação de oportunidades&lt;div&gt;(6.1)&amp;nbsp;&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="848" y="760" width="130" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="proc_6_2" value="Criação de conceitos&lt;div&gt;(6.2)&amp;nbsp;&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1198" y="760" width="125" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="proc_6_3" value="Validação de conceitos&lt;div&gt;(6.3)&amp;nbsp;&lt;/div&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1588" y="760" width="130" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="proc_6_4" value="(6.4) Desenvolvimento de soluções" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1588" y="980" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="proc_6_5" value="(6.5) Implantação de soluções" style="ellipse;whiteSpace=wrap;html=1;fillColor=#fff3e0;strokeColor=#f57c00;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="1218" y="980" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_proc_1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="proc_6_1" target="proc_6_2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_proc_2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="proc_6_2" target="proc_6_3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="conn_proc_3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="proc_6_3" target="proc_6_4">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1648" y="1043" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1808" y="800" />
+              <mxPoint x="1808" y="1010" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="conn_proc_4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="proc_6_4" target="proc_6_5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s4_title" value="4. ESTRUTURA DE GESTÃO DA PI" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontStyle=1;fontSize=17;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="1785" y="120" width="185" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-9" value="&lt;h2&gt;&lt;ul&gt;&lt;li&gt;&lt;font&gt;&lt;font face=&quot;Helvetica&quot;&gt;Capturar ideias por vários meios e armazenar dados&lt;/font&gt;&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;font face=&quot;Helvetica&quot;&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;Garantir comunicação entre PI, P&amp;amp;D e marketing&lt;/span&gt;&lt;/font&gt;&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;font face=&quot;Helvetica&quot;&gt;Analisar portfólio interno de PI&lt;/font&gt;&lt;/font&gt;&lt;/li&gt;&lt;li&gt;&lt;font&gt;&lt;font face=&quot;Helvetica&quot;&gt;Conduzir análise do estado da arte&lt;/font&gt;&lt;/font&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/h2&gt;" style="rounded=0;html=1;fillColor=none;strokeColor=default;align=left;fontSize=8;labelBackgroundColor=none;fontStyle=0" vertex="1" parent="1">
+          <mxGeometry x="740" y="850" width="355" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-11" value="&lt;h2&gt;&lt;ul&gt;&lt;li&gt;&lt;span&gt;Avaliar riscos e oportunidades da PI&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;Mitigar riscos identificados&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;Negociar com parceiros e licenciadores&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;Assegurar manutenção da proteção da PI&lt;/span&gt;&lt;/li&gt;&lt;li&gt;&lt;span&gt;Atualizar registros dos conceitos&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/h2&gt;" style="rounded=0;html=1;fillColor=none;strokeColor=default;align=left;fontSize=8;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1111" y="850" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-12" value="&lt;h2&gt;&lt;ul&gt;&lt;li&gt;Monitorar riscos e disputas de PI&lt;/li&gt;&lt;li&gt;Analisar registros e tendências tecnológicas&lt;/li&gt;&lt;li&gt;Avaliar utilidade dos ativos de PI&lt;/li&gt;&lt;li&gt;Alavancar ativos e atualizar portfólio&lt;/li&gt;&lt;/ul&gt;&lt;/h2&gt;" style="rounded=0;html=1;fillColor=none;strokeColor=default;align=left;fontSize=8;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1448" y="850" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-13" value="&lt;h2&gt;&lt;ul&gt;&lt;li&gt;Monitorar riscos e disputas de PI&lt;/li&gt;&lt;li&gt;Avaliar tendências e inovação técnica&lt;/li&gt;&lt;li&gt;Compreender utilidade dos ativos de PI&lt;/li&gt;&lt;li&gt;Alavancar ativos estratégicos&lt;/li&gt;&lt;li&gt;Atualizar registros e informações do portfólio&lt;/li&gt;&lt;/ul&gt;&lt;/h2&gt;" style="rounded=0;html=1;fillColor=none;strokeColor=default;align=left;fontSize=8;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1488" y="1070" width="320" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="RWnjh6hNTgd0dztnnf-K-15" value="&lt;h2&gt;&lt;ul&gt;&lt;li&gt;Avaliar tendências e inovação técnica&lt;/li&gt;&lt;li&gt;Compreender utilidade dos ativos de PI&lt;/li&gt;&lt;li&gt;Alavancar ativos estratégicos&lt;/li&gt;&lt;li&gt;Atualizar registros e informações do portfólio&lt;/li&gt;&lt;/ul&gt;&lt;/h2&gt;" style="rounded=0;html=1;fillColor=none;strokeColor=default;align=left;fontSize=8;labelBackgroundColor=none;" vertex="1" parent="1">
+          <mxGeometry x="1128" y="1070" width="320" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

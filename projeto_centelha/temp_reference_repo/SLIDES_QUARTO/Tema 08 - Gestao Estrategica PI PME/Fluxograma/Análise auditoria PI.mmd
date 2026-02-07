@@ -1,0 +1,18 @@
+graph TB
+    A[ANÁLISE<br/>Auditoria PI] --> P[PROTEÇÃO<br/>Registro/Segredo]
+    P --> C[COMERCIALIZAÇÃO<br/>Exploração]
+    C --> M[MONITORAMENTO<br/>Manutenção]
+    M --> A
+    
+    A --> A1[Formulários divulgação<br/>Diagnóstico ativos<br/>Priorização VRIO]
+    
+    P --> P1[Decisão: Patente?<br/>Marca? Segredo?<br/>Depósito seletivo]
+    
+    C --> C1[Licenciamento<br/>Exploração direta<br/>Parcerias]
+    
+    M --> M1[Pagamento taxas<br/>Vigilância infrações<br/>Poda portfolio]
+    
+    style A fill:#003366,color:#fff
+    style P fill:#0066CC,color:#fff
+    style C fill:#00A859,color:#fff
+    style M fill:#FF8C00,color:#fff

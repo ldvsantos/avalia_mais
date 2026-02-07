@@ -1,0 +1,18 @@
+graph TD
+    U["🎓 UNIVERSIDADE<br/>Conhecimento básico<br/>Capital humano<br/>Pesquisa científica"]
+    E["🏢 EMPRESA<br/>Aplicação comercial<br/>P&D aplicado<br/>Escala produtiva"]
+    G["🏛️ GOVERNO<br/>Políticas públicas<br/>Financiamento<br/>Regulamentação"]
+    I["💡 INOVAÇÃO<br/>TECNOLÓGICA<br/>SUSTENTÁVEL"]
+    
+    U <-->|"Pesquisa cooperada<br/>Licenciamento"| E
+    E <-->|"Políticas setoriais<br/>Incentivos fiscais"| G
+    G <-->|"Fomento CT&I<br/>Infraestrutura"| U
+    
+    U -.->|Contribui| I
+    E -.->|Contribui| I
+    G -.->|Contribui| I
+    
+    style U fill:#003366,color:#fff
+    style E fill:#00A859,color:#fff
+    style G fill:#0066CC,color:#fff
+    style I fill:#FF8C00,color:#fff

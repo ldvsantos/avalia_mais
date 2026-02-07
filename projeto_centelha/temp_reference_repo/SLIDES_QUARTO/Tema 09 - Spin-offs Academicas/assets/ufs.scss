@@ -1,0 +1,129 @@
+/*-- scss:defaults --*/
+
+/* Cores Oficiais UFS - Manual de Marca (Padrão Cromático) */
+$ufs-amarelo: #FDB913;          /* Pantone 1235 C - Cor Principal */
+$ufs-vermelho: #ED1C24;         /* Pantone 1788 C - Cor Secundária */
+$ufs-azul: #034EA2;             /* Pantone 2728 C - Cor Secundária */
+$ufs-cinza-escuro: #58595B;     /* Cinza para textos */
+$ufs-cinza-claro: #D1D3D4;      /* Cinza para backgrounds */
+
+$body-bg: #ffffff;
+$body-color: $ufs-cinza-escuro;
+$link-color: $ufs-azul;
+$presentation-heading-color: $ufs-azul;
+$presentation-heading-font: 'Ubuntu', sans-serif;
+$presentation-font-size-root: 40px;
+
+/* Fonte Ubuntu */
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap');
+
+/*-- scss:rules --*/
+
+.reveal {
+  font-family: 'Ubuntu', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4,
+.reveal h5,
+.reveal h6 {
+  color: $presentation-heading-color;
+  font-family: 'Ubuntu', sans-serif;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.reveal h1 {
+  font-size: 2.2em;
+  color: $ufs-azul;
+}
+
+.reveal h2 {
+  font-size: 1.6em;
+  color: $ufs-azul;
+}
+
+.reveal h3 {
+  font-size: 1.3em;
+  color: $ufs-azul;
+}
+
+.reveal .slide blockquote {
+  border-left: 5px solid $ufs-amarelo;
+  padding-left: 1em;
+  background-color: rgba(253, 185, 19, 0.08);
+}
+
+.reveal strong,
+.reveal b {
+  color: $ufs-vermelho;
+  font-weight: 600;
+}
+
+.reveal a {
+  color: $ufs-azul;
+  text-decoration: none;
+}
+
+.reveal a:hover {
+  color: $ufs-vermelho;
+  text-decoration: underline;
+}
+
+/* Forçar estilos da capa - author, institute e date */
+.reveal .slides section.title-slide .author,
+.reveal .slides section.title-slide .institute,
+.reveal .slides section.title-slide .date,
+#title-slide .author,
+#title-slide .institute,
+#title-slide .date {
+  color: white !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 1.1em !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5) !important;
+}
+
+/* Sobrescrever qualquer h1, h2, h3 que seja author ou institute */
+.reveal .slides section.title-slide h1.author,
+.reveal .slides section.title-slide h2.author,
+.reveal .slides section.title-slide h3.author,
+.reveal .slides section.title-slide h1.institute,
+.reveal .slides section.title-slide h2.institute,
+.reveal .slides section.title-slide h3.institute {
+  color: white !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 1.1em !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5) !important;
+}
+
+/* Classes específicas do Quarto para author e institute */
+.reveal section.title-slide .quarto-title-authors,
+.reveal section.title-slide .quarto-title-author,
+.reveal section.title-slide .quarto-title-author-name,
+.reveal section.title-slide .quarto-title-affiliation,
+#title-slide .quarto-title-authors,
+#title-slide .quarto-title-author,
+#title-slide .quarto-title-author-name,
+#title-slide .quarto-title-affiliation {
+  color: white !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 0.9em !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5) !important;
+}
+
+/* Estilo para a data */
+.reveal section.title-slide .date,
+#title-slide .date,
+.reveal section.title-slide .quarto-title-meta-contents {
+  color: white !important;
+  font-family: 'Ubuntu', sans-serif !important;
+  font-weight: 300 !important;
+  font-size: 0.55em !important;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5) !important;
+}

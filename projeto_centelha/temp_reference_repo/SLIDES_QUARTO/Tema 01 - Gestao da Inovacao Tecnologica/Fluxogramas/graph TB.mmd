@@ -1,0 +1,17 @@
+
+graph TB
+    subgraph "Inovação Fechada"
+    A[P&D Interna] --> B[Desenvolvimento]
+    B --> C[Mercado]
+    end
+    
+    subgraph "Inovação Aberta"
+    D[P&D Interna] <--> E[P&D Externa]
+    E --> F[Licenciamento]
+    D --> G[Spin-offs]
+    E --> H[Novos Mercados]
+    D --> H
+    end
+    
+    style D fill:#003366,color:#fff
+    style E fill:#00A859,color:#fff

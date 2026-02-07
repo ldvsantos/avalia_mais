@@ -1,0 +1,56 @@
+---
+title: "Concurso Edital 05/2025"
+subtitle: "Transferência de Tecnologia<br>Processos e Estratégias"
+author: "Luiz Diego Vidal Santos"
+institute: "Universidade Federal de Sergipe"
+format: 
+  revealjs:
+    logo: assets/logo-ufs.png
+    footer: "UFS - Universidade Federal de Sergipe | Tema 7 - Transferência de Tecnologia"
+    slide-number: true
+    theme: [simple, assets/ufs.scss]
+    controls: true
+    width: 1280
+    height: 720
+    css: assets/custom.css
+    transition: slide
+    background-transition: fade
+    preview-links: auto
+execute:
+  echo: false
+---
+
+## Visão Geral {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Tópicos Principais
+
+- [1]{.circle} Conceitos de Transferência de Tecnologia
+- [2]{.circle} Modelos de TT
+- [3]{.circle} Licenciamento de Tecnologia
+- [4]{.circle} Contratos de TT
+- [5]{.circle} NITs e Gestão de TT
+:::
+
+::: {.column width="50%"}
+::: {.info-box}
+**Objetivo Central**
+
+Explorar os processos e estratégias de transferência de tecnologia entre organizações e setores.
+:::
+:::
+:::
+
+---
+
+## Conteúdo em Desenvolvimento
+
+::: {.highlight-box}
+Esta apresentação será construída com base no material do Tema 07.
+
+Próximos passos:
+- Estruturação do conteúdo
+- Inclusão de figuras e diagramas
+- Revisão e ajustes finais
+:::

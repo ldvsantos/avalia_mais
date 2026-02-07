@@ -1,0 +1,32 @@
+flowchart LR
+    %% --- Estrutura principal do modelo de Capacidade Absortiva ---
+
+    %% Blocos principais
+    A[Fontes de conhecimento e complementaridade<br>Experiência] --> B
+    B["<b>Capacidade Absortiva</b><br><i>Potencial</i><br>Aquisição • Assimilação"] --> C
+    C[Capacidade Absortiva<br><b>Realizada</b><br>Transformação • Exploração] --> D
+    D[Vantagem competitiva<br>Flexibilidade estratégica • Inovação • Performance]
+
+    %% Conexões intermediárias
+    subgraph  ***Capacidade Absortiva***
+        direction LR
+        B --> C
+    end
+
+    %% Gatilhos e mecanismos de integração
+    E((Gatilhos)) --> B
+    F((Mecanismos <br>de</br> integração social)) --> C
+    G((Regime <br>de</br> apropriação)) --> D
+
+    %% Estilo visual - Cores UFS
+    classDef entrada fill:#0066CC,stroke:#003366,stroke-width:2px,color:#fff,font-weight:bold
+    classDef potencial fill:#0099FF,stroke:#003366,stroke-width:2px,color:#fff,font-weight:bold
+    classDef realizada fill:#00A859,stroke:#004D2E,stroke-width:2px,color:#fff,font-weight:bold
+    classDef saida fill:#003366,stroke:#001a33,stroke-width:2px,color:#fff,font-weight:bold
+    classDef gatilho fill:#FF8C00,stroke:#CC6600,stroke-width:2px,color:#fff,font-weight:bold
+
+    class A entrada
+    class B potencial
+    class C realizada
+    class D saida
+    class E,F,G gatilho

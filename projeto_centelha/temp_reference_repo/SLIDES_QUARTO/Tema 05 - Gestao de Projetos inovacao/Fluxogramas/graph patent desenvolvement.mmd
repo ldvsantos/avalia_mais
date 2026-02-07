@@ -1,0 +1,36 @@
+graph TB
+    subgraph "Stage 1: Escopo (TRL 1-2)"
+    A[Busca Preliminar<br/>Anterioridade] --> B[Disclosure de<br/>Invenção]
+    B --> C[Segredo ou<br/>Publicação?]
+    end
+    
+    subgraph "Stage 2: Business Case (TRL 3-4)"
+    D[Busca Completa<br/>Anterioridade] --> E[Análise FTO]
+    E --> F[Estratégia Territorial]
+    F --> G[Orçamento PI]
+    end
+    
+    subgraph "Stage 3: Desenvolvimento (TRL 5-6)"
+    H[Depósito Patente<br/>Provisório] --> I[Validação<br/>Técnica]
+    I --> J[Patente Definitiva<br/>+ PCT?]
+    end
+    
+    subgraph "Stage 4: Validação (TRL 7-8)"
+    K[Proteção<br/>Complementar] --> L[Design Industrial<br/>Marca]
+    L --> M[Valoração de<br/>Ativos]
+    end
+    
+    subgraph "Stage 5: Comercialização (TRL 9)"
+    N[Licenciamento] --> O[Spin-off]
+    O --> P[Exploração<br/>Direta]
+    end
+    
+    C --> D
+    G --> H
+    J --> K
+    M --> N
+    
+    style A fill:#003366,color:#fff
+    style H fill:#00A859,color:#fff
+    style M fill:#FF8C00,color:#fff
+    style P fill:#0066CC,color:#fff

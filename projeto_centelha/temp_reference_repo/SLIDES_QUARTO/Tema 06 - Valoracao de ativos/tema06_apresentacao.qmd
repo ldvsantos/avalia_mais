@@ -1,0 +1,1211 @@
+---
+title: "Concurso Edital 05/2025"
+subtitle: "Valoração de Ativos de PI<br>Métodos e Aplicações"
+author: "Luiz Diego Vidal Santos"
+institute: "Universidade Federal de Sergipe"
+format: 
+  revealjs:
+    logo: assets/logo-ufs.png
+    footer: "UFS - Universidade Federal de Sergipe | Tema 6 - Valoração de Ativos de PI"
+    slide-number: true
+    theme: [simple, assets/ufs.scss]
+    controls: true
+    width: 1280
+    height: 720
+    css: assets/custom.css
+    transition: slide
+    background-transition: fade
+    preview-links: auto
+execute:
+  echo: false
+---
+
+# [Introdução]{.section-header}
+
+::: {style="text-align: right; padding-top: 10px; padding-right: 50px;"}
+![](Figuras/intro.jpg){width="25%"}
+:::
+
+---
+
+## Ativos Intangíveis: Definição e Relevância {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Conceito Fundamental
+
+**Ativos Intangíveis** (Lev, 2001)
+- Recursos sem substância física
+- Geram valor econômico futuro
+- Crescente participação no valor de mercado
+
+::: {.highlight-box}
+**Setores Tecnológicos**: >80% da capitalização de mercado
+:::
+
+### Composição
+
+**Capital Humano**
+- Conhecimento
+- Competências
+- Expertise
+:::
+
+::: {.column width="50%"}
+### Tipologia
+
+**Capital Estrutural**
+- Processos
+- Sistemas
+- Cultura organizacional
+
+**Capital Relacional**
+- Redes
+- Reputação
+- Marca
+
+::: {.info-box}
+**Propriedade Intelectual**: Subconjunto crítico com proteção jurídica
+:::
+:::
+:::
+
+---
+
+## Propriedade Intelectual no Brasil {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Estrutura Normativa
+
+**Propriedade Industrial** (Lei 9.279/1996)
+- Patentes
+- Marcas
+- Desenhos industriais
+
+**Direitos Autorais** (Lei 9.610/1998)
+- Obras literárias e artísticas
+- Proteção automática
+
+**Programas de Computador** (Lei 9.609/1998)
+- Software
+- Código-fonte
+:::
+
+::: {.column width="50%"}
+### Outras Proteções
+
+**Cultivares** (Lei 9.456/1997)
+- Variedades vegetais
+
+**Informações Confidenciais**
+- *Know-how*
+- Segredo industrial
+
+::: {.info-box}
+**Base Internacional**: Convenção de Berna, TRIPS
+:::
+
+::: {.highlight-box}
+**Objetivo**: Equilibrar proteção exclusiva com acesso social ao conhecimento
+:::
+:::
+:::
+
+---
+
+## PI como Competência Estratégica {.smaller-text}
+
+::: {.columns}
+::: {.column width="60%"}
+### Além do Ritual Contábil
+
+**Valoração de PI é Competência Estratégica que:**
+- Orienta investimentos em P&D
+- Desenha estratégias de comercialização
+- Viabiliza captura de valor da inovação
+
+### Marco Legal de CT&I (Lei 13.243/2016)
+
+**Núcleos de Inovação Tecnológica (NITs)**
+- Gestão de ativos intangíveis
+- Negociação e comercialização
+- Domínio metodológico rigoroso
+:::
+
+::: {.column width="40%"}
+::: {.highlight-box}
+### Definição
+
+"Medir, com rigor analítico, a **promessa econômica** de ideias juridicamente protegidas"
+:::
+
+::: {.info-box}
+**Desafio**: Transformar conhecimento protegido em valor capturável
+:::
+:::
+:::
+
+---
+
+# [Métodos de Valoração]{.section-header}
+
+::: {style="text-align: right; padding-top: 10px; padding-right: 50px;"}
+![](Figuras/metodos.jpg){width="25%"}
+:::
+
+---
+
+## Abordagens Tradicionais (Smith & Parr, 2000) {.smaller-text}
+
+### Três Pilares Metodológicos
+
+::: {.columns}
+::: {.column width="33%"}
+::: {.info-box}
+**1. Abordagem de Custo**
+
+**Base**: Custo histórico ou de reposição
+
+**Vantagem**
+- Estabelece piso de valor
+- Dados objetivos
+
+**Limitação**
+- Dissocia-se do potencial de mercado
+- Ignora valor futuro
+:::
+:::
+
+::: {.column width="33%"}
+::: {.highlight-box}
+**2. Abordagem de Mercado**
+
+**Base**: Transações comparáveis
+
+**Vantagem**
+- Reflete dinâmica real
+
+**Limitação**
+- Unicidade dos ativos de PI
+- Confidencialidade de acordos
+- Difícil comparabilidade
+:::
+:::
+
+::: {.column width="33%"}
+::: {.info-box}
+**3. Abordagem de Renda**
+
+**Base**: Benefícios econômicos futuros
+
+**Técnicas**
+- Fluxo de Caixa Descontado (FCD)
+- *Relief from Royalty*
+
+**Status**: **Mais robusta**
+:::
+:::
+:::
+
+---
+
+## Estrutura de Mercado e Adequação Metodológica {.smaller-text}
+
+### Framework de Arora et al. (2001)
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.highlight-box}
+### Mercados "Espessos" (*Thick Markets*)
+
+**Características**
+- Muitas transações
+- Alta liquidez
+- Dados comparáveis disponíveis
+
+**Método Adequado**
+- ✅ Abordagem de Mercado
+- Comparação viável
+- Benchmarking robusto
+:::
+:::
+
+::: {.column width="50%"}
+::: {.info-box}
+### Mercados "Finos" (*Thin Markets*)
+
+**Características**
+- Poucas transações
+- Tecnologias emergentes
+- Alta unicidade
+
+**Métodos Adequados**
+- ✅ Abordagem de Renda
+- ✅ Opções Reais
+- Modelagem de incerteza
+:::
+:::
+:::
+
+::: {style="text-align: center; margin-top: 30px;"}
+**Conclusão**: Eficácia do método depende da **estrutura de mercado**
+:::
+
+---
+
+## Limitações das Abordagens Tradicionais {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Desafios em Mercados Tecnológicos
+
+**Alta Incerteza**
+- Trajetórias tecnológicas imprevisíveis
+- Adoção de mercado incerta
+- Cenários múltiplos
+
+**Natureza Dinâmica**
+- Ciclos de vida curtos
+- Obsolescência rápida
+- Competição intensa
+
+**Complexidade**
+- Múltiplas dimensões de valor
+- Interdependências tecnológicas
+- Efeitos de rede
+:::
+
+::: {.column width="50%"}
+::: {.info-box}
+### Insuficiências Metodológicas
+
+**FCD Tradicional**
+- Estimativa pontual
+- Assume certeza
+- Ignora flexibilidade gerencial
+
+**Comparação de Mercado**
+- Dados escassos
+- Ativos não fungíveis
+- Contextos específicos
+:::
+
+::: {.highlight-box}
+**Necessidade**: Métodos que capturem incerteza, não-linearidade e dinamismo
+:::
+:::
+:::
+
+---
+
+## Evolução: Métodos Computacionais e ML {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Zhou & Wang (2022)
+
+**Integração de ML com Modelos Paramétricos**
+
+**Algoritmos**
+- *Random Forests*
+- *Gradient Boosting*
+- Redes Neurais
+
+**Capacidades**
+- Processar grandes volumes de dados patentários
+- Revelar padrões não lineares
+- Capturar relações complexas
+
+::: {.info-box}
+Superação de limites dos métodos tradicionais
+:::
+:::
+
+::: {.column width="50%"}
+### Wu & Li (2022)
+
+**Modelo de Contribuição Tecnológica**
+
+**Métricas Quantitativas**
+- Desempenho técnico
+- Parâmetros objetivos
+
+**Métricas Qualitativas**
+- Valor estratégico
+- Risco comercial
+- Potencial disruptivo
+
+::: {.highlight-box}
+**Resultado**: Análise multidimensional e contextual
+:::
+:::
+:::
+
+---
+
+## Deslocamento Paradigmático na Valoração {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Abordagem Tradicional
+
+**Características**
+- Estimativa estática
+- Valor pontual
+- Métodos isolados
+- Dados limitados
+
+**Limitações**
+- Não captura complexidade
+- Ignora dinamismo
+- Subestima incerteza
+
+::: {style="text-align: center; margin-top: 20px;"}
+⬇️ **EVOLUÇÃO** ⬇️
+:::
+:::
+
+::: {.column width="50%"}
+### Abordagem Contemporânea
+
+**Características**
+- Análise dinâmica
+- Distribuição probabilística
+- Integração de métodos
+- Big data + ML
+
+**Ganhos**
+- Complexidade multidimensional
+- Adaptação contextual
+- Gestão de incerteza
+
+::: {.highlight-box}
+**Decisão Estratégica**: Método contingente, setorial e situacional
+:::
+:::
+:::
+
+---
+
+# [Estratégias de Comercialização]{.section-header}
+
+::: {style="text-align: right; padding-top: 10px; padding-right: 50px;"}
+![](Figuras/comercializacao.jpg){width="25%"}
+:::
+
+---
+
+## Transferência Tecnológica (Bozeman, 2000) {.smaller-text}
+
+### Modelos de Comercialização
+
+::: {.columns}
+::: {.column width="33%"}
+::: {.info-box}
+**Licenciamento**
+
+**Exclusivo**
+- Um único licenciado
+- Direitos exclusivos
+- Maior royalty
+
+**Não Exclusivo**
+- Múltiplos licenciados
+- Ampla disseminação
+- Menor royalty unitário
+:::
+:::
+
+::: {.column width="33%"}
+::: {.highlight-box}
+**Joint Ventures**
+
+**Características**
+- Parceria estratégica
+- Compartilhamento de riscos
+- Investimento conjunto
+- Governança colaborativa
+
+**Aplicação**
+- Projetos de longo prazo
+- Alta complexidade
+:::
+:::
+
+::: {.column width="33%"}
+::: {.info-box}
+**Spin-offs Acadêmicas**
+
+**Características**
+- Nova empresa
+- Tecnologia da instituição
+- Empreendedorismo
+
+**Vantagens**
+- Controle da aplicação
+- Upside ilimitado
+- Ecossistema de inovação
+:::
+:::
+:::
+
+::: {style="margin-top: 30px; text-align: center;"}
+**Questão Central**: Como escolher o modelo adequado?
+:::
+
+---
+
+## Regimes de Apropriabilidade (Teece, 1986) {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Teoria Fundamental
+
+**Lucro com Inovação depende de:**
+
+**1. Regime de Apropriabilidade**
+- Força da proteção de PI
+- Barreiras à imitação
+- Efetividade dos direitos exclusivos
+
+**2. Controle de Ativos Complementares**
+- Manufatura
+- Distribuição
+- Marca
+- Serviços pós-venda
+:::
+
+::: {.column width="50%"}
+::: {.highlight-box}
+### Regimes "Fortes"
+
+**Exemplo**: Farmacêutico
+- Patentes robustas
+- Alta barreira à imitação
+- Proteção efetiva
+
+**Estratégia Viável**
+- Licenciamento
+- Exploração direta
+:::
+
+::: {.info-box}
+### Regimes "Fracos"
+
+**Exemplo**: Software
+- Replicação fácil
+- Baixa barreira técnica
+
+**Resposta Necessária**
+- Controle de ativos complementares
+- Integração vertical
+:::
+:::
+:::
+
+---
+
+## Ativos Complementares: Caso Crítico {.smaller-text}
+
+::: {.columns}
+::: {.column width="60%"}
+### Cenário: Startup com Patente Robusta
+
+**Situação**
+- Tecnologia inovadora protegida
+- Patente de alta qualidade
+- **MAS**: Sem ativos complementares
+
+**Ausências Críticas**
+- Canais de distribuição
+- Reconhecimento de marca
+- Capacidade produtiva
+- Força de vendas
+
+**Dilema Estratégico**
+- Exploração direta: Alto risco, alta recompensa
+- Licenciamento: Risco mitigado, retorno compartilhado
+:::
+
+::: {.column width="40%"}
+::: {.highlight-box}
+### Dinâmica de Poder
+
+**Empresa Estabelecida**
+- Canais consolidados
+- Marca reconhecida
+- Escala de produção
+- Posição negocial forte
+
+⬇️
+
+**Resultado Provável**
+- Startup licencia tecnologia
+- Empresa captura maior parte do valor
+- Startup recebe royalties
+:::
+
+::: {.info-box}
+**Lição**: Proteção legal ≠ Captura de valor
+:::
+:::
+:::
+
+---
+
+## Marcas como Estratégia de PI {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Papel Estratégico das Marcas
+
+**Mecanismos de Apropriação**
+- Simbólicos: Identidade, valores
+- Relacionais: Confiança, reputação
+
+**Funções**
+- Ampliar diferencial competitivo
+- Reduzir vulnerabilidade em regimes fracos
+- Extensão da estratégia de PI
+
+::: {.highlight-box}
+**Branding**: Traduz valor técnico em percepção de valor
+:::
+:::
+
+::: {.column width="50%"}
+### Sinergia de Proteção
+
+::: {.info-box}
+**Proteção Formal**
+- Patentes
+- Registros
+- Direitos exclusivos legais
+:::
+
+::: {style="text-align: center; font-size: 2em; margin: 20px 0;"}
++
+:::
+
+::: {.highlight-box}
+**Proteção Simbólica**
+- Marcas
+- Reputação
+- Capital relacional
+:::
+
+**Resultado**: Fortalecimento do ciclo de inovação, monetização e fidelização
+:::
+:::
+
+---
+
+## Framework de Decisão (Bradley et al., 2013) {.smaller-text}
+
+### Quatro Fatores Críticos para Escolha Estratégica
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.info-box}
+**1. Maturidade Tecnológica (TRL)**
+
+*Technology Readiness Level*
+- TRL 1-3: Pesquisa básica
+- TRL 4-6: Prototipagem
+- TRL 7-9: Prontidão para mercado
+
+**Impacto na Estratégia**
+- Baixo TRL → Parceria de desenvolvimento
+- Alto TRL → Licenciamento ou spin-off
+:::
+
+::: {.highlight-box}
+**2. Análise de Mercado**
+
+**Dimensões**
+- Demanda atual e potencial
+- Concorrência e substitutos
+- Barreiras de entrada
+- Janela de oportunidade
+:::
+:::
+
+::: {.column width="50%"}
+::: {.info-box}
+**3. Estratégia de PI**
+
+**Definições**
+- Escopo da proteção
+- Abrangência geográfica
+- Duração e manutenção
+- Portfolio de ativos
+:::
+
+::: {.highlight-box}
+**4. Capacidades Organizacionais**
+
+**Do Detentor**
+- Recursos internos
+- Expertise de mercado
+
+**Do Parceiro/Licenciado**
+- **Capacidade Absortiva** (Cohen & Levinthal, 1990)
+- Habilidade de assimilar e aplicar conhecimento externo
+:::
+:::
+:::
+
+---
+
+## Capacidade Absortiva: Fator Determinante {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Cohen & Levinthal (1990)
+
+**Definição**
+Habilidade organizacional de:
+- Reconhecer o valor de informação externa
+- Assimilar conhecimento novo
+- Aplicar comercialmente
+
+**Características**
+- Cumulativa (*path-dependent*)
+- Baseada em conhecimento prévio
+- Requer investimento contínuo
+:::
+
+::: {.column width="50%"}
+### Implicação para Licenciamento
+
+::: {.info-box}
+**Cenário de Sucesso**
+- Licenciado com alta capacidade absortiva
+- Compreende e aplica tecnologia
+- Extrai valor efetivamente
+- Parceria frutífera
+:::
+
+::: {.highlight-box}
+**Cenário de Fracasso**
+- Licenciado sem capacidade absortiva
+- Não consegue implementar
+- Valor não realizado
+- Parceria infrutífera
+:::
+
+**Conclusão**: Avaliar capacidade absortiva do parceiro é essencial
+:::
+:::
+
+---
+
+# [NITs e Arsenal Analítico]{.section-header}
+
+::: {style="text-align: right; padding-top: 10px; padding-right: 50px;"}
+![](Figuras/nits.jpg){width="25%"}
+:::
+
+---
+
+## NITs no Marco Legal de CT&I {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Lei 13.243/2016 e Decreto 9.283/2018
+
+**Fortalecimento dos NITs**
+- Ampliação de competências
+- Autonomia de gestão
+- Papel estratégico
+
+**Função Central**
+- Mediadores estratégicos
+- Navegação da complexidade
+- Ponte entre academia e mercado
+
+::: {.info-box}
+NITs como agentes de inovação
+:::
+:::
+
+::: {.column width="50%"}
+### Competências Essenciais
+
+**Técnicas**
+- Metodologias de valoração
+- Análise de mercado
+- Gestão de PI
+
+**Relacionais**
+- Articulação de ecossistema
+- Negociação
+- Mediação de interesses
+
+::: {.highlight-box}
+**Objetivo**: Maximizar retorno social e econômico do conhecimento
+:::
+:::
+:::
+
+---
+
+## Inteligência Competitiva: Ponto de Partida {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Buscas de Anterioridade
+
+**Finalidade**
+- Verificar novidade
+- Identificar arte anterior
+- Avaliar patenteabilidade
+
+**Bases de Dados**
+- USPTO, EPO, WIPO
+- INPI (Brasil)
+- Patentscope
+
+**Resultado**
+- Validação técnica
+- Estratégia de reivindicações
+:::
+
+::: {.column width="50%"}
+### Análise de Paisagem Patentária
+
+**Componentes**
+- Mapeamento de concorrentes
+- Identificação de tendências
+- Análise de citações
+- Famílias de patentes
+
+**Inteligência Fornecida**
+- Estado da arte tecnológico
+- Posicionamento competitivo
+- Espaços de liberdade (*white spaces*)
+
+::: {.highlight-box}
+Base para decisões estratégicas
+:::
+:::
+:::
+
+---
+
+## Arsenal Analítico Avançado {.smaller-text}
+
+### Ferramentas para Modelagem da Incerteza
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.info-box}
+**1. Método de Monte Carlo**
+
+**Aplicação**
+- FCD probabilístico
+- Substituir estimativa pontual por distribuição
+
+**Processo**
+- Simular milhares de cenários
+- Incorporar variáveis aleatórias
+- Quantificar risco
+
+**Vantagem**
+- Modelagem probabilística
+- Distribuição de valores possíveis
+- Quantificação precisa de risco
+:::
+:::
+
+::: {.column width="50%"}
+::: {.highlight-box}
+**2. Teoria de Opções Reais**
+
+**Conceito**
+- Projeto de P&D como opção financeira
+- Valor da flexibilidade gerencial
+
+**Flexibilidades Modeladas**
+- Expandir investimento
+- Adiar decisão
+- Abandonar projeto
+- Mudar de estratégia
+
+**Vantagem**
+- Captura valor em ambientes voláteis
+- Métodos estáticos ignoram flexibilidade
+:::
+:::
+:::
+
+---
+
+## Ferramentas Estratégicas Complementares {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+::: {.info-box}
+**3. Teoria dos Jogos**
+
+**Aplicação em Licenciamento**
+- Modelar interação estratégica
+- Detentor PI vs. Licenciados
+- Cenários de competição/cooperação
+
+**Análise**
+- Antecipar comportamentos
+- Identificar equilíbrios
+- Desenhar contratos ótimos
+
+**Estruturas de Contrato**
+- Pagamentos de *milestones*
+- *Royalties* variáveis
+- Cláusulas de desempenho
+
+**Resultado**: Alinhamento de incentivos
+:::
+:::
+
+::: {.column width="50%"}
+::: {.highlight-box}
+**4. Modelos Econométricos Hedônicos**
+
+**Conceito**
+- Decomposição de valor por atributos
+- Análise de características intrínsecas
+
+**Variáveis Analisadas**
+- Número de reivindicações
+- Citações recebidas
+- Tamanho da família de patentes
+- Amplitude tecnológica
+
+**Método**
+- Regressão sobre transações passadas
+- "Preço" implícito de cada atributo
+
+**Base**: Quantitativa e empírica para valoração
+:::
+:::
+:::
+
+---
+
+## Metodologias Institucionais Brasileiras {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Embrapa (2022)
+
+**Valoração de Ativos Tecnológicos**
+
+**Características**
+- Adaptada ao setor público
+- Foco em tecnologias agrícolas
+- Metodologia contextualizada
+
+**Componentes**
+- Abordagens clássicas adaptadas
+- Consideração de impacto social
+- Métricas de adoção
+
+::: {.info-box}
+Aplicações e desafios no setor público
+:::
+:::
+
+::: {.column width="50%"}
+### ICC Brasil (2022)
+
+**Manual de Avaliação de PI**
+
+**Escopo**
+- Metodologias abrangentes
+- Diretrizes práticas
+- Estudos de caso
+
+**Contribuição**
+- Padronização de práticas
+- Capacitação de avaliadores
+- Referência nacional
+
+::: {.highlight-box}
+Base metodológica para NITs brasileiros
+:::
+:::
+:::
+
+---
+
+## Síntese do Arsenal Analítico dos NITs {.smaller-text}
+
+::: {.columns}
+::: {.column width="60%"}
+### Integração de Ferramentas
+
+**Etapa 1: Inteligência**
+- Buscas de anterioridade
+- Análise de paisagem patentária
+
+**Etapa 2: Valoração**
+- Métodos tradicionais (base)
+- Monte Carlo (incerteza)
+- Opções Reais (flexibilidade)
+- ML/Econométricos (padrões)
+
+**Etapa 3: Comercialização**
+- Teoria dos Jogos (negociação)
+- Framework de Bradley (decisão)
+- Avaliação de capacidade absortiva
+:::
+
+::: {.column width="40%"}
+::: {.highlight-box}
+### Competências Integradas
+
+**Técnicas**
+- Domínio metodológico
+- Análise quantitativa
+- Modelagem avançada
+
+**Relacionais**
+- Articulação de ecossistema
+- Mediação de interesses
+- Negociação estratégica
+:::
+
+::: {.info-box}
+**Resultado**: NITs capacitados para maximizar retorno do conhecimento gerado
+:::
+:::
+:::
+
+---
+
+# [Conclusão]{.section-header}
+
+::: {style="text-align: right; padding-top: 10px; padding-right: 50px;"}
+![](Figuras/conclusao.jpg){width="25%"}
+:::
+
+---
+
+## Síntese: Valoração e Comercialização de PI {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Natureza Estratégica
+
+**Integração Multidisciplinar**
+- Teoria econômica
+- Análise de mercado
+- Conhecimento jurídico
+- Competência técnica
+
+**Processos Interligados**
+- Valoração informa comercialização
+- Comercialização valida valoração
+- Ciclo de aprendizado
+:::
+
+::: {.column width="50%"}
+### Evolução Metodológica
+
+**Clássica** (Smith & Parr, 2000)
+- Custo, Mercado, Renda
+
+⬇️
+
+**Probabilística**
+- Monte Carlo, Opções Reais
+
+⬇️
+
+**Computacional** (Zhou & Wang, Wu & Li, 2022)
+- Machine Learning
+- Modelos integrados
+:::
+:::
+
+::: {style="text-align: center; margin-top: 30px;"}
+**Reflexo**: Complexidade crescente dos ativos intangíveis
+:::
+
+---
+
+## Decisão Estratégica Informada {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Escolha de Estratégia de Comercialização
+
+**Modelos** (Bozeman, 2000)
+- Licenciamento
+- Joint ventures
+- Spin-offs
+
+**Indissociável de:**
+
+::: {.info-box}
+**Regimes de Apropriabilidade** (Teece, 1986)
+- Força da proteção
+- Ativos complementares
+- Posição competitiva
+:::
+:::
+
+::: {.column width="50%"}
+### Framework de Decisão
+
+**Bradley et al. (2013)**
+1. Maturidade tecnológica (TRL)
+2. Análise de mercado
+3. Estratégia de PI
+4. Capacidades organizacionais
+
+::: {.highlight-box}
+**Fator Crítico**: Capacidade Absortiva do parceiro (Cohen & Levinthal, 1990)
+:::
+
+**Resultado**: Decisão contextualizada e fundamentada
+:::
+:::
+
+---
+
+## Fortalecimento dos NITs no Brasil {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Importância Estratégica
+
+**Marco Legal de CT&I**
+- Lei 13.243/2016
+- Decreto 9.283/2018
+- Ampliação de competências
+
+**Papel dos NITs**
+- Mediadores estratégicos
+- Gestores de ativos intangíveis
+- Articuladores de ecossistema
+
+::: {.info-box}
+Aplicar conhecimento de forma contextualizada
+:::
+:::
+
+::: {.column width="50%"}
+### Arsenal Necessário
+
+**Metodológico**
+- Valoração adaptada
+- Ferramentas avançadas
+- Inteligência competitiva
+
+**Relacional**
+- Capacidade de negociação
+- Articulação institucional
+- Mediação de interesses
+
+::: {.highlight-box}
+**Objetivo Final**: Converter PI em motor de vantagem competitiva e desenvolvimento
+:::
+:::
+:::
+
+---
+
+## Articulação: Técnica, Mercado e Estratégia {.smaller-text}
+
+::: {.columns}
+::: {.column width="60%"}
+### Dimensões Integradas
+
+**Técnica**
+- Métodos rigorosos de valoração
+- Ferramentas analíticas avançadas
+- Modelagem de incerteza
+
+**Mercado**
+- Análise de demanda e concorrência
+- Identificação de oportunidades
+- Timing estratégico
+
+**Estratégia**
+- Escolha de modelo de comercialização
+- Gestão de ativos complementares
+- Construção de capacidades
+:::
+
+::: {.column width="40%"}
+::: {.highlight-box}
+### Essência
+
+"Bem articular técnica, mercado e estratégia"
+:::
+
+::: {.info-box}
+**Transformação**
+
+Ativos Intangíveis
+⬇️
+Retornos Econômicos
+⬇️
+Posicionamento Competitivo
+⬇️
+Desenvolvimento Nacional
+:::
+:::
+:::
+
+---
+
+## Referências {.smaller-text .references}
+
+::: {style="font-size: 0.65em; column-count: 2; column-gap: 40px;"}
+
+**Arora et al.** Markets for Technology: The Economics of Innovation and Corporate Strategy, 2001.
+
+**Bozeman** Technology transfer and public policy: a review of research and theory, 2000.
+
+**Bradley et al.** Models and methods of university technology transfer, 2013.
+
+**Brasil** Lei nº 13.243, de 11 de janeiro de 2016 (Marco Legal de CT&I), 2016.
+
+**Brasil** Decreto nº 9.283, de 7 de fevereiro de 2018, 2018.
+
+**Cohen e Levinthal** Absorptive Capacity: A New Perspective on Learning and Innovation, 1990.
+
+**Embrapa** Valoração de ativos tecnológicos: metodologias, aplicações e desafios no setor público, 2022.
+
+**ICC Brasil** Manual de Avaliação de Ativos de Propriedade Intelectual, 2022.
+
+**Lev** Intangibles: Management, Measurement, and Reporting, 2001.
+
+**Smith e Parr** Valuation of Intellectual Property and Intangible Assets, 2000.
+
+**Teece** Profiting from technological innovation: implications for integration, collaboration, licensing and public policy, 1986.
+
+**Wu e Li** Research on technology contribution evaluation model for commercialization, 2022.
+
+**Zhou e Wang** Measuring intangible assets using parametric and machine learning approaches, 2022.
+
+:::
+
+---
+
+## {.centered-content}
+
+::: {style="text-align: center; font-size: 2.5em; color: var(--ufs-azul); margin-top: 150px;"}
+**Obrigado!**
+:::
+
+::: {style="text-align: center; font-size: 1.2em; margin-top: 50px; color: var(--ufs-cinza-escuro);"}
+**Luiz Diego Vidal Santos**
+
+Universidade Federal de Sergipe
+
+[diego@academico.ufs.br](mailto:diego@academico.ufs.br)
+:::

@@ -1,0 +1,20 @@
+graph TB
+    I[Inovação] --> R{Regime de<br/>Apropriabilidade}
+    
+    R -->|Forte| RF[PI efetiva<br/>ex: Farmacêutico<br/>Químico<br/>Biotecnologia]
+    R -->|Fraco| RW[Imitação fácil<br/>ex: Software<br/>Eletrônica<br/>Serviços]
+    
+    RF --> AC1{Ativos<br/>Complementares?}
+    RW --> AC2{Ativos<br/>Complementares?}
+    
+    AC1 -->|Possui| E1[✅ Exploração Direta<br/>Captura máxima de valor]
+    AC1 -->|Não possui| L1[Licenciamento<br/>Parceria estratégica]
+    
+    AC2 -->|Possui| E2[Integração Vertical<br/>Velocidade + Sigilo]
+    AC2 -->|Não possui| P[❌ Valor capturado<br/>por imitadores]
+    
+    style R fill:#FF8C00,color:#fff
+    style RF fill:#00A859,color:#fff
+    style RW fill:#CC0000,color:#fff
+    style E1 fill:#0066CC,color:#fff
+    style P fill:#CC0000,color:#fff

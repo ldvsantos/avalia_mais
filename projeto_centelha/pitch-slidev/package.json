@@ -1,0 +1,16 @@
+{
+  "name": "pitch-avalia-slidev",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "slidev",
+    "build": "slidev build",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@slidev/cli": "^0.48.0",
+    "@slidev/theme-default": "^0.21.2",
+    "@slidev/theme-seriph": "^0.21.2",
+    "vue": "^3.4.0",
+    "sass": "^1.70.0" 
+  }
+}

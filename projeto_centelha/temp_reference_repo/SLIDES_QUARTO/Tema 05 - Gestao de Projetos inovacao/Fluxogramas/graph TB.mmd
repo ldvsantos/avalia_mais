@@ -1,0 +1,24 @@
+graph TB
+    TRL1[TRL 1: Princípios básicos<br/>observados] --> TRL2[TRL 2: Conceito<br/>formulado]
+    TRL2 --> TRL3[TRL 3: Prova de conceito<br/>experimental]
+    TRL3 --> TRL4[TRL 4: Validação<br/>laboratório]
+    TRL4 --> TRL5[TRL 5: Validação<br/>ambiente relevante]
+    TRL5 --> TRL6[TRL 6: Demonstração<br/>protótipo]
+    TRL6 --> TRL7[TRL 7: Demonstração<br/>operacional]
+    TRL7 --> TRL8[TRL 8: Sistema completo<br/>qualificado]
+    TRL8 --> TRL9[TRL 9: Operação<br/>comprovada]
+    
+    TRL1 -.->|Decisão PI| D1[Segredo comercial<br/>ou publicação?]
+    TRL3 -.->|Decisão PI| D2[Depósito provisório?]
+    TRL5 -.->|Decisão PI| D3[Patente definitiva<br/>Escopo geográfico]
+    TRL7 -.->|Decisão PI| D4[Licenciamento<br/>Spin-off?]
+    
+    style TRL1 fill:#003366,color:#fff
+    style TRL3 fill:#0066CC,color:#fff
+    style TRL5 fill:#00A859,color:#fff
+    style TRL7 fill:#FF8C00,color:#fff
+    style TRL9 fill:#003366,color:#fff
+    style D1 fill:#FFCC00,color:#000
+    style D2 fill:#FFCC00,color:#000
+    style D3 fill:#FFCC00,color:#000
+    style D4 fill:#FFCC00,color:#000

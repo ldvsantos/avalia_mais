@@ -1,0 +1,56 @@
+---
+title: "Concurso Edital 05/2025"
+subtitle: "Spin-offs Acadêmicas<br>Empreendedorismo Universitário"
+author: "Luiz Diego Vidal Santos"
+institute: "Universidade Federal de Sergipe"
+format: 
+  revealjs:
+    logo: assets/logo-ufs.png
+    footer: "UFS - Universidade Federal de Sergipe | Tema 9 - Spin-offs Acadêmicas"
+    slide-number: true
+    theme: [simple, assets/ufs.scss]
+    controls: true
+    width: 1280
+    height: 720
+    css: assets/custom.css
+    transition: slide
+    background-transition: fade
+    preview-links: auto
+execute:
+  echo: false
+---
+
+## Visão Geral {.smaller-text}
+
+::: {.columns}
+::: {.column width="50%"}
+### Tópicos Principais
+
+- [1]{.circle} Conceitos de Spin-offs Acadêmicas
+- [2]{.circle} Processo de Criação
+- [3]{.circle} Modelos de Governança
+- [4]{.circle} PI em Spin-offs
+- [5]{.circle} Ecossistema de Apoio
+:::
+
+::: {.column width="50%"}
+::: {.info-box}
+**Objetivo Central**
+
+Explorar o processo de criação e desenvolvimento de spin-offs acadêmicas e seu papel na inovação.
+:::
+:::
+:::
+
+---
+
+## Conteúdo em Desenvolvimento
+
+::: {.highlight-box}
+Esta apresentação será construída com base no material do Tema 09.
+
+Próximos passos:
+- Estruturação do conteúdo
+- Inclusão de figuras e diagramas
+- Revisão e ajustes finais
+:::

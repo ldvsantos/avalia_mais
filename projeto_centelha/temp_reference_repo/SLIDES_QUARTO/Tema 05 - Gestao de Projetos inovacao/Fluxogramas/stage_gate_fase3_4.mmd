@@ -1,0 +1,16 @@
+graph LR
+    
+    
+    S3 --> G3{Gate 3<br/>Teste}
+    G3 -->|Go| S4[Stage 4<br/>Validação]
+    G3 -->|Kill| K[❌]
+    
+    S4 --> G4{Gate 4<br/>Lançamento}
+    G4 -->|Hold| H[⏸️]
+    
+    style G3 fill:#FF8C00,color:#fff
+    style G4 fill:#FF8C00,color:#fff
+    style S3 fill:#00A859,color:#fff
+    style S4 fill:#00A859,color:#fff
+    style K fill:#CC0000,color:#fff
+    style H fill:#CCCC00,color:#000
