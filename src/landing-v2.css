@@ -103,9 +103,10 @@ ul{list-style:none}
 .metric-divider{width:1px;height:36px;background:rgba(255,255,255,.15)}
 
 /* scroll hint */
-.hero-scroll-hint{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;color:rgba(255,255,255,.35);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase}
-.scroll-line{width:1px;height:32px;background:linear-gradient(to bottom,rgba(255,255,255,.35),transparent);animation:scrollDown 1.8s ease infinite}
-@keyframes scrollDown{0%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(0);transform-origin:top}}
+.hero-scroll-hint{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.5);font-size:.72rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;transition:color .3s}
+.hero-scroll-hint:hover{color:rgba(255,255,255,.85)}
+.hero-scroll-hint svg{animation:bounceDown 1.6s ease-in-out infinite}
+@keyframes bounceDown{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(6px);opacity:1}}
 
 /* =====================================================
    SECTION COMMONS
