@@ -1,425 +1,379 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Avalia+Tec — Plataforma Inteligente para Processos Seletivos</title>
-    <meta name="description" content="Inscrição, avaliação multicritério, alocação de vagas e resultados auditáveis. A plataforma que transforma a gestão de processos seletivos educacionais.">
-    <link rel="icon" type="image/png" href="img/logo_avalia_quadrado.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="landing-v2.css?v=20260207">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avalia+ — Plataforma Inteligente para Processos Seletivos</title>
+  <meta name="description" content="Inscrição, avaliação multicritério, alocação de vagas e resultados auditáveis. Transforme a gestão de processos seletivos educacionais.">
+  <link rel="icon" type="image/png" href="img/logo_avalia_quadrado.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="landing-v2.css?v=20260207b">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <a class="brand" href="index.html">
-                <img src="img/logo_avalia_horizontal.png" alt="Avalia+Tec" class="brand-logo-horizontal">
-            </a>
-            <button class="nav-toggle" aria-label="Menu" onclick="this.nextElementSibling.classList.toggle('open')">
-                <span></span><span></span><span></span>
-            </button>
-            <div class="nav-links">
-                <a href="#problemas">Desafios</a>
-                <a href="#solucao">Solução</a>
-                <a href="#diferenciais">Diferenciais</a>
-                <a href="#segmentos">Segmentos</a>
-                <a href="#roadmap">Roadmap</a>
-                <a href="https://github.com/ldvsantos/avalia_mais_desktop/releases/latest" target="_blank" rel="noopener" class="btn-nav btn-nav-download">⬇ Desktop</a>
-                <a href="index-portal.html" class="btn-nav">Acessar Sistema</a>
-            </div>
-        </div>
-    </nav>
 
-    <!-- ===== HERO ===== -->
-    <section class="hero-section">
-        <div class="hero-bg">
-            <img src="img/landing/hero_wide_16x9.png" alt="" aria-hidden="true">
+  <!-- ─── NAVBAR ─── -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a class="nav-brand" href="index.html">
+        <img src="img/logo_avalia_horizontal.png" alt="Avalia+" class="brand-logo">
+      </a>
+      <button class="nav-toggle" aria-label="Menu" id="navToggle">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-menu" id="navMenu">
+        <a href="#funcionalidades" class="nav-link">Funcionalidades</a>
+        <a href="#diferenciais" class="nav-link">Diferenciais</a>
+        <a href="#seguranca" class="nav-link">Segurança</a>
+        <a href="#segmentos" class="nav-link">Segmentos</a>
+        <a href="#roadmap" class="nav-link">Roadmap</a>
+        <div class="nav-actions">
+          <a href="https://github.com/ldvsantos/avalia_mais_desktop/releases/latest" target="_blank" rel="noopener" class="nav-btn nav-btn-outline">↓ Desktop</a>
+          <a href="index-portal.html" class="nav-btn nav-btn-solid">Acessar Sistema</a>
         </div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <div class="container">
-                <div class="hero-inner">
-                    <div class="hero-text">
-                        <div class="hero-badge">Plataforma Ativa</div>
-                        <h1 class="hero-title">
-                            Processos seletivos com <span class="gradient-text">transparência total</span>
-                        </h1>
-                        <p class="hero-subtitle">
-                            Inscrição, avaliação multicritério, alocação inteligente de vagas e resultados auditáveis — tudo em uma única plataforma.
-                        </p>
-                        <div class="hero-actions">
-                            <a href="#solucao" class="btn-primary">Conheça a Solução →</a>
-                            <a href="https://github.com/ldvsantos/avalia_mais_desktop/releases/latest" target="_blank" rel="noopener" class="btn-secondary">⬇ Baixar Desktop</a>
-                        </div>
-                    </div>
-                    <div class="hero-visual">
-                        <div class="hero-card">
-                            <img src="img/landing/dashboard.png" alt="Dashboard do Avalia+" loading="eager">
-                            <div class="hero-stats">
-                                <div class="stat-item">
-                                    <div class="stat-number">100%</div>
-                                    <div class="stat-label">Auditável</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">−50%</div>
-                                    <div class="stat-label">Retrabalho</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">0</div>
-                                    <div class="stat-label">Inconsist.</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+      </div>
+    </div>
+  </nav>
 
-    <!-- ===== PROBLEMAS ===== -->
-    <section id="problemas" class="section problems-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">O Desafio</span>
-                <h2 class="section-title">Problemas que processos seletivos enfrentam hoje</h2>
-                <p class="section-subtitle">Planilhas, retrabalho, erros humanos e falta de rastreabilidade geram custos altos e insegurança jurídica.</p>
-            </div>
-            <div class="problems-grid">
-                <div class="problem-card reveal">
-                    <div class="problem-icon">📊</div>
-                    <h3>Alto Custo Operacional</h3>
-                    <p>Conferência manual, múltiplas planilhas e retrabalho constante consomem tempo precioso das equipes.</p>
-                </div>
-                <div class="problem-card reveal">
-                    <div class="problem-icon">⚠️</div>
-                    <h3>Risco de Inconsistência</h3>
-                    <p>Versões divergentes de notas e critérios subjetivos aumentam erros e contestações.</p>
-                </div>
-                <div class="problem-card reveal">
-                    <div class="problem-icon">🔍</div>
-                    <h3>Baixa Auditabilidade</h3>
-                    <p>Impossibilidade de demonstrar "como" se chegou ao resultado gera insegurança jurídica.</p>
-                </div>
-                <div class="problem-card reveal">
-                    <div class="problem-icon">⚖️</div>
-                    <h3>Alta Judicialização</h3>
-                    <p>Volume de processos e recursos devido à falta de transparência e rastreabilidade.</p>
-                </div>
-            </div>
+  <!-- ─── HERO ─── -->
+  <section class="hero">
+    <div class="hero-bg-wrap">
+      <div class="hero-gradient"></div>
+      <div class="hero-particles" id="particles"></div>
+    </div>
+    <div class="container hero-grid">
+      <div class="hero-text">
+        <div class="hero-chip">
+          <span class="chip-dot"></span>
+          Plataforma em produção
         </div>
-    </section>
+        <h1>Processos seletivos com <span class="text-accent">transparência<br>e inteligência</span></h1>
+        <p class="hero-sub">Inscrição, avaliação multicritério, alocação inteligente de vagas e resultados 100 % auditáveis — tudo em uma única plataforma segura.</p>
+        <div class="hero-ctas">
+          <a href="#funcionalidades" class="btn btn-primary">Explorar funcionalidades</a>
+          <a href="https://github.com/ldvsantos/avalia_mais_desktop/releases/latest" target="_blank" rel="noopener" class="btn btn-ghost">↓ Baixar Desktop</a>
+        </div>
+        <div class="hero-metrics">
+          <div class="metric" data-target="100" data-suffix="%">
+            <span class="metric-value">0%</span>
+            <span class="metric-label">Auditável</span>
+          </div>
+          <div class="metric-divider"></div>
+          <div class="metric" data-target="50" data-prefix="−" data-suffix="%">
+            <span class="metric-value">0%</span>
+            <span class="metric-label">Retrabalho</span>
+          </div>
+          <div class="metric-divider"></div>
+          <div class="metric" data-target="0" data-suffix="">
+            <span class="metric-value">0</span>
+            <span class="metric-label">Inconsistências</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-mockup">
+          <img src="img/landing/dashboard.png" alt="Dashboard do Avalia+" loading="eager">
+          <div class="mockup-glow"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll-hint">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
 
-    <!-- ===== SOLUÇÃO ===== -->
-    <section id="solucao" class="solution-section">
-        <div class="solution-bg">
-            <img src="img/landing/03_dashboard_devices.png" alt="" aria-hidden="true">
-        </div>
-        <div class="solution-overlay"></div>
-        <div class="solution-content">
-            <div class="container">
-                <div class="solution-header">
-                    <span class="section-tag light">A Solução</span>
-                    <h2 class="section-title light">Plataforma completa para todo o ciclo</h2>
-                    <p class="section-subtitle light">Do edital à publicação de resultados, cada etapa é rastreável, auditável e automatizada.</p>
-                </div>
-                <div class="horizontal-scroll-container">
-                    <div class="horizontal-scroll-wrapper">
-                        <div class="horizontal-scroll-item">
-                            <div class="solution-card">
-                                <h4>📋 Gestão de Inscrições</h4>
-                                <p>Formulários inteligentes, validação automática, protocolo com hash e comprovante PDF assinado.</p>
-                                <div class="card-arrow">→</div>
-                            </div>
-                        </div>
-                        <div class="horizontal-scroll-item">
-                            <div class="solution-card">
-                                <h4>📊 Avaliação Multicritério</h4>
-                                <p>Múltiplos avaliadores, pesos configuráveis, consolidação automática e ranking dinâmico.</p>
-                                <div class="card-arrow">→</div>
-                            </div>
-                        </div>
-                        <div class="horizontal-scroll-item">
-                            <div class="solution-card">
-                                <h4>🎯 Alocação de Vagas</h4>
-                                <p>Distribuição de vagas por cotas, linhas e critérios com algoritmo auditável.</p>
-                                <div class="card-arrow">→</div>
-                            </div>
-                        </div>
-                        <div class="horizontal-scroll-item">
-                            <div class="solution-card">
-                                <h4>🛡️ Integridade com IA</h4>
-                                <p>Detecção de plágio, conteúdo gerado por IA e verificação de referências bibliográficas.</p>
-                                <div class="card-arrow">→</div>
-                            </div>
-                        </div>
-                        <div class="horizontal-scroll-item">
-                            <div class="solution-card">
-                                <h4>📄 Recursos e Contestações</h4>
-                                <p>Fluxo completo de recursos com protocolo, análise e resposta rastreável.</p>
-                                <div class="card-arrow">→</div>
-                            </div>
-                        </div>
-                        <div class="horizontal-scroll-item">
-                            <div class="solution-card">
-                                <h4>🔐 Auditoria Completa</h4>
-                                <p>Trilha de todas as ações com IP, timestamp, hash e assinatura digital.</p>
-                                <div class="card-arrow">→</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- ─── PROBLEMAS ─── -->
+  <section id="problemas" class="section bg-light">
+    <div class="container">
+      <header class="section-head">
+        <span class="tag">O desafio</span>
+        <h2>Por que processos seletivos ainda falham?</h2>
+        <p>Planilhas, conferência manual e falta de rastreabilidade geram custos altos, erros e insegurança jurídica.</p>
+      </header>
+      <div class="grid-4 stagger">
+        <article class="card-problem rv">
+          <div class="card-icon">📊</div>
+          <h3>Alto custo operacional</h3>
+          <p>Múltiplas planilhas, conferência manual e retrabalho constante consomem tempo e orçamento.</p>
+        </article>
+        <article class="card-problem rv">
+          <div class="card-icon">⚠️</div>
+          <h3>Risco de inconsistência</h3>
+          <p>Versões divergentes de notas e critérios subjetivos multiplicam erros e contestações.</p>
+        </article>
+        <article class="card-problem rv">
+          <div class="card-icon">🔍</div>
+          <h3>Baixa auditabilidade</h3>
+          <p>Impossibilidade de demonstrar "como" se chegou ao resultado gera insegurança jurídica.</p>
+        </article>
+        <article class="card-problem rv">
+          <div class="card-icon">⚖️</div>
+          <h3>Alta judicialização</h3>
+          <p>Volume de processos e recursos pela falta de transparência e rastreabilidade.</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    <!-- ===== DIFERENCIAIS ===== -->
-    <section id="diferenciais" class="section differentials-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Diferenciais</span>
-                <h2 class="section-title">Por que escolher o AVALIA+?</h2>
-            </div>
-            <div class="differentials-grid">
-                <div class="differential-card reveal">
-                    <div class="differential-number">01</div>
-                    <h3>Governança e Automação</h3>
-                    <p>Controle de acesso, trilha de auditoria e padronização combinados com consolidação multicritério automática.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">02</div>
-                    <h3>Redução de −50% no Esforço</h3>
-                    <p>Eliminação de conferência manual e consolidação por planilha. Resultado mais rápido e confiável.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">03</div>
-                    <h3>Zero Inconsistências</h3>
-                    <p>Validações em tempo real, cálculos determinísticos e hash de integridade em cada documento.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">04</div>
-                    <h3>Transparência Total</h3>
-                    <p>100% de rastreabilidade: cada ação é registrada com usuário, IP, data e contexto.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">05</div>
-                    <h3>IA para Integridade</h3>
-                    <p>Verificação inteligente de plágio, conteúdo gerado por IA e referências bibliográficas fabricadas.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">06</div>
-                    <h3>Web + Desktop</h3>
-                    <p>Plataforma online e app desktop offline com PDFs idênticos, sincronização e backup local.</p>
-                </div>
-            </div>
+  <!-- ─── FUNCIONALIDADES (pipeline) ─── -->
+  <section id="funcionalidades" class="section bg-dark">
+    <div class="container">
+      <header class="section-head light">
+        <span class="tag tag-light">A solução</span>
+        <h2>Do edital ao resultado — tudo em um fluxo</h2>
+        <p>Cada etapa é rastreável, auditável e automatizada.</p>
+      </header>
+      <div class="pipeline">
+        <div class="pipe-line-bg"></div>
+        <div class="pipe-step rv">
+          <div class="pipe-number">1</div>
+          <div class="pipe-card glass">
+            <h4>Gestão de Inscrições</h4>
+            <p>Formulários inteligentes, validação automática, protocolo com hash e comprovante PDF assinado digitalmente.</p>
+          </div>
         </div>
-    </section>
+        <div class="pipe-step rv">
+          <div class="pipe-number">2</div>
+          <div class="pipe-card glass">
+            <h4>Avaliação Multicritério</h4>
+            <p>Múltiplos avaliadores, pesos configuráveis, consolidação automática e ranking dinâmico por etapa.</p>
+          </div>
+        </div>
+        <div class="pipe-step rv">
+          <div class="pipe-number">3</div>
+          <div class="pipe-card glass">
+            <h4>Alocação de Vagas</h4>
+            <p>Distribuição por cotas, linhas de pesquisa e critérios com algoritmo 100 % auditável.</p>
+          </div>
+        </div>
+        <div class="pipe-step rv">
+          <div class="pipe-number">4</div>
+          <div class="pipe-card glass">
+            <h4>Integridade com IA</h4>
+            <p>Detecção de plágio, conteúdo gerado por IA e verificação de referências bibliográficas.</p>
+          </div>
+        </div>
+        <div class="pipe-step rv">
+          <div class="pipe-number">5</div>
+          <div class="pipe-card glass">
+            <h4>Recursos e Contestações</h4>
+            <p>Fluxo completo de recursos com protocolo, análise e resposta 100 % rastreável.</p>
+          </div>
+        </div>
+        <div class="pipe-step rv">
+          <div class="pipe-number">6</div>
+          <div class="pipe-card glass">
+            <h4>Auditoria Completa</h4>
+            <p>Trilha de todas as ações com IP, timestamp, geolocalização, hash e assinatura digital.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- ===== SEGURANÇA ===== -->
-    <section class="section security-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Segurança</span>
-                <h2 class="section-title">DeepTech para proteger dados e decisões</h2>
-                <p class="section-subtitle">Camadas de proteção contra vazamento, fraude e acesso indevido.</p>
-            </div>
-            <div class="differentials-grid">
-                <div class="differential-card reveal">
-                    <div class="differential-number">01</div>
-                    <h3>Hardening no Navegador</h3>
-                    <p>Headers e políticas de navegação que reduzem superfícies de ataque como clickjacking e MIME sniffing.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">02</div>
-                    <h3>Autenticação e Controle</h3>
-                    <p>Rotas protegidas com JWT, área administrativa sob segredo e sessões seguras.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">03</div>
-                    <h3>Bloqueio de Ataques</h3>
-                    <p>Detecção e bloqueio de SQLi, XSS, path traversal e command injection antes da regra de negócio.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">04</div>
-                    <h3>Anti-Abuso</h3>
-                    <p>Rate limiting para reduzir força bruta, varredura e tentativas automatizadas.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">05</div>
-                    <h3>Auditoria e Rastreabilidade</h3>
-                    <p>Trilha completa com contexto de requisição para investigação e conformidade.</p>
-                </div>
-                <div class="differential-card reveal">
-                    <div class="differential-number">06</div>
-                    <h3>Operação Segura</h3>
-                    <p>Logs de segurança, backups automáticos e resposta a incidentes.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- ─── DIFERENCIAIS ─── -->
+  <section id="diferenciais" class="section">
+    <div class="container">
+      <header class="section-head">
+        <span class="tag">Diferenciais</span>
+        <h2>Por que escolher o Avalia+?</h2>
+      </header>
+      <div class="grid-3 stagger">
+        <article class="card-diff rv">
+          <span class="diff-num">01</span>
+          <h3>Governança &amp; Automação</h3>
+          <p>Controle de acesso, trilha de auditoria e consolidação multicritério automática combinados.</p>
+        </article>
+        <article class="card-diff rv">
+          <span class="diff-num">02</span>
+          <h3>−50 % de esforço</h3>
+          <p>Eliminação de conferência manual e consolidação por planilha. Resultado mais rápido e confiável.</p>
+        </article>
+        <article class="card-diff rv">
+          <span class="diff-num">03</span>
+          <h3>Zero inconsistências</h3>
+          <p>Validações em tempo real, cálculos determinísticos e hash de integridade em cada documento.</p>
+        </article>
+        <article class="card-diff rv">
+          <span class="diff-num">04</span>
+          <h3>Transparência total</h3>
+          <p>100 % de rastreabilidade: cada ação registrada com usuário, IP, data e contexto.</p>
+        </article>
+        <article class="card-diff rv">
+          <span class="diff-num">05</span>
+          <h3>IA para integridade</h3>
+          <p>Verificação inteligente de plágio, conteúdo gerado por IA e referências bibliográficas fabricadas.</p>
+        </article>
+        <article class="card-diff rv">
+          <span class="diff-num">06</span>
+          <h3>Web + Desktop</h3>
+          <p>Plataforma online e app desktop offline com PDFs idênticos, sincronização e backup local.</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    <!-- ===== CANDIDATOS ===== -->
-    <section class="section proof-section">
-        <div class="container">
-            <div class="lp-split lp-split-reverse">
-                <div class="lp-media-wrapper">
-                    <img src="img/landing/candidatos.png" alt="Candidatos acessando o processo seletivo no AVALIA+" class="lp-media" loading="lazy" decoding="async">
-                </div>
-                <div class="proof-content">
-                    <span class="section-tag">Para o Candidato</span>
-                    <h2 class="section-title">Transparência em cada etapa</h2>
-                    <p class="section-text">Todo candidato tem acesso completo: critérios de avaliação, notas detalhadas, composição do ranking e justificativas das decisões. A transparência total elimina dúvidas, reduz recursos e fortalece a confiança.</p>
-                    <a href="index-portal.html" class="btn-outline">Acessar Portal do Candidato →</a>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- ─── SEGURANÇA ─── -->
+  <section id="seguranca" class="section bg-gradient">
+    <div class="container">
+      <header class="section-head light">
+        <span class="tag tag-light">Segurança</span>
+        <h2>DeepTech para proteger dados e decisões</h2>
+        <p>Camadas de proteção contra vazamento, fraude e acesso indevido.</p>
+      </header>
+      <div class="grid-3 stagger">
+        <article class="card-sec rv glass">
+          <div class="sec-icon">🛡️</div>
+          <h3>Hardening no navegador</h3>
+          <p>Headers e políticas que reduzem superfícies de ataque como clickjacking e MIME sniffing.</p>
+        </article>
+        <article class="card-sec rv glass">
+          <div class="sec-icon">🔑</div>
+          <h3>Autenticação e controle</h3>
+          <p>Rotas protegidas com JWT, área administrativa sob segredo e sessões seguras.</p>
+        </article>
+        <article class="card-sec rv glass">
+          <div class="sec-icon">🚫</div>
+          <h3>Bloqueio de ataques</h3>
+          <p>Detecção e bloqueio de SQLi, XSS, path traversal e command injection.</p>
+        </article>
+        <article class="card-sec rv glass">
+          <div class="sec-icon">🔒</div>
+          <h3>Anti-abuso</h3>
+          <p>Rate limiting para reduzir força bruta, varredura e tentativas automatizadas.</p>
+        </article>
+        <article class="card-sec rv glass">
+          <div class="sec-icon">📋</div>
+          <h3>Auditoria e rastreabilidade</h3>
+          <p>Trilha completa com contexto de requisição para investigação e conformidade.</p>
+        </article>
+        <article class="card-sec rv glass">
+          <div class="sec-icon">💾</div>
+          <h3>Operação segura</h3>
+          <p>Logs de segurança, backups automáticos e resposta a incidentes.</p>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    <!-- ===== SEGMENTOS ===== -->
-    <section id="segmentos" class="section segments-colored-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Segmentos</span>
-                <h2 class="section-title">Para instituições que levam seleção a sério</h2>
-                <p class="section-subtitle">De pós-graduações a editais de fomento — onde houver processo seletivo, o AVALIA+ resolve.</p>
-            </div>
-            <div class="segments-colored-grid">
-                <div class="segment-colored-box color-white reveal">
-                    <div class="segment-icon">🎓</div>
-                    <h4>Pós-Graduação</h4>
-                </div>
-                <div class="segment-colored-box color-white reveal">
-                    <div class="segment-icon">🏛️</div>
-                    <h4>Universidades</h4>
-                </div>
-                <div class="segment-colored-box color-gray reveal">
-                    <div class="segment-icon-white">🏢</div>
-                    <h4 class="text-white">Fundações</h4>
-                </div>
-                <div class="segment-colored-box color-blue reveal">
-                    <div class="segment-icon-white">🎯</div>
-                    <h4 class="text-white">Escolas de Governo</h4>
-                </div>
-                <div class="segment-colored-box color-blue reveal">
-                    <div class="segment-icon-white">💼</div>
-                    <h4 class="text-white">Incubadoras</h4>
-                </div>
-                <div class="segment-colored-box color-yellow reveal">
-                    <div class="segment-icon">🚀</div>
-                    <h4>Aceleradoras</h4>
-                </div>
-                <div class="segment-colored-box color-white reveal">
-                    <div class="segment-icon">📚</div>
-                    <h4>Institutos de Pesquisa</h4>
-                </div>
-                <div class="segment-colored-box color-blue reveal">
-                    <div class="segment-icon-white">🌐</div>
-                    <h4 class="text-white">ONGs</h4>
-                </div>
-                <div class="segment-colored-box color-gray reveal">
-                    <div class="segment-icon-white">🏅</div>
-                    <h4 class="text-white">Programas de Bolsas</h4>
-                </div>
-                <div class="segment-colored-box color-yellow reveal">
-                    <div class="segment-icon">🔬</div>
-                    <h4>Centros de Inovação</h4>
-                </div>
-                <div class="segment-colored-box color-white reveal">
-                    <div class="segment-icon">🎯</div>
-                    <h4>Editais de Fomento</h4>
-                </div>
-                <div class="segment-colored-box color-white reveal">
-                    <div class="segment-icon">🌟</div>
-                    <h4>Residências</h4>
-                </div>
-            </div>
+  <!-- ─── CANDIDATO ─── -->
+  <section class="section">
+    <div class="container">
+      <div class="split">
+        <div class="split-media rv">
+          <img src="img/landing/candidatos.png" alt="Portal do candidato" loading="lazy">
         </div>
-    </section>
+        <div class="split-text rv">
+          <span class="tag">Para o candidato</span>
+          <h2>Transparência em cada etapa</h2>
+          <p>Todo candidato tem acesso completo: critérios de avaliação, notas detalhadas, composição do ranking e justificativas das decisões. A transparência total elimina dúvidas, reduz recursos e fortalece a confiança no processo.</p>
+          <a href="index-portal.html" class="btn btn-outline-dark">Acessar Portal do Candidato →</a>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- ===== ROADMAP ===== -->
-    <section id="roadmap" class="section roadmap-section">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Evolução</span>
-                <h2 class="section-title">Plano de evolução do produto</h2>
-            </div>
-            <div class="roadmap-grid">
-                <div class="roadmap-card reveal">
-                    <div class="roadmap-phase">Curto Prazo</div>
-                    <div class="roadmap-period">M1 — M4</div>
-                    <ul class="roadmap-list">
-                        <li>Hardening de segurança e conformidade LGPD</li>
-                        <li>Trilhas de auditoria completas</li>
-                        <li>Parametrização de editais (critérios e pesos)</li>
-                        <li>Acessibilidade e responsividade mobile/desktop</li>
-                    </ul>
-                </div>
-                <div class="roadmap-card reveal">
-                    <div class="roadmap-phase">Médio Prazo</div>
-                    <div class="roadmap-period">M5 — M8</div>
-                    <ul class="roadmap-list">
-                        <li>Relatórios avançados e dashboards</li>
-                        <li>Integrações via API com sistemas externos</li>
-                        <li>Pilotos com instituições parceiras</li>
-                        <li>Consolidação do Go-to-Market</li>
-                    </ul>
-                </div>
-                <div class="roadmap-card reveal">
-                    <div class="roadmap-phase">Longo Prazo</div>
-                    <div class="roadmap-period">M9 — M12</div>
-                    <ul class="roadmap-list">
-                        <li>App mobile para candidatos</li>
-                        <li>Módulo de analytics preditivo</li>
-                        <li>Marketplace de templates de editais</li>
-                        <li>Expansão nacional e internacionalização</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- ─── SEGMENTOS ─── -->
+  <section id="segmentos" class="section bg-light">
+    <div class="container">
+      <header class="section-head">
+        <span class="tag">Segmentos</span>
+        <h2>Para instituições que levam seleção a sério</h2>
+        <p>De pós-graduações a editais de fomento — onde houver processo seletivo, o Avalia+ resolve.</p>
+      </header>
+      <div class="segments-mosaic stagger">
+        <div class="seg-tile rv">🎓<span>Pós-Graduação</span></div>
+        <div class="seg-tile rv">🏛️<span>Universidades</span></div>
+        <div class="seg-tile seg-dark rv">🏢<span>Fundações</span></div>
+        <div class="seg-tile seg-accent rv">🎯<span>Escolas de Governo</span></div>
+        <div class="seg-tile seg-accent rv">💼<span>Incubadoras</span></div>
+        <div class="seg-tile seg-warm rv">🚀<span>Aceleradoras</span></div>
+        <div class="seg-tile rv">📚<span>Institutos de Pesquisa</span></div>
+        <div class="seg-tile seg-accent rv">🌐<span>ONGs</span></div>
+        <div class="seg-tile seg-dark rv">🏅<span>Programas de Bolsas</span></div>
+        <div class="seg-tile seg-warm rv">🔬<span>Centros de Inovação</span></div>
+        <div class="seg-tile rv">🎯<span>Editais de Fomento</span></div>
+        <div class="seg-tile rv">🌟<span>Residências</span></div>
+      </div>
+    </div>
+  </section>
 
-    <!-- ===== CTA ===== -->
-    <section class="cta-section">
-        <div class="cta-bg">
-            <img src="img/landing/03_dashboard_devices.png" alt="" aria-hidden="true">
-        </div>
-        <div class="cta-overlay"></div>
-        <div class="cta-content">
-            <div class="container">
-                <div class="cta-box">
-                    <h2>Pronto para transformar seus processos seletivos?</h2>
-                    <p>Conheça o AVALIA+ e descubra como podemos ajudar sua instituição a alcançar eficiência, transparência e conformidade.</p>
-                    <div class="hero-actions" style="justify-content:center">
-                        <a href="index-portal.html" class="btn-primary-large">Acessar Demonstração →</a>
-                        <a href="https://github.com/ldvsantos/avalia_mais_desktop/releases/latest" target="_blank" rel="noopener" class="btn-secondary">⬇ Baixar App Desktop</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- ─── ROADMAP ─── -->
+  <section id="roadmap" class="section">
+    <div class="container">
+      <header class="section-head">
+        <span class="tag">Evolução</span>
+        <h2>Plano de evolução do produto</h2>
+      </header>
+      <div class="grid-3 stagger">
+        <article class="card-road rv">
+          <div class="road-phase">Curto prazo</div>
+          <div class="road-period">M1 — M4</div>
+          <ul>
+            <li>Hardening de segurança e conformidade LGPD</li>
+            <li>Trilhas de auditoria completas</li>
+            <li>Parametrização de editais (critérios e pesos)</li>
+            <li>Acessibilidade e responsividade mobile/desktop</li>
+          </ul>
+        </article>
+        <article class="card-road rv">
+          <div class="road-phase">Médio prazo</div>
+          <div class="road-period">M5 — M8</div>
+          <ul>
+            <li>Relatórios avançados e dashboards</li>
+            <li>Integrações via API com sistemas externos</li>
+            <li>Pilotos com instituições parceiras</li>
+            <li>Consolidação do Go-to-Market</li>
+          </ul>
+        </article>
+        <article class="card-road rv">
+          <div class="road-phase">Longo prazo</div>
+          <div class="road-period">M9 — M12</div>
+          <ul>
+            <li>App mobile para candidatos</li>
+            <li>Módulo de analytics preditivo</li>
+            <li>Marketplace de templates de editais</li>
+            <li>Expansão nacional e internacionalização</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
 
-    <!-- ===== FOOTER ===== -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <img src="img/logo_avalia_quadrado.png" alt="AVALIA+">
-                    <div class="brand-text">
-                        <span class="brand-name">Avalia+Tec</span>
-                        <span class="brand-product">AVALIA+</span>
-                    </div>
-                </div>
-                <div class="footer-info">
-                    <p>Plataforma Inteligente para Processos Seletivos</p>
-                    <p>Eficiência · Transparência · Governança</p>
-                    <p>&copy; 2025-2026 Avalia+Tec. Todos os direitos reservados.</p>
-                </div>
-            </div>
+  <!-- ─── CTA ─── -->
+  <section class="cta-section">
+    <div class="cta-inner">
+      <div class="container">
+        <h2>Pronto para transformar seus processos seletivos?</h2>
+        <p>Conheça o Avalia+ e descubra como podemos ajudar sua instituição a alcançar eficiência, transparência e conformidade.</p>
+        <div class="cta-actions">
+          <a href="index-portal.html" class="btn btn-white">Acessar demonstração</a>
+          <a href="https://github.com/ldvsantos/avalia_mais_desktop/releases/latest" target="_blank" rel="noopener" class="btn btn-ghost-w">↓ Baixar App Desktop</a>
         </div>
-    </footer>
+      </div>
+    </div>
+  </section>
 
-    <script src="landing-v2.js?v=20260207"></script>
+  <!-- ─── FOOTER ─── -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <img src="img/logo_avalia_quadrado.png" alt="Avalia+" width="40" height="40">
+        <div>
+          <strong>Avalia+Tec</strong>
+          <span>AVALIA+</span>
+        </div>
+      </div>
+      <div class="footer-copy">
+        <p>Plataforma Inteligente para Processos Seletivos</p>
+        <p>Eficiência · Transparência · Governança</p>
+        <p>&copy; 2025-2026 Avalia+Tec. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="landing-v2.js?v=20260207b"></script>
 </body>
 </html>

@@ -1,79 +1,97 @@
 (() => {
   'use strict';
 
-  // ── Smooth scroll ──
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', e => {
+  /* ── Smooth scroll ── */
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
       e.preventDefault();
-      const target = document.querySelector(anchor.getAttribute('href'));
-      if (target) {
-        window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
-      }
+      const t = document.querySelector(a.getAttribute('href'));
+      if (t) window.scrollTo({ top: t.offsetTop - 72, behavior: 'smooth' });
+      // close mobile menu
+      document.getElementById('navMenu')?.classList.remove('open');
     });
   });
 
-  // ── Navbar scroll class ──
-  const navbar = document.querySelector('.navbar');
-  const onScroll = () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 60);
-  };
+  /* ── Navbar scroll ── */
+  const nav = document.getElementById('navbar');
+  const onScroll = () => nav.classList.toggle('scrolled', scrollY > 50);
   window.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  // ── Intersection Observer for .reveal ──
-  const observer = new IntersectionObserver(
-    entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
-  );
-
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // ── Stagger reveal delay for grid children ──
-  document.querySelectorAll('.problems-grid, .differentials-grid, .segments-colored-grid, .roadmap-grid').forEach(grid => {
-    grid.querySelectorAll('.reveal').forEach((card, i) => {
-      card.style.transitionDelay = `${i * 80}ms`;
-    });
+  /* ── Mobile toggle ── */
+  document.getElementById('navToggle')?.addEventListener('click', () => {
+    document.getElementById('navMenu').classList.toggle('open');
   });
 
-  // ── Counter animation for hero stats ──
-  const animateCounters = () => {
-    document.querySelectorAll('.stat-number').forEach(el => {
-      const text = el.textContent;
-      const match = text.match(/(-?\d+)/);
-      if (!match) return;
-      const target = parseInt(match[1]);
-      const prefix = text.startsWith('−') || text.startsWith('-') ? '−' : '';
-      const suffix = text.replace(/^-?\d+/, '');
-      let current = 0;
-      const step = Math.ceil(Math.abs(target) / 30);
-      const dir = target >= 0 ? 1 : -1;
+  /* ── Reveal on scroll ── */
+  const io = new IntersectionObserver(
+    entries => entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); }
+    }),
+    { threshold: 0.08, rootMargin: '0px 0px -30px 0px' }
+  );
+  document.querySelectorAll('.rv').forEach(el => io.observe(el));
 
-      const timer = setInterval(() => {
-        current += step;
-        if (current >= Math.abs(target)) {
-          current = Math.abs(target);
-          clearInterval(timer);
-        }
-        el.textContent = prefix + current + suffix;
-      }, 30);
+  /* ── Metric counter animation ── */
+  const animateMetrics = () => {
+    document.querySelectorAll('.metric').forEach(m => {
+      const target = parseInt(m.dataset.target, 10);
+      const prefix = m.dataset.prefix || '';
+      const suffix = m.dataset.suffix || '';
+      const el = m.querySelector('.metric-value');
+      if (!el || m.dataset.done) return;
+      m.dataset.done = '1';
+
+      if (target === 0) { el.textContent = prefix + '0' + suffix; return; }
+      let cur = 0;
+      const step = Math.max(1, Math.ceil(target / 40));
+      const t = setInterval(() => {
+        cur += step;
+        if (cur >= target) { cur = target; clearInterval(t); }
+        el.textContent = prefix + cur + suffix;
+      }, 25);
     });
   };
 
-  const heroStats = document.querySelector('.hero-stats');
-  if (heroStats) {
-    const statsObserver = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) {
-        animateCounters();
-        statsObserver.unobserve(heroStats);
-      }
+  const metricsEl = document.querySelector('.hero-metrics');
+  if (metricsEl) {
+    const mio = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) { animateMetrics(); mio.disconnect(); }
     }, { threshold: 0.5 });
-    statsObserver.observe(heroStats);
+    mio.observe(metricsEl);
+  }
+
+  /* ── Floating particles (subtle) ── */
+  const canvas = document.getElementById('particles');
+  if (canvas) {
+    const pCount = 35;
+    const dots = [];
+    for (let i = 0; i < pCount; i++) {
+      const d = document.createElement('div');
+      const size = 2 + Math.random() * 3;
+      Object.assign(d.style, {
+        position: 'absolute',
+        width: size + 'px', height: size + 'px',
+        borderRadius: '50%',
+        background: `rgba(255,255,255,${.04 + Math.random() * .08})`,
+        left: Math.random() * 100 + '%',
+        top: Math.random() * 100 + '%',
+        transition: 'none',
+        pointerEvents: 'none'
+      });
+      canvas.appendChild(d);
+      dots.push({ el: d, x: Math.random() * 100, y: Math.random() * 100, vx: (Math.random() - .5) * .015, vy: (Math.random() - .5) * .012 });
+    }
+    const moveDots = () => {
+      dots.forEach(d => {
+        d.x += d.vx; d.y += d.vy;
+        if (d.x < 0 || d.x > 100) d.vx *= -1;
+        if (d.y < 0 || d.y > 100) d.vy *= -1;
+        d.el.style.left = d.x + '%';
+        d.el.style.top = d.y + '%';
+      });
+      requestAnimationFrame(moveDots);
+    };
+    moveDots();
   }
 })();
