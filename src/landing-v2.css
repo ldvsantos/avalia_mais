@@ -187,15 +187,15 @@ ul{list-style:none}
    ===================================================== */
 .section-bg-image{position:relative;overflow:hidden}
 .section-bg-blur{position:absolute;inset:-20px;z-index:0}
-.section-bg-blur img{width:100%;height:100%;object-fit:cover;filter:blur(18px) brightness(.92) saturate(1.1);transform:scale(1.08)}
-.section-bg-overlay{position:absolute;inset:0;z-index:1;background:rgba(255,255,255,.82);backdrop-filter:blur(2px)}
+.section-bg-blur img{width:100%;height:100%;object-fit:cover;filter:blur(6px) brightness(.95) saturate(1.15);transform:scale(1.04)}
+.section-bg-overlay{position:absolute;inset:0;z-index:1;background:rgba(255,255,255,.55)}
 .section-bg-image>.container{position:relative;z-index:2}
 
 /* =====================================================
    CARDS — Differentials
    ===================================================== */
-.card-diff{position:relative;background:var(--white);border:1px solid var(--s200);border-radius:var(--r);padding:36px 28px;overflow:hidden;transition:var(--ease)}
-.card-diff:hover{transform:translateY(-6px);box-shadow:var(--sh-lg);border-color:var(--g100)}
+.card-diff{position:relative;background:rgba(255,255,255,.88);border:1px solid var(--s200);border-radius:var(--r);padding:36px 28px;overflow:hidden;transition:var(--ease);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.card-diff:hover{transform:translateY(-6px);box-shadow:var(--sh-lg);border-color:var(--g100);background:rgba(255,255,255,.95)}
 .diff-num{position:absolute;top:16px;right:20px;font-size:3rem;font-weight:900;color:var(--s100);line-height:1;pointer-events:none}
 .card-diff:hover .diff-num{color:var(--g50)}
 .card-diff h3{font-size:1.05rem;font-weight:700;margin-bottom:8px}
