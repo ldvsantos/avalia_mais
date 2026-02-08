@@ -281,7 +281,9 @@ try {
     '--exclude=prints',
     '--exclude=templates',
     '--exclude=server.log',
-    '--exclude=src/results'
+    '--exclude=src/results',
+    '--exclude=projeto_centelha',
+    '--exclude=downloads'
   )
 
   Write-Host "Gerando pacote: $archiveLocal" -ForegroundColor Cyan
