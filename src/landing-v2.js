@@ -1,57 +1,79 @@
 (() => {
-  // Smooth scroll para navegação
+  'use strict';
+
+  // ── Smooth scroll ──
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
+    anchor.addEventListener('click', e => {
       e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
+      const target = document.querySelector(anchor.getAttribute('href'));
       if (target) {
-        const offsetTop = target.offsetTop - 80;
-        window.scrollTo({
-          top: offsetTop,
-          behavior: 'smooth'
-        });
+        window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
       }
     });
   });
 
-  // Navbar background on scroll
+  // ── Navbar scroll class ──
   const navbar = document.querySelector('.navbar');
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-      navbar.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
-    } else {
-      navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-      navbar.style.boxShadow = 'none';
-    }
-  });
-
-  // Intersection Observer para animações
-  const observerOptions = {
-    root: null,
-    threshold: 0.1,
-    rootMargin: '0px 0px -10% 0px'
+  const onScroll = () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
   };
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-        observer.unobserve(entry.target);
-      }
-    });
-  }, observerOptions);
-
-  // Anima cards e elementos
-  const animateElements = document.querySelectorAll(
-    '.problem-card, .differential-card, .segment-box, .roadmap-card, .feature-item'
+  // ── Intersection Observer for .reveal ──
+  const observer = new IntersectionObserver(
+    entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.1, rootMargin: '0px 0px -40px 0px' }
   );
 
-  animateElements.forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(30px)';
-    el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
-    observer.observe(el);
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Stagger reveal delay for grid children ──
+  document.querySelectorAll('.problems-grid, .differentials-grid, .segments-colored-grid, .roadmap-grid').forEach(grid => {
+    grid.querySelectorAll('.reveal').forEach((card, i) => {
+      card.style.transitionDelay = `${i * 80}ms`;
+    });
   });
+
+  // ── Counter animation for hero stats ──
+  const animateCounters = () => {
+    document.querySelectorAll('.stat-number').forEach(el => {
+      const text = el.textContent;
+      const match = text.match(/(-?\d+)/);
+      if (!match) return;
+      const target = parseInt(match[1]);
+      const prefix = text.startsWith('−') || text.startsWith('-') ? '−' : '';
+      const suffix = text.replace(/^-?\d+/, '');
+      let current = 0;
+      const step = Math.ceil(Math.abs(target) / 30);
+      const dir = target >= 0 ? 1 : -1;
+
+      const timer = setInterval(() => {
+        current += step;
+        if (current >= Math.abs(target)) {
+          current = Math.abs(target);
+          clearInterval(timer);
+        }
+        el.textContent = prefix + current + suffix;
+      }, 30);
+    });
+  };
+
+  const heroStats = document.querySelector('.hero-stats');
+  if (heroStats) {
+    const statsObserver = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) {
+        animateCounters();
+        statsObserver.unobserve(heroStats);
+      }
+    }, { threshold: 0.5 });
+    statsObserver.observe(heroStats);
+  }
 })();
