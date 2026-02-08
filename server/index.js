@@ -6207,7 +6207,10 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
               <tr><th>Curso de graduação</th><td>${safeValue(record.identified?.curso_graduacao)}</td></tr>
               <tr><th>Instituição</th><td>${safeValue(record.identified?.instituicao)}</td></tr>
               <tr><th>Ano de conclusão</th><td>${safeValue(record.identified?.ano_conclusao)}</td></tr>
-              <tr><th>Vagas / cotas</th><td>${safeValue(record.identified?.vaga_institucional || record.identified?.vaga_cooperacao || record.identified?.vaga_reservada || record.identified?.cotas)}</td></tr>
+              <tr><th>Vaga institucional</th><td>${safeValue(record.identified?.vaga_institucional)}</td></tr>
+              <tr><th>Vaga cooperação</th><td>${safeValue(record.identified?.vaga_cooperacao)}</td></tr>
+              <tr><th>Vaga reservada</th><td>${safeValue(record.identified?.vaga_reservada)}</td></tr>
+              <tr><th>Cotas</th><td>${safeValue(record.identified?.cotas)}</td></tr>
               <tr><th>Raça/Cor</th><td>${safeValue(record.identified?.raca_cor)}</td></tr>
               <tr><th>Língua estrangeira</th><td>${safeValue(record.identified?.lingua_estrangeira)}</td></tr>
               <tr><th>Vínculo empregatício</th><td>${safeValue(record.identified?.vinculo_empregaticio)}</td></tr>
@@ -6254,6 +6257,9 @@ app.get(`/secret/${ADMIN_SECRET}/admin/submission/:protocol`, checkAdminIP, admi
 
           <div class="sectionTitle"><strong>Objetivos específicos</strong></div>
           <div class="box">${safeMultiline(coalesceProjectField(record.project?.objetivos_especificos))}</div>
+
+          <div class="sectionTitle"><strong>Metas</strong></div>
+          <div class="box">${safeMultiline(record.project?.metas)}</div>
 
           <div class="sectionTitle"><strong>5 – Revisão da literatura</strong></div>
           <div class="box">${safeMultiline(record.project?.revisao_literatura)}</div>
