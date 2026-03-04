@@ -1,0 +1,389 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{pifont}
+\usepackage{tcolorbox}
+
+\definecolor{reviewercolor}{RGB}{0,51,102}
+\definecolor{responsecolor}{RGB}{0,100,0}
+\definecolor{changecolor}{RGB}{139,69,19}
+
+\newtcolorbox{reviewerbox}{
+  colback=blue!5!white,
+  colframe=reviewercolor,
+  fonttitle=\bfseries,
+  title=Coment\'{a}rio do Revisor,
+  boxrule=0.5pt,
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newcommand{\response}[1]{\par\noindent\textcolor{responsecolor}{\textbf{Resposta:}} #1}
+\newcommand{\change}[1]{\par\noindent\textcolor{changecolor}{\textbf{Altera\c{c}\~{o}es no manuscrito:}} \textit{#1}}
+
+\title{Resposta Ponto a Ponto aos Coment\'{a}rios dos Revisores\\[0.3em]
+\large Manuscrito: ``avalia+Tec: Uma Plataforma \`{a} Prova de Adultera\c{c}\~{a}o para\\
+Processos Seletivos Acad\^{e}micos com Verifica\c{c}\~{a}o de Integridade''}
+\author{L.D.V. Santos, V.R.Q. Leithardt}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\noindent Prezado Editor e Revisores,
+
+\medskip
+\noindent Agradecemos sinceramente ao Editor e a ambos os Revisores pela avalia\c{c}\~{a}o minuciosa, construtiva e perspicaz do nosso manuscrito. Seus coment\'{a}rios identificaram fragilidades importantes que melhoraram substancialmente o rigor cient\'{i}fico, a transpar\^{e}ncia e a honestidade do artigo.
+
+Abordamos \textbf{todos os coment\'{a}rios} levantados por ambos os revisores. As revis\~{o}es incluem:
+\begin{itemize}[nosep]
+  \item Implementa\c{c}\~{a}o de Carimbo de Tempo Confi\'{a}vel RFC~3161 para ancoragem externa de hashes (c\'{o}digo, migra\c{c}\~{a}o SQL e integra\c{c}\~{a}o no servidor);
+  \item Substitui\c{c}\~{a}o de ``imut\'{a}vel'' por ``\`{a} prova de adultera\c{c}\~{a}o'' em todo o texto;
+  \item Adi\c{c}\~{a}o de testes estat\'{i}sticos formais (ICs de 95\%, Mann--Whitney $U$, teste exato de Fisher, tamanhos de efeito) com linguagem adequadamente moderada;
+  \item Reposicionamento expl\'{i}cito da contribui\c{c}\~{a}o como \emph{engenharia de integra\c{c}\~{a}o};
+  \item Reformula\c{c}\~{a}o completa da tabela comparativa com pontua\c{c}\~{a}o multin\'{i}vel e metodologia independente;
+  \item Modelo de amea\c{c}as expandido com tr\^{e}s classes e an\'{a}lise de risco residual;
+  \item Tabela de mapeamento de conformidade com a LGPD e disclaimer;
+  \item Resultados de testes de carga (benchmarks autocannon a 100/500 conex\~{o}es simult\^{a}neas);
+  \item Se\c{c}\~{a}o de Limita\c{c}\~{o}es estruturada com cinco \'{a}reas identificadas;
+  \item Pacote de replica\c{c}\~{a}o no Zenodo (DOI: 10.5281/zenodo.18868994);
+  \item Condensa\c{c}\~{a}o significativa do texto.
+\end{itemize}
+
+\noindent Abaixo fornecemos uma resposta detalhada ponto a ponto. Os coment\'{a}rios dos revisores est\~{a}o destacados em caixas azuis; nossas respostas aparecem em verde; as altera\c{c}\~{o}es no manuscrito s\~{a}o indicadas em it\'{a}lico marrom.
+
+\bigskip
+\hrule
+\bigskip
+
+%% ================================================================
+\section*{Revisor \#1}
+%% ================================================================
+
+\subsection*{Coment\'{a}rio 1.1 --- Modelo de amea\c{c}as e alega\c{c}\~{a}o de ``imutabilidade''}
+
+\begin{reviewerbox}
+O modelo de amea\c{c}as cont\'{e}m uma vulnerabilidade cr\'{i}tica que os pr\'{o}prios autores reconhecem: um administrador de servidor com acesso root ao banco de dados poderia reescrever toda a cadeia de hashes de forma consistente. Isso compromete fundamentalmente a alega\c{c}\~{a}o central do artigo sobre uma trilha de auditoria ``imut\'{a}vel''. Sem ancoragem externa de hashes (por exemplo, blockchain p\'{u}blico ou autoridade de carimbo de tempo compat\'{i}vel com RFC~3161), o uso do termo ``imut\'{a}vel'' \'{e} tecnicamente incorreto e enganoso. Os autores devem implementar essa salvaguarda ou revisar substancialmente suas alega\c{c}\~{o}es.
+\end{reviewerbox}
+
+\response{Concordamos plenamente com esta cr\'{i}tica. O termo ``imut\'{a}vel'' era tecnicamente impreciso na aus\^{e}ncia de ancoragem externa, e agradecemos ao revisor por insistir nesse ponto.}
+
+Na vers\~{a}o revisada, tomamos \textbf{ambas} as a\c{c}\~{o}es corretivas sugeridas pelo revisor:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Implementa\c{c}\~{a}o de Carimbo de Tempo Confi\'{a}vel RFC~3161.} Implementamos um m\'{o}dulo \texttt{TimestampService} que submete o resumo SHA-256 de cada inscri\c{c}\~{a}o a uma Autoridade de Carimbo de Tempo (TSA) externa compat\'{i}vel com RFC~3161 (padr\~{a}o: FreeTSA.org). A TSA retorna um token TimeStampResp (TSR) assinado criptograficamente, que \'{e} armazenado junto ao registro da inscri\c{c}\~{a}o. Mesmo um administrador com acesso root n\~{a}o pode forjar um TSR v\'{a}lido sem a chave privada de assinatura da TSA. O c\'{o}digo inclui codifica\c{c}\~{a}o ASN.1 DER, requisi\c{c}\~{a}o HTTP POST \`{a} TSA e l\'{o}gica de verifica\c{c}\~{a}o do TSR. Uma migra\c{c}\~{a}o SQL correspondente (\texttt{002\_add\_rfc3161\_timestamp.sql}) adiciona as colunas \texttt{tsr\_base64}, \texttt{tsr\_tsa\_url} e \texttt{tsr\_requested\_at}. A rota \texttt{/api/verify/:protocol} agora retorna os resultados da verifica\c{c}\~{a}o do TSR juntamente com a verifica\c{c}\~{a}o de hash existente.
+
+  \item \textbf{Corre\c{c}\~{a}o terminol\'{o}gica.} Todas as ocorr\^{e}ncias de ``imut\'{a}vel'' foram substitu\'{i}das por ``\`{a} prova de adultera\c{c}\~{a}o'' em ambas as vers\~{o}es (ingl\^{e}s e portugu\^{e}s) do manuscrito, no resumo, nos destaques, no r\'{o}tulo do diagrama de arquitetura e em todas as descri\c{c}\~{o}es t\'{e}cnicas.
+\end{enumerate}
+
+\change{%
+Resumo reescrito (ambas as vers\~{o}es); Se\c{c}\~{a}o~1 motiva\c{c}\~{a}o; Se\c{c}\~{a}o~2 Funcionalidades do Software --- novo par\'{a}grafo descrevendo RFC~3161; Se\c{c}\~{a}o~3 Modelo de Amea\c{c}as --- completamente reescrita com tr\^{e}s classes de advers\'{a}rios (atacante externo, insider sem privil\'{e}gios, administrador privilegiado) e an\'{a}lise de risco residual; diagrama de arquitetura: ``Armazenamento Imut\'{a}vel de Eventos'' $\to$ ``Armazenamento \`{a} Prova de Adultera\c{c}\~{a}o''; Se\c{c}\~{a}o~7 Conclus\~{o}es --- linguagem de resist\^{e}ncia a adultera\c{c}\~{a}o. Novos arquivos: \texttt{TimestampService.js}, \texttt{002\_add\_rfc3161\_timestamp.sql}. Arquivos modificados: \texttt{RegisterSubmission.js}, \texttt{SqlSubmissionRepository.js}, \texttt{JsonSubmissionRepository.js}, \texttt{index.js}.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 1.2 --- Evid\^{e}ncia emp\'{i}rica insuficiente}
+
+\begin{reviewerbox}
+A evid\^{e}ncia emp\'{i}rica para os ganhos reportados de desempenho (redu\c{c}\~{a}o de 65\% no tempo de ciclo, redu\c{c}\~{a}o de 45,4\% no tempo do avaliador) \'{e} insuficiente. A amostra ($n=60$ inscri\c{c}\~{o}es, $n=6$ avaliadores) prov\'{e}m de uma \'{u}nica institui\c{c}\~{a}o, e as compara\c{c}\~{o}es com fluxos anteriores baseiam-se exclusivamente em dados retrospectivos de pesquisa administrativa auto-reportados, suscet\'{i}veis a vi\'{e}s de mem\'{o}ria. Nenhum intervalo de confian\c{c}a, teste formal de signific\^{a}ncia (ex: Mann--Whitney U) ou compara\c{c}\~{a}o com grupo controle \'{e} fornecido.
+\end{reviewerbox}
+
+\response{Concordamos que a apresenta\c{c}\~{a}o estat\'{i}stica original era inadequada. O manuscrito revisado agora inclui:}
+
+\begin{itemize}[nosep]
+  \item Intervalos de confian\c{c}a de 95\% para todas as m\'{e}tricas reportadas;
+  \item Testes de Mann--Whitney $U$ (bicaudais) com $p$-valores exatos: tempo de ciclo $U=0$, $p=0{,}029$; tempo do avaliador $U=2$, $p=0{,}009$;
+  \item Tamanhos de efeito: rank-biserial $r=1{,}0$ para tempo de ciclo, Cohen's $d=1{,}88$ (grande) para tempo do avaliador;
+  \item Teste exato de Fisher para taxas de contesta\c{c}\~{a}o: 0/60 vs.\ 14/292, $p=0{,}069$ (unilateral), explicitamente notado como \emph{n\~{a}o atingindo signific\^{a}ncia convencional};
+  \item Reconhecimento expl\'{i}cito de vi\'{e}s de mem\'{o}ria, efeito Hawthorne, tamanho amostral pequeno e limita\c{c}\~{a}o de institui\c{c}\~{a}o \'{u}nica;
+  \item Linguagem moderada: ``estimativas preliminares de tamanho de efeito'', ``associado a'', ``sugere'' em vez de alega\c{c}\~{o}es causais.
+\end{itemize}
+
+N\~{a}o adicionamos grupo controle, pois se tratou de uma implanta\c{c}\~{a}o institucional real onde randomiza\c{c}\~{a}o seria impratic\'{a}vel e eticamente problem\'{a}tica. Essa limita\c{c}\~{a}o \'{e} explicitamente declarada (Se\c{c}\~{a}o~6).
+
+\change{Se\c{c}\~{a}o~5 (Impacto) --- completamente reescrita com testes estat\'{i}sticos e linguagem moderada. Se\c{c}\~{a}o~6 (Limita\c{c}\~{o}es) --- novas subse\c{c}\~{o}es ``Desenho do estudo'' e ``Qualidade dos dados de baseline''.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 1.3 --- Novidade superestimada}
+
+\begin{reviewerbox}
+A novidade da contribui\c{c}\~{a}o criptogr\'{a}fica \'{e} superestimada. Hashing SHA-256 e autentica\c{c}\~{a}o HMAC-SHA256 em ambiente Node.js representam pr\'{a}tica padr\~{a}o de engenharia de software, n\~{a}o uma contribui\c{c}\~{a}o cient\'{i}fica. A alega\c{c}\~{a}o de que nenhuma plataforma existente integra esses mecanismos requer justificativa mais forte do que a compara\c{c}\~{a}o apresentada na Tabela~3.
+\end{reviewerbox}
+
+\response{Concordamos plenamente. As primitivas criptogr\'{a}ficas individuais (SHA-256, HMAC-SHA256) s\~{a}o de fato bem estabelecidas e sua implementa\c{c}\~{a}o n\~{a}o constitui uma alega\c{c}\~{a}o de novidade cient\'{i}fica. O manuscrito revisado reposiciona explicitamente a contribui\c{c}\~{a}o:}
+
+\begin{itemize}[nosep]
+  \item Um novo par\'{a}grafo ``Escopo da contribui\c{c}\~{a}o'' na Se\c{c}\~{a}o~1 declara: ``\textit{A contribui\c{c}\~{a}o cient\'{i}fica reside nessa integra\c{c}\~{a}o sistem\'{a}tica, e n\~{a}o nas primitivas criptogr\'{a}ficas subjacentes.}''
+  \item O resumo agora diz: ``\textit{A plataforma combina t\'{e}cnicas criptogr\'{a}ficas bem estabelecidas---[\ldots]---em um fluxo de trabalho unificado e de c\'{o}digo aberto especificamente projetado para [\ldots]}''
+  \item Todas as alega\c{c}\~{o}es de novidade foram substitu\'{i}das pelo enquadramento de ``engenharia de integra\c{c}\~{a}o''.
+\end{itemize}
+
+\change{Resumo, Se\c{c}\~{a}o~1 (novo par\'{a}grafo ``Escopo da contribui\c{c}\~{a}o''), Se\c{c}\~{a}o~7 (Conclus\~{o}es) --- contribui\c{c}\~{a}o explicitamente enquadrada como engenharia de integra\c{c}\~{a}o.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 1.4 --- Tabela comparativa superficial}
+
+\begin{reviewerbox}
+A an\'{a}lise comparativa na Tabela~3 \'{e} superficial e parece constru\'{i}da para favorecer o avalia+Tec. Notavelmente, o artigo alega conformidade com a LGPD como vantagem exclusiva sem avaliar os mecanismos de conformidade com o GDPR nas plataformas concorrentes. Os crit\'{e}rios de compara\c{c}\~{a}o devem ser definidos independentemente do conjunto de funcionalidades do sistema proposto.
+\end{reviewerbox}
+
+\response{Concordamos que o formato bin\'{a}rio Sim/N\~{a}o original era redutor e os crit\'{e}rios n\~{a}o eram suficientemente independentes. A Tabela~3 revisada incorpora:}
+
+\begin{itemize}[nosep]
+  \item Escala de pontua\c{c}\~{a}o em tr\^{e}s n\'{i}veis (\ding{108} completo/nativo, \ding{119} parcial/plugin, \ding{55} ausente) para evitar a simplifica\c{c}\~{a}o bin\'{a}ria;
+  \item Duas novas colunas que n\~{a}o favorecem o avalia+Tec: ``TSA Ext.'' (avalia+Tec recebe \ding{119} parcial, pois a implementa\c{c}\~{a}o \'{e} nova) e ``Escala Comprovada'' (avalia+Tec recebe \ding{55}, reconhecendo sua implanta\c{c}\~{a}o em institui\c{c}\~{a}o \'{u}nica vs.\ sistemas em produ\c{c}\~{a}o com milh\~{o}es de submiss\~{o}es);
+  \item Uma coluna ``GDPR/LGPD'' substituindo a coluna exclusiva de LGPD, com notas sobre conformidade via plugins (ex: controles de privacidade do OpenReview);
+  \item Uma coluna ``Plugins Ext.'' creditando explicitamente HotCRP e OpenReview por seus ecossistemas de extens\~{o}es;
+  \item Notas metodol\'{o}gicas explicando os crit\'{e}rios de pontua\c{c}\~{a}o: ``avaliado via documenta\c{c}\~{a}o publicada, inspe\c{c}\~{a}o de c\'{o}digo-fonte e matrizes oficiais de funcionalidades.''
+\end{itemize}
+
+\change{Tabela~3 completamente reformulada (10 colunas, escala de 3 n\'{i}veis, notas de rodap\'{e}, coluna GDPR, coluna ``Escala Comprovada'').}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 1.5 --- Categoria de submiss\~{a}o incorreta}
+
+\begin{reviewerbox}
+O manuscrito foi submetido na categoria ``Humanidades, Artes e Ci\^{e}ncias Sociais'', o que \'{e} claramente incorreto para uma contribui\c{c}\~{a}o de engenharia de software. Os autores devem reenviar sob uma \'{a}rea tem\'{a}tica apropriada.
+\end{reviewerbox}
+
+\response{Agradecemos ao revisor por apontar esse erro administrativo. A resubmiss\~{a}o foi reclassificada na \'{a}rea ``Ci\^{e}ncia da Computa\c{c}\~{a}o'', que \'{e} a categoria apropriada para uma contribui\c{c}\~{a}o de engenharia de software descrevendo uma plataforma web com componentes criptogr\'{a}ficos. Pedimos desculpas pelo equivoco.}
+
+\change{Metadados da submiss\~{a}o corrigidos para categoria ``Ci\^{e}ncia da Computa\c{c}\~{a}o''.}
+
+\bigskip
+\hrule
+\bigskip
+
+%% ================================================================
+\section*{Revisor \#2}
+%% ================================================================
+
+\subsection*{Coment\'{a}rio 2.1 --- Engenharia de integra\c{c}\~{a}o, n\~{a}o novidade cient\'{i}fica}
+
+\begin{reviewerbox}
+O manuscrito, em grande parte, integra primitivas criptogr\'{a}ficas bem estabelecidas (SHA-256, HMAC, RBAC, PostgreSQL RLS) sem propor inova\c{c}\~{o}es metodol\'{o}gicas, algor\'{i}tmicas ou arquiteturais. A contribui\c{c}\~{a}o parece ser primariamente um esfor\c{c}o de implementa\c{c}\~{a}o, e n\~{a}o um avan\c{c}o cientificamente novo. Os autores devem articular claramente o que \'{e} fundamentalmente novo al\'{e}m da engenharia de integra\c{c}\~{a}o.
+\end{reviewerbox}
+
+\response{Concordamos e reposicionamos explicitamente a contribui\c{c}\~{a}o como engenharia de integra\c{c}\~{a}o. Veja nossa resposta ao Revisor~\#1, Coment\'{a}rio~1.3. O manuscrito revisado declara que a contribui\c{c}\~{a}o reside na \emph{integra\c{c}\~{a}o sistem\'{a}tica} de primitivas estabelecidas em um fluxo de trabalho espec\'{i}fico do dom\'{i}nio, e n\~{a}o nas primitivas em si. Tamb\'{e}m observamos que o escopo da SoftwareX abrange explicitamente ``software que tem impacto significativo na pesquisa'', independentemente de novidade algor\'{i}tmica.}
+
+\change{Mesmo que Coment\'{a}rio~1.3. Resumo, Se\c{c}\~{a}o~1 (par\'{a}grafo ``Escopo da contribui\c{c}\~{a}o''), Se\c{c}\~{a}o~7.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.2 --- Estat\'{i}stica inferencial insuficiente}
+
+\begin{reviewerbox}
+A redu\c{c}\~{a}o de 65\% no tempo de ciclo e o ganho de 45,4\% na efici\^{e}ncia do avaliador reportados baseiam-se em uma implanta\c{c}\~{a}o pequena de institui\c{c}\~{a}o \'{u}nica ($n=60$ inscri\c{c}\~{o}es, $n=6$ avaliadores). Nenhuma estat\'{i}stica inferencial, intervalo de confian\c{c}a ou teste de hip\'{o}teses \'{e} fornecido. Alega\c{c}\~{o}es sobre elimina\c{c}\~{a}o de disputas e melhorias de efici\^{e}ncia s\~{a}o, portanto, superestimadas e insuficientemente fundamentadas.
+\end{reviewerbox}
+
+\response{Integralmente abordado. Veja nossa resposta ao Revisor~\#1, Coment\'{a}rio~1.2. A Se\c{c}\~{a}o~5 revisada agora inclui ICs de 95\%, testes de Mann--Whitney $U$ com $p$-valores exatos, tamanhos de efeito e teste exato de Fisher para taxas de contesta\c{c}\~{a}o. Todas as alega\c{c}\~{o}es foram adequadamente moderadas.}
+
+\change{Mesmo que Coment\'{a}rio~1.2. Se\c{c}\~{a}o~5 (Impacto), Se\c{c}\~{a}o~6 (Limita\c{c}\~{o}es).}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.3 --- Dados retrospectivos auto-reportados}
+
+\begin{reviewerbox}
+A avalia\c{c}\~{a}o baseia-se em dados administrativos retrospectivos auto-reportados. N\~{a}o h\'{a} baseline controlado, compara\c{c}\~{a}o randomizada nem valida\c{c}\~{a}o longitudinal multi-coorte. Isso enfraquece a credibilidade emp\'{i}rica das melhorias de desempenho reportadas.
+\end{reviewerbox}
+
+\response{Reconhecemos essa limita\c{c}\~{a}o explicitamente na Se\c{c}\~{a}o~6 revisada (Limita\c{c}\~{o}es), na nova subse\c{c}\~{a}o ``Qualidade dos dados de baseline''. O texto agora declara: ``\textit{As compara\c{c}\~{o}es de baseline baseiam-se em dados retrospectivos de pesquisa administrativa auto-reportados e est\~{a}o sujeitas a vi\'{e}s de mem\'{o}ria. Os avaliadores podem superestimar o tempo anteriormente gasto, inflando o ganho aparente de efici\^{e}ncia. N\~{a}o existem dados objetivos de rastreamento de tempo para o per\'{i}odo pr\'{e}-implanta\c{c}\~{a}o.}'' Tamb\'{e}m observamos a aus\^{e}ncia de compara\c{c}\~{a}o randomizada e explicamos por que a randomiza\c{c}\~{a}o era impratic\'{a}vel em uma implanta\c{c}\~{a}o institucional real. Valida\c{c}\~{a}o longitudinal multi-institucional \'{e} identificada como trabalho futuro planejado.}
+
+\change{Se\c{c}\~{a}o~5 --- alertas expl\'{i}citos sobre vi\'{e}s de mem\'{o}ria e efeito Hawthorne. Se\c{c}\~{a}o~6 --- subse\c{c}\~{a}o ``Qualidade dos dados de baseline''. Se\c{c}\~{a}o~7 --- trabalho futuro inclui implanta\c{c}\~{o}es multi-institucionais com desenhos quase-experimentais.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.4 --- Fragilidade do administrador confi\'{a}vel}
+
+\begin{reviewerbox}
+O manuscrito assume explicitamente um administrador confi\'{a}vel, o que enfraquece fundamentalmente as garantias de integridade. Uma vez que um usu\'{a}rio root malicioso pode reescrever toda a cadeia de hashes, o sistema n\~{a}o fornece resist\^{e}ncia forte a adultera\c{c}\~{o}es em contextos institucionais adversariais. As alega\c{c}\~{o}es de seguran\c{c}a devem ser atenuadas em conformidade.
+\end{reviewerbox}
+
+\response{Abordado pela mesma implementa\c{c}\~{a}o de RFC~3161 descrita na nossa resposta ao Revisor~\#1, Coment\'{a}rio~1.1. A Se\c{c}\~{a}o~3 revisada agora apresenta um modelo de amea\c{c}as com tr\^{e}s classes:}
+
+\begin{enumerate}[nosep]
+  \item Atacante externo (n\~{a}o autenticado) --- mitigado por TLS, limita\c{c}\~{a}o de taxa, sanitiza\c{c}\~{a}o de entrada, autentica\c{c}\~{a}o JWT;
+  \item Insider sem privil\'{e}gios (usu\'{a}rio autenticado) --- mitigado por RBAC, RLS, formul\'{a}rios autenticados por HMAC, trilha de auditoria com cadeia de hashes;
+  \item \textbf{Administrador privilegiado} (acesso root ao banco) --- mitigado por ancoragem externa de hashes via RFC~3161.
+\end{enumerate}
+
+\noindent A limita\c{c}\~{a}o residual \'{e} explicitamente declarada: se o administrador suprimir o armazenamento do TSR \emph{antes} da solicita\c{c}\~{a}o do carimbo de tempo, nenhuma \^{a}ncora externa existir\'{a} para aquele registro. Isso \'{e} identificado como \'{a}rea para melhoria futura (ex: ancoragem cont\'{i}nua em blockchain, gerenciamento de chaves multipartid\'{a}rio).
+
+\change{Se\c{c}\~{a}o~3 --- reescrita completa. Novo c\'{o}digo: \texttt{TimestampService.js}. Todo ``imut\'{a}vel'' $\to$ ``\`{a} prova de adultera\c{c}\~{a}o''.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.5 --- Compara\c{c}\~{a}o sem rigor}
+
+\begin{reviewerbox}
+A compara\c{c}\~{a}o com plataformas como SIGAA, OpenReview, EasyChair, HotCRP e SUCUPIRA carece de rigor metodol\'{o}gico. A compara\c{c}\~{a}o funcional n\~{a}o considera capacidades de plugins, extensibilidade ou possibilidades alternativas de integra\c{c}\~{a}o criptogr\'{a}fica. Apresenta uma simplifica\c{c}\~{a}o bin\'{a}ria ``Sim/N\~{a}o'' que pode deturpar os sistemas concorrentes.
+\end{reviewerbox}
+
+\response{Integralmente abordado. Veja nossa resposta ao Revisor~\#1, Coment\'{a}rio~1.4. A Tabela~3 revisada utiliza pontua\c{c}\~{a}o em tr\^{e}s n\'{i}veis, credita explicitamente ecossistemas de plugins, inclui colunas onde o avalia+Tec recebe nota inferior aos concorrentes e documenta a metodologia de compara\c{c}\~{a}o em notas de rodap\'{e}.}
+
+\change{Mesmo que Coment\'{a}rio~1.4. Tabela~3 reformulada.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.6 --- Sem valida\c{c}\~{a}o formal de seguran\c{c}a}
+
+\begin{reviewerbox}
+Embora SHA-256 e HMAC sejam citados, n\~{a}o h\'{a} valida\c{c}\~{a}o formal de seguran\c{c}a, nenhum relat\'{o}rio de teste de penetra\c{c}\~{a}o, nenhuma auditoria externa e nenhuma verifica\c{c}\~{a}o de pr\'{a}ticas corretas de gerenciamento de chaves. Simplesmente chamar bibliotecas-padr\~{a}o n\~{a}o garante implanta\c{c}\~{a}o segura.
+\end{reviewerbox}
+
+\response{Concordamos que chamar bibliotecas-padr\~{a}o n\~{a}o garante implanta\c{c}\~{a}o segura. O manuscrito revisado aborda isso de duas formas:}
+
+\begin{enumerate}[nosep]
+  \item \textbf{Evid\^{e}ncias positivas:} A Se\c{c}\~{a}o~3 agora declara que a implementa\c{c}\~{a}o foi verificada contra o checklist OWASP Top~10 e que o \texttt{npm audit} n\~{a}o reporta vulnerabilidades de alta severidade conhecidas nas depend\^{e}ncias de produ\c{c}\~{a}o. Tamb\'{e}m descrevemos as pr\'{a}ticas atuais de gerenciamento de chaves (segredos JWT e chaves HMAC armazenados como vari\'{a}veis de ambiente, nunca em c\'{o}digo-fonte).
+  \item \textbf{Limita\c{c}\~{a}o honesta:} As Se\c{c}\~{o}es~3 e~6 (subse\c{c}\~{a}o ``Seguran\c{c}a'') declaram explicitamente: ``\textit{Nenhum teste formal de penetra\c{c}\~{a}o ou auditoria externa de seguran\c{c}a foi conduzido at\'{e} o momento; isso representa trabalho futuro planejado.}'' e ``\textit{Esses n\~{a}o constituem uma avalia\c{c}\~{a}o abrangente de seguran\c{c}a.}''
+\end{enumerate}
+
+Teste formal de penetra\c{c}\~{a}o e auditoria externa s\~{a}o listados como trabalho futuro na Se\c{c}\~{a}o~7.
+
+\change{Se\c{c}\~{a}o~3 (Modelo de Amea\c{c}as) --- men\c{c}\~{a}o a OWASP/npm audit, descri\c{c}\~{a}o de gerenciamento de chaves. Se\c{c}\~{a}o~6 (Limita\c{c}\~{o}es) --- nova subse\c{c}\~{a}o ``Seguran\c{c}a''.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.7 --- Sem teste de estresse}
+
+\begin{reviewerbox}
+Os testes de desempenho foram realizados com 60 inscri\c{c}\~{o}es. Nenhum teste de estresse, simula\c{c}\~{a}o de usu\'{a}rios concorrentes ou benchmarking de alta carga \'{e} apresentado. N\~{a}o est\'{a} claro como o sistema se comporta com centenas ou milhares de usu\'{a}rios simult\^{a}neos.
+\end{reviewerbox}
+
+\response{Agora conduzimos e reportamos testes de carga. Um novo script de teste de carga (\texttt{scripts/load-test.js}) utilizando autocannon (ferramenta de benchmarking HTTP para Node.js) foi criado com tr\^{e}s cen\'{a}rios: GET~/ (p\'{a}gina inicial), GET~/api/verify/:protocol (verifica\c{c}\~{a}o de integridade) e POST~/api/inscricao (cria\c{c}\~{a}o de inscri\c{c}\~{a}o com hashing SHA-256 e carimbo de tempo RFC~3161 ass\'{i}ncrono). Os testes foram executados contra uma inst\^{a}ncia do servidor avalia+Tec em opera\c{c}\~{a}o, com 100 e 500 conex\~{o}es simult\^{a}neas por 30~segundos cada.}
+
+Uma nova Se\c{c}\~{a}o~4.1 (Testes de Carga) e Tabela~5 reportam os resultados medidos:
+\begin{itemize}[nosep]
+  \item A 100 conex\~{o}es: GET~/ alcan\c{c}a 1.753~req/s (p50=52\,ms, p97,5=98\,ms); POST~/api/inscricao alcan\c{c}a 1.338~req/s (p50=68\,ms, p97,5=133\,ms);
+  \item A 500 conex\~{o}es: opera\c{c}\~{o}es de leitura sustentam $>$1.700~req/s, mas a lat\^{e}ncia de cauda do POST aumenta acentuadamente (p99=8.153\,ms) com 1.127 erros de 47.976 requisi\c{c}\~{o}es, indicando satura\c{c}\~{a}o do event loop que confirma a necessidade de escalonamento horizontal al\'{e}m de $\sim$500 escritores concorrentes;
+  \item O texto declara explicitamente que escalonamento horizontal (balanceamento de carga, r\'{e}plicas de leitura PostgreSQL) \'{e} uma extens\~{a}o arquitetural direta para implanta\c{c}\~{o}es maiores.
+\end{itemize}
+
+Os resultados brutos completos (JSON estruturado com todos os percentis de lat\^{e}ncia, throughput e contagem de erros para todas as seis combina\c{c}\~{o}es cen\'{a}rio/concorr\^{e}ncia) est\~{a}o inclu\'{i}dos no pacote de replica\c{c}\~{a}o (\texttt{load-test/load\_test\_results.json}).
+
+\change{Nova Se\c{c}\~{a}o~4.1 (Testes de Carga), nova Tabela~5 com dados medidos. Novo arquivo: \texttt{scripts/load-test.js}. Pacote de replica\c{c}\~{a}o inclui resultados JSON brutos.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.8 --- Conformidade com LGPD n\~{a}o demonstrada}
+
+\begin{reviewerbox}
+Alega\c{c}\~{o}es de conformidade com a LGPD s\~{a}o afirmadas, mas n\~{a}o rigorosamente demonstradas atrav\'{e}s de mapeamento formal de conformidade, DPIA (Avalia\c{c}\~{a}o de Impacto sobre a Prote\c{c}\~{a}o de Dados) ou refer\^{e}ncias de auditoria jur\'{i}dica. As declara\c{c}\~{o}es de conformidade parecem descritivas e n\~{a}o validadas.
+\end{reviewerbox}
+
+\response{Reconhecemos que a plena conformidade com a LGPD requer medidas organizacionais, jur\'{i}dicas e t\'{e}cnicas, e uma \'{u}nica plataforma de software n\~{a}o pode ``estar em conformidade com a LGPD'' isoladamente. O manuscrito revisado:}
+
+\begin{enumerate}[nosep]
+  \item Substitui ``em conformidade com a LGPD'' por ``design compat\'{i}vel com a LGPD'' em todo o texto;
+  \item Adiciona uma nova Tabela~(tab:lgpdmapping) que mapeia artigos espec\'{i}ficos da LGPD (Art.~6~I--II, Art.~6~V, Art.~6~VII--VIII, Art.~6~X, Art.~46, Art.~48, Art.~18) aos controles t\'{e}cnicos correspondentes implementados no avalia+Tec;
+  \item Adiciona um disclaimer expl\'{i}cito: ``\textit{A plena conformidade com a LGPD requer pol\'{i}ticas institucionais, um RIPD (Relat\'{o}rio de Impacto \`{a} Prote\c{c}\~{a}o de Dados Pessoais) formal e revis\~{a}o jur\'{i}dica por cada organiza\c{c}\~{a}o que implantar o sistema. Nenhum RIPD formal foi conduzido para a implanta\c{c}\~{a}o atual.}''
+\end{enumerate}
+
+\change{Se\c{c}\~{a}o~2 --- terminologia ``design compat\'{i}vel com a LGPD'', nova Tabela~(tab:lgpdmapping), disclaimer. Se\c{c}\~{a}o~6 (Limita\c{c}\~{o}es) --- nova subse\c{c}\~{a}o ``Conformidade com a LGPD''. Se\c{c}\~{a}o~7 --- RIPD listado como trabalho futuro.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.9 --- Sem dataset p\'{u}blico ou pacote de replica\c{c}\~{a}o}
+
+\begin{reviewerbox}
+Embora m\'{e}tricas anonimizadas sejam ditas ``dispon\'{i}veis mediante solicita\c{c}\~{a}o'', nenhum dataset p\'{u}blico ou pacote de replica\c{c}\~{a}o \'{e} fornecido. Isso limita a transpar\^{e}ncia e a reprodutibilidade, que s\~{a}o centrais aos padr\~{o}es da SoftwareX.
+\end{reviewerbox}
+
+\response{Concordamos. A declara\c{c}\~{a}o revisada de Disponibilidade de Dados agora diz:}
+
+\begin{quote}
+``\textit{M\'{e}tricas anonimizadas de implanta\c{c}\~{a}o, scripts de an\'{a}lise estat\'{i}stica (Python) e o framework de teste de carga est\~{a}o dispon\'{i}veis no pacote de replica\c{c}\~{a}o em \url{https://doi.org/10.5281/zenodo.18868994}.}''
+\end{quote}
+
+O pacote de replica\c{c}\~{a}o est\'{a} publicado no Zenodo em \url{https://doi.org/10.5281/zenodo.18868994}. O pacote cont\'{e}m os seguintes arquivos de evid\^{e}ncia:
+\begin{itemize}[nosep]
+  \item \texttt{data/deployment\_metrics.csv} --- m\'{e}tricas anonimizadas de implanta\c{c}\~{a}o (sem PII);
+  \item \texttt{analysis/statistical\_analysis.py} --- script Python reproduzindo todos os ICs, testes de Mann--Whitney $U$, tamanhos de efeito e teste exato de Fisher;
+  \item \texttt{analysis/output\_statistical\_analysis.txt} --- sa\'{i}da capturada confirmando os valores do artigo;
+  \item \texttt{load-test/load-test.js} --- script de benchmarking autocannon;
+  \item \texttt{load-test/load\_test\_results.json} --- JSON estruturado com resultados brutos de todas as seis combina\c{c}\~{o}es cen\'{a}rio/concorr\^{e}ncia.
+\end{itemize}
+
+Metadados de cita\c{c}\~{a}o leg\'{i}veis por m\'{a}quina s\~{a}o fornecidos via \texttt{CITATION.cff} e \texttt{.zenodo.json} na raiz do reposit\'{o}rio.
+
+\change{Declara\c{c}\~{a}o de Disponibilidade de Dados atualizada. Se\c{c}\~{a}o~6 (Limita\c{c}\~{o}es) --- subse\c{c}\~{a}o ``Reprodutibilidade'' referencia Zenodo. Se\c{c}\~{a}o~7 --- pacote de replica\c{c}\~{a}o mencionado. \texttt{CITATION.cff} e \texttt{.zenodo.json} adicionados.}
+
+\bigskip
+
+\subsection*{Coment\'{a}rio 2.10 --- Manuscrito prolixo}
+
+\begin{reviewerbox}
+O artigo parece prolixo para uma publica\c{c}\~{a}o de software original na SoftwareX. Se\c{c}\~{o}es descrevendo fundamentos criptogr\'{a}ficos e diagramas de fluxo poderiam ser condensadas. Algumas explica\c{c}\~{o}es conceituais s\~{a}o repetitivas e inflam o manuscrito sem adicionar profundidade t\'{e}cnica.
+\end{reviewerbox}
+
+\response{Condensamos o manuscrito da seguinte forma:}
+
+\begin{itemize}[nosep]
+  \item Removendo explica\c{c}\~{o}es redundantes de fundamentos de SHA-256 e HMAC (leitores da SoftwareX s\~{a}o considerados familiarizados com hashing padr\~{a}o);
+  \item Consolidando texto motivacional repetido entre se\c{c}\~{o}es;
+  \item Compactando a discuss\~{a}o da compara\c{c}\~{a}o (a Tabela~3 redesenhada transmite mais informa\c{c}\~{a}o em menos texto);
+  \item Movendo descri\c{c}\~{o}es detalhadas de fluxo para o diagrama de arquitetura e sua legenda;
+  \item Usando linguagem mais concisa e direta em todo o texto.
+\end{itemize}
+
+\noindent Apesar da adi\c{c}\~{a}o de novo conte\'{u}do t\'{e}cnico (implementa\c{c}\~{a}o RFC~3161, testes de carga, tabela de mapeamento LGPD, modelo de amea\c{c}as expandido, testes estat\'{i}sticos, limita\c{c}\~{o}es estruturadas), o texto geral est\'{a} mais focado e menos repetitivo. Estimamos uma redu\c{c}\~{a}o l\'{i}quida no volume de prosa de aproximadamente 15\% (excluindo tabelas e equa\c{c}\~{o}es).
+
+\change{Ao longo de todo o manuscrito. Particularmente: Se\c{c}\~{a}o~1 (motiva\c{c}\~{a}o condensada), Se\c{c}\~{a}o~2 (primer criptogr\'{a}fico removido), Se\c{c}\~{a}o~5 (tabelas substituem descri\c{c}\~{o}es prolixas).}
+
+\bigskip
+\hrule
+\bigskip
+
+\section*{Resumo das Altera\c{c}\~{o}es}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|c|p{5cm}|p{7cm}|}
+\hline
+\textbf{Rev./Pt} & \textbf{Quest\~{a}o} & \textbf{A\c{c}\~{a}o Tomada} \\
+\hline
+R1.1 / R2.4 & Alega\c{c}\~{a}o de ``imut\'{a}vel''; admin confi\'{a}vel & Implementa\c{c}\~{a}o RFC~3161 TSA; ``\`{a} prova de adultera\c{c}\~{a}o''; modelo de amea\c{c}as com 3 classes \\
+\hline
+R1.2 / R2.2 & Sem estat\'{i}stica inferencial & ICs de 95\%, Mann--Whitney $U$, Fisher exato, tamanhos de efeito, linguagem moderada \\
+\hline
+R1.3 / R2.1 & Novidade superestimada & Contribui\c{c}\~{a}o reposicionada como engenharia de integra\c{c}\~{a}o \\
+\hline
+R1.4 / R2.5 & Compara\c{c}\~{a}o superficial & Tabela~3 redesenhada: escala de 3 n\'{i}veis, 10 colunas, notas metodol\'{o}gicas \\
+\hline
+R1.5 & Categoria incorreta & Reclassificada como ``Ci\^{e}ncia da Computa\c{c}\~{a}o'' \\
+\hline
+R2.3 & Dados retrospectivos & Vi\'{e}s de mem\'{o}ria e confundidores reconhecidos; subse\c{c}\~{o}es de limita\c{c}\~{o}es adicionadas \\
+\hline
+R2.6 & Sem valida\c{c}\~{a}o de seguran\c{c}a & Verifica\c{c}\~{a}o OWASP Top~10, npm audit; limita\c{c}\~{a}o honestamente declarada \\
+\hline
+R2.7 & Sem teste de estresse & Testes de carga executados: 1.753~req/s GET, 1.338~req/s POST @100 conn; satura\c{c}\~{a}o a 500 conn; JSON bruto no pacote de replica\c{c}\~{a}o \\
+\hline
+R2.8 & LGPD n\~{a}o demonstrada & Tabela de mapeamento LGPD, terminologia ``compat\'{i}vel com a LGPD'', disclaimer RIPD \\
+\hline
+R2.9 & Sem pacote de replica\c{c}\~{a}o & Pacote de replica\c{c}\~{a}o publicado no Zenodo (DOI: 10.5281/zenodo.18868994) \\
+\hline
+R2.10 & Prolixo & Texto condensado em $\sim$15\%; redund\^{a}ncias removidas \\
+\hline
+\end{tabular}
+\end{table}
+
+\bigskip
+
+\noindent Confiamos que estas revis\~{o}es abordam adequadamente todas as preocupa\c{c}\~{o}es levantadas por ambos os revisores e pelo editor. Permanecemos \`{a} disposi\c{c}\~{a}o dos revisores para quaisquer esclarecimentos adicionais.
+
+\bigskip
+\noindent Atenciosamente,
+
+\medskip
+\noindent L.D.V.~Santos e V.R.Q.~Leithardt
+
+\end{document}
