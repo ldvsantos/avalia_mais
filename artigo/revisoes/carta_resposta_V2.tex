@@ -40,22 +40,7 @@ Integrity-Verified Academic Selection Processes''}
 \medskip
 \noindent We sincerely thank the Editor and both Reviewers for their thorough, constructive, and insightful evaluation of our manuscript. Their comments identified important weaknesses that have substantially improved the scientific rigor, transparency, and honesty of the paper.
 
-We have addressed \textbf{every comment} raised by both reviewers. The revisions include:
-\begin{itemize}[nosep]
-  \item Implementation of RFC~3161 Trusted Timestamping for external hash anchoring (code, SQL migration, and server integration);
-  \item Replacement of ``immutable'' with ``tamper-evident'' throughout;
-  \item Addition of formal statistical tests (95\% CIs, Mann--Whitney $U$, Fisher's exact test, effect sizes) with appropriately hedged language;
-  \item Explicit repositioning of the contribution as \emph{integration engineering};
-  \item Complete rewrite of the comparison table with multi-level scoring and independent methodology;
-  \item Expanded three-class threat model with residual-risk analysis;
-  \item LGPD compliance mapping table with disclaimer;
-  \item Load testing results (autocannon benchmarks at 100/500 concurrent connections);
-  \item Structured Limitations section with five identified areas;
-  \item Zenodo replication package (DOI: 10.5281/zenodo.18868994);
-  \item Significant text condensation.
-\end{itemize}
-
-\noindent Below we provide a detailed point-by-point response. Reviewer comments are highlighted in blue boxes; our responses appear in green; manuscript changes are indicated in brown italics.
+We have addressed every comment raised by both reviewers. Below we provide our detailed point-by-point response.
 
 \bigskip
 \hrule
@@ -73,12 +58,12 @@ The threat model contains a critical vulnerability that the authors themselves a
 
 \response{We fully agree with this criticism. The term ``immutable'' was technically inaccurate in the absence of external anchoring, and we thank the reviewer for pressing this point.}
 
-In the revised version, we have taken \textbf{both} corrective actions the reviewer suggested:
+In the revised version, we have taken both corrective actions the reviewer suggested:
 
 \begin{enumerate}[nosep]
-  \item \textbf{Implementation of RFC~3161 Trusted Timestamping.} We implemented a \texttt{TimestampService} module that submits each submission's SHA-256 digest to an external RFC~3161-compliant Timestamp Authority (default: FreeTSA.org). The TSA returns a cryptographically signed TimeStampResp (TSR) token that is stored alongside the submission record. Even a root-level database administrator cannot forge a valid TSR without the TSA's private signing key. The code includes ASN.1 DER encoding, HTTP POST to the TSA, and TSR verification logic. A corresponding SQL migration (\texttt{002\_add\_rfc3161\_timestamp.sql}) adds \texttt{tsr\_base64}, \texttt{tsr\_tsa\_url}, and \texttt{tsr\_requested\_at} columns. The \texttt{/api/verify/:protocol} route now returns TSR verification results alongside the existing hash check.
+  \item Implementation of RFC~3161 Trusted Timestamping. We implemented a \texttt{TimestampService} module that submits each submission's SHA-256 digest to an external RFC~3161-compliant Timestamp Authority (default: FreeTSA.org). The TSA returns a cryptographically signed TimeStampResp (TSR) token that is stored alongside the submission record. Even a root-level database administrator cannot forge a valid TSR without the TSA's private signing key. The code includes ASN.1 DER encoding, HTTP POST to the TSA, and TSR verification logic. A corresponding SQL migration (\texttt{002\_add\_rfc3161\_timestamp.sql}) adds \texttt{tsr\_base64}, \texttt{tsr\_tsa\_url}, and \texttt{tsr\_requested\_at} columns. The \texttt{/api/verify/:protocol} route now returns TSR verification results alongside the existing hash check.
 
-  \item \textbf{Terminology correction.} Every occurrence of ``immutable'' has been replaced with ``tamper-evident'' throughout both the English and Portuguese versions of the manuscript, the abstract, highlights, the architecture diagram label, and all technical descriptions.
+  \item Terminology correction. Every occurrence of ``immutable'' has been replaced with ``tamper-evident'' throughout both the English and Portuguese versions of the manuscript, the abstract, highlights, the architecture diagram label, and all technical descriptions.
 \end{enumerate}
 
 \change{%
@@ -212,7 +197,7 @@ The manuscript explicitly assumes a trusted administrator, which fundamentally w
 \begin{enumerate}[nosep]
   \item External (unauthenticated) attacker --- mitigated by TLS, rate limiting, input sanitization, JWT auth;
   \item Non-privileged insider (authenticated user) --- mitigated by RBAC, RLS, HMAC-authenticated forms, hash-chained audit trail;
-  \item \textbf{Privileged administrator} (root DB access) --- mitigated by RFC~3161 external hash anchoring.
+  \item Privileged administrator (root DB access) --- mitigated by RFC~3161 external hash anchoring.
 \end{enumerate}
 
 \noindent The residual limitation is explicitly stated: if the administrator suppresses TSR storage \emph{before} the timestamp is requested, no external anchor exists for that record. This is identified as an area for future improvement (e.g., continuous blockchain anchoring, multi-party key management).
@@ -242,8 +227,8 @@ While SHA-256 and HMAC are cited, there is no formal security validation, no pen
 \response{We agree that calling standard libraries does not guarantee secure deployment. The revised manuscript addresses this in two ways:}
 
 \begin{enumerate}[nosep]
-  \item \textbf{Positive evidence:} Section~3 now states that the implementation was checked against the OWASP Top~10 checklist and that \texttt{npm audit} reports zero high-severity known vulnerabilities in production dependencies. We also describe current key management practices (JWT secrets and HMAC keys stored as environment variables, never hard-coded).
-  \item \textbf{Honest limitation:} Section~3 and Section~6 (``Security'' subsection) explicitly state: ``\textit{No formal penetration test or external security audit has been conducted to date; this represents planned future work.}'' and ``\textit{These do not constitute a comprehensive security assessment.}''
+  \item Positive evidence: Section~3 now states that the implementation was checked against the OWASP Top~10 checklist and that \texttt{npm audit} reports zero high-severity known vulnerabilities in production dependencies. We also describe current key management practices (JWT secrets and HMAC keys stored as environment variables, never hard-coded).
+  \item Honest limitation: Section~3 and Section~6 (``Security'' subsection) explicitly state: ``\textit{No formal penetration test or external security audit has been conducted to date; this represents planned future work.}'' and ``\textit{These do not constitute a comprehensive security assessment.}''
 \end{enumerate}
 
 Formal penetration testing and external audit are listed as future work in Section~7.
