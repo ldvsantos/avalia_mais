@@ -157,6 +157,22 @@ class JsonSubmissionRepository {
   clearAll() {
     this.saveAll([]);
   }
+
+  /**
+   * Store an RFC 3161 timestamp response for a submission (JSON backend).
+   * @param {string} protocol
+   * @param {{ tsrBase64: string, tsaUrl: string, requestedAt: string }} tsResult
+   */
+  updateTimestamp(protocol, tsResult) {
+    const submissions = this.loadAll();
+    const sub = submissions.find((s) => s.protocol === protocol);
+    if (sub) {
+      sub.tsrBase64 = tsResult.tsrBase64;
+      sub.tsrTsaUrl = tsResult.tsaUrl;
+      sub.tsrRequestedAt = tsResult.requestedAt;
+      this.saveAll(submissions);
+    }
+  }
 }
 
 module.exports = JsonSubmissionRepository;

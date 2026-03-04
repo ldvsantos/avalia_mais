@@ -42,6 +42,7 @@ const PdfService = require('./src/infrastructure/services/PdfService');
 const EdenAiAdapter = require('./src/infrastructure/adapters/EdenAiAdapter');
 const MockPlagiarismAdapter = require('./src/infrastructure/adapters/MockPlagiarismAdapter');
 const ProjectAnalysisService = require('./src/application/services/ProjectAnalysisService');
+const TimestampService = require('./src/infrastructure/services/TimestampService');
 
 const RegisterSubmission = require('./src/application/RegisterSubmission');
 const RegisterAppeal = require('./src/application/RegisterAppeal');
@@ -302,13 +303,17 @@ async function notifyCandidateAppealDecision({ appeal, submission }) {
   }
 }
 
+// RFC 3161 Trusted Timestamping — external hash anchoring
+const timestampService = new TimestampService();
+
 const registerSubmissionUseCase = new RegisterSubmission(
   submissionRepo,
   HMAC_SECRET,
   emailService,
   emailTemplateService,
   pdfService,
-  ADMIN_NOTIFY_TO
+  ADMIN_NOTIFY_TO,
+  timestampService
 );
 const registerAppealUseCase = new RegisterAppeal(appealRepo, submissionRepo, emailService, emailTemplateService, pdfService, ADMIN_NOTIFY_TO);
 const authenticateUserUseCase = new AuthenticateUser(evaluatorRepo, jwtService, { user: ADMIN_USER, pass: ADMIN_PASS });
@@ -2936,12 +2941,22 @@ app.get('/api/verify/:protocol', async (req, res) => {
   const canonical = stableStringify(payloadForHash);
   const computed = sha256Hex(canonical);
 
+  // RFC 3161 external timestamp verification (if available)
+  let tsrVerification = null;
+  const tsrBase64 = record.tsrBase64 || record.tsr_base64;
+  if (tsrBase64 && timestampService) {
+    tsrVerification = timestampService.verifyTimestamp(tsrBase64, computed);
+    tsrVerification.tsaUrl = record.tsrTsaUrl || record.tsr_tsa_url || '';
+    tsrVerification.requestedAt = record.tsrRequestedAt || record.tsr_requested_at || '';
+  }
+
   return res.json({
     protocol: record.protocol,
     storedHash: record.hash,
     computedHash: computed,
     valid: computed === record.hash,
     createdAt: record.createdAt,
+    externalTimestamp: tsrVerification,
     data: {
       nome: record.identified?.nome || '',
       email: record.identified?.email || '',

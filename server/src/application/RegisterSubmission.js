@@ -4,13 +4,14 @@ const crypto = require('crypto');
 const { stableStringify, sha256Hex } = require('../../util');
 
 class RegisterSubmission {
-  constructor(submissionRepository, hmacSecret, emailService, emailTemplateService, pdfService, adminNotifyTo) {
+  constructor(submissionRepository, hmacSecret, emailService, emailTemplateService, pdfService, adminNotifyTo, timestampService) {
     this.submissionRepository = submissionRepository;
     this.hmacSecret = hmacSecret;
     this.emailService = emailService;
     this.emailTemplateService = emailTemplateService;
     this.pdfService = pdfService;
     this.adminNotifyTo = adminNotifyTo;
+    this.timestampService = timestampService || null;
   }
 
   async execute(data, ctx) {
@@ -116,6 +117,26 @@ class RegisterSubmission {
 
     // 6. Save
     await Promise.resolve(this.submissionRepository.save(submission));
+
+    // 6b. RFC 3161 External Timestamp Anchoring (async, non-blocking)
+    // Requests a timestamp token from an independent TSA to anchor the
+    // submission hash externally, strengthening tamper-evidence guarantees.
+    if (this.timestampService) {
+      Promise.resolve()
+        .then(async () => {
+          try {
+            const tsResult = await this.timestampService.requestTimestamp(hash);
+            await Promise.resolve(
+              this.submissionRepository.updateTimestamp(protocol, tsResult)
+            );
+            console.log(`[TSA] RFC 3161 timestamp anchored for ${protocol}`);
+          } catch (err) {
+            // Timestamp failure must not block submission — log and continue
+            console.error(`[TSA] Failed to anchor timestamp for ${protocol}:`, err.message);
+          }
+        })
+        .catch((err) => console.error('[TSA] Unexpected error:', err));
+    }
 
     // 7. Emails (candidato + notificação admin) + PDF (assíncrono)
     const candidateEmail = String(identified.email || '').trim();

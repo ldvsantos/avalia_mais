@@ -276,6 +276,22 @@ class SqlSubmissionRepository {
   async clearAll() {
     await this.pool.query('DELETE FROM submissions');
   }
+
+  /**
+   * Store an RFC 3161 timestamp response for a submission.
+   * @param {string} protocol
+   * @param {{ tsrBase64: string, tsaUrl: string, requestedAt: string }} tsResult
+   */
+  async updateTimestamp(protocol, tsResult) {
+    await this.pool.query(
+      `UPDATE submissions
+         SET tsr_base64 = $1,
+             tsr_tsa_url = $2,
+             tsr_requested_at = $3
+       WHERE protocol = $4`,
+      [tsResult.tsrBase64, tsResult.tsaUrl, tsResult.requestedAt, protocol]
+    );
+  }
 }
 
 module.exports = SqlSubmissionRepository;

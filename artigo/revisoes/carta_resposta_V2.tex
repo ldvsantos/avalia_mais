@@ -1,0 +1,377 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{tcolorbox}
+
+\definecolor{reviewercolor}{RGB}{0,51,102}
+\definecolor{responsecolor}{RGB}{0,100,0}
+\definecolor{changecolor}{RGB}{139,69,19}
+
+\newtcolorbox{reviewerbox}{
+  colback=blue!5!white,
+  colframe=reviewercolor,
+  fonttitle=\bfseries,
+  title=Reviewer Comment,
+  boxrule=0.5pt,
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newcommand{\response}[1]{\par\noindent\textcolor{responsecolor}{\textbf{Response:}} #1}
+\newcommand{\change}[1]{\par\noindent\textcolor{changecolor}{\textbf{Changes in manuscript:}} \textit{#1}}
+
+\title{Point-by-Point Response to Reviewer Comments\\[0.3em]
+\large Manuscript: ``avalia+Tec: A Tamper-Evident Platform for\\
+Integrity-Verified Academic Selection Processes''}
+\author{L.D.V. Santos, V.R.Q. Leithardt}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\noindent Dear Editor and Reviewers,
+
+\medskip
+\noindent We sincerely thank the Editor and both Reviewers for their thorough, constructive, and insightful evaluation of our manuscript. Their comments identified important weaknesses that have substantially improved the scientific rigor, transparency, and honesty of the paper.
+
+We have addressed \textbf{every comment} raised by both reviewers. The revisions include:
+\begin{itemize}[nosep]
+  \item Implementation of RFC~3161 Trusted Timestamping for external hash anchoring (code, SQL migration, and server integration);
+  \item Replacement of ``immutable'' with ``tamper-evident'' throughout;
+  \item Addition of formal statistical tests (95\% CIs, Mann--Whitney $U$, Fisher's exact test, effect sizes) with appropriately hedged language;
+  \item Explicit repositioning of the contribution as \emph{integration engineering};
+  \item Complete rewrite of the comparison table with multi-level scoring and independent methodology;
+  \item Expanded three-class threat model with residual-risk analysis;
+  \item LGPD compliance mapping table with disclaimer;
+  \item Load testing results (autocannon benchmarks at 100/500 concurrent connections);
+  \item Structured Limitations section with seven identified threat areas;
+  \item Zenodo replication package (DOI placeholder);
+  \item Significant text condensation.
+\end{itemize}
+
+\noindent Below we provide a detailed point-by-point response. Reviewer comments are highlighted in blue boxes; our responses appear in green; manuscript changes are indicated in brown italics.
+
+\bigskip
+\hrule
+\bigskip
+
+%% ================================================================
+\section*{Reviewer \#1}
+%% ================================================================
+
+\subsection*{Comment 1.1 --- Threat model and ``immutable'' claim}
+
+\begin{reviewerbox}
+The threat model contains a critical vulnerability that the authors themselves acknowledge: a server administrator with root-level database access could rewrite the entire hash chain consistently. This fundamentally undermines the paper's central claim of an ``immutable'' audit trail. Without external hash anchoring (e.g., a public blockchain or an RFC 3161-compliant timestamping authority), the use of the term ``immutable'' is technically incorrect and misleading. The authors must either implement this safeguard or substantially revise their claims.
+\end{reviewerbox}
+
+\response{We fully agree with this criticism. The term ``immutable'' was technically inaccurate in the absence of external anchoring, and we thank the reviewer for pressing this point.}
+
+In the revised version, we have taken \textbf{both} corrective actions the reviewer suggested:
+
+\begin{enumerate}[nosep]
+  \item \textbf{Implementation of RFC~3161 Trusted Timestamping.} We implemented a \texttt{TimestampService} module that submits each submission's SHA-256 digest to an external RFC~3161-compliant Timestamp Authority (default: FreeTSA.org). The TSA returns a cryptographically signed TimeStampResp (TSR) token that is stored alongside the submission record. Even a root-level database administrator cannot forge a valid TSR without the TSA's private signing key. The code includes ASN.1 DER encoding, HTTP POST to the TSA, and TSR verification logic. A corresponding SQL migration (\texttt{002\_add\_rfc3161\_timestamp.sql}) adds \texttt{tsr\_base64}, \texttt{tsr\_tsa\_url}, and \texttt{tsr\_requested\_at} columns. The \texttt{/api/verify/:protocol} route now returns TSR verification results alongside the existing hash check.
+
+  \item \textbf{Terminology correction.} Every occurrence of ``immutable'' has been replaced with ``tamper-evident'' throughout both the English and Portuguese versions of the manuscript, the abstract, highlights, the architecture diagram label, and all technical descriptions.
+\end{enumerate}
+
+\change{%
+Abstract rewritten (both versions); Section~1 motivation; Section~2 Software Functionalities --- new RFC~3161 description paragraph; Section~3 Threat Model --- completely rewritten with three adversary classes (external attacker, non-privileged insider, privileged administrator) and residual-risk analysis; architecture diagram: ``Immutable Event Store'' $\to$ ``Tamper-Evident Store''; Section~7 Conclusions --- tamper-evident language. New code files: \texttt{TimestampService.js}, \texttt{002\_add\_rfc3161\_timestamp.sql}. Modified files: \texttt{RegisterSubmission.js}, \texttt{SqlSubmissionRepository.js}, \texttt{JsonSubmissionRepository.js}, \texttt{index.js}.}
+
+\bigskip
+
+\subsection*{Comment 1.2 --- Insufficient empirical evidence}
+
+\begin{reviewerbox}
+The empirical evidence for the reported performance gains (65\% cycle time reduction, 45.4\% evaluator time reduction) is insufficient. The sample ($n=60$ submissions, $n=6$ evaluators) is drawn from a single institution, and comparisons with prior workflows rely exclusively on retrospective self-reported administrative survey data, which is susceptible to recall bias. No confidence intervals, formal significance tests (e.g., Mann--Whitney U), or control group comparisons are provided.
+\end{reviewerbox}
+
+\response{We agree that the original statistical presentation was inadequate. The revised manuscript now includes:}
+
+\begin{itemize}[nosep]
+  \item 95\% confidence intervals for all reported metrics;
+  \item Mann--Whitney $U$ tests (two-tailed) with exact $p$-values: cycle time $U=0$, $p=0.029$; evaluator time $U=2$, $p=0.009$;
+  \item Effect sizes: rank-biserial $r=1.0$ for cycle time, Cohen's $d=1.88$ (large) for evaluator time;
+  \item Fisher's exact test for dispute rates: 0/60 vs.\ 14/292, $p=0.096$ (one-tailed), explicitly noted as \emph{not reaching conventional significance};
+  \item Explicit acknowledgment of recall bias, Hawthorne effect, small sample size, and single-institution limitation;
+  \item Hedged language throughout: ``preliminary effect-size estimates'', ``associated with'', ``suggests'' instead of causal claims.
+\end{itemize}
+
+We have not added a control group, as this was a real institutional deployment where randomization would have been impractical and ethically problematic. We explicitly state this limitation (Section~6).
+
+\change{Section~5 (Impact) --- completely rewritten with statistical tests and hedged language. Section~6 (Limitations) --- new ``Study design'', ``Baseline data quality'', and ``Confounding factors'' subsections.}
+
+\bigskip
+
+\subsection*{Comment 1.3 --- Overstated novelty}
+
+\begin{reviewerbox}
+The novelty of the cryptographic contribution is overstated. SHA-256 hashing and HMAC-SHA256 authentication in a Node.js environment represent standard software engineering practice, not a scientific contribution. The claim that no existing platform integrates these mechanisms together requires stronger justification than the comparison presented in Table~3.
+\end{reviewerbox}
+
+\response{We fully agree. The individual cryptographic primitives (SHA-256, HMAC-SHA256) are indeed well-established and their implementation does not constitute a scientific novelty claim. The revised manuscript explicitly repositions the contribution:}
+
+\begin{itemize}[nosep]
+  \item A new ``Scope of contribution'' paragraph in Section~1 states: ``\textit{The scientific contribution resides in this systematic integration rather than in the underlying cryptographic primitives.}''
+  \item The abstract now reads: ``\textit{The platform combines well-established cryptographic techniques---[\ldots]---into a unified, open-source workflow specifically designed for [\ldots]}''
+  \item All novelty claims have been replaced with ``integration engineering'' framing throughout.
+\end{itemize}
+
+\change{Abstract, Section~1 (new ``Scope of contribution'' paragraph), Section~7 (Conclusions) --- contribution explicitly framed as integration engineering.}
+
+\bigskip
+
+\subsection*{Comment 1.4 --- Superficial comparison table}
+
+\begin{reviewerbox}
+The comparative analysis in Table~3 is superficial and appears constructed to favor avalia+Tec. Notably, the paper claims LGPD compliance as a unique advantage while making no assessment of GDPR compliance mechanisms in competing platforms. The comparison criteria should be defined independently of the proposed system's feature set.
+\end{reviewerbox}
+
+\response{We agree that the original binary Yes/No format was reductive and the criteria were not sufficiently independent. The revised Table~3 incorporates:}
+
+\begin{itemize}[nosep]
+  \item A three-level scoring scale (\ding{108} full/native, \ding{119} partial/plugin, \ding{55} absent) to avoid the binary simplification;
+  \item Two new columns not favoring avalia+Tec: ``Ext.\ TSA'' (avalia+Tec is rated \ding{119} partial, as the implementation is new) and ``Proven Scale'' (avalia+Tec receives \ding{55}, acknowledging its single-institution deployment vs.\ production systems handling millions of submissions);
+  \item A ``GDPR/LGPD'' column replacing the LGPD-only column, with footnotes about plugin-based compliance (e.g., OpenReview's privacy controls);
+  \item An ``Ext.\ Plugins'' column explicitly crediting HotCRP and OpenReview for their extension ecosystems;
+  \item Methodology footnotes explaining scoring criteria: ``assessed via published documentation, source code inspection, and official feature matrices.''
+\end{itemize}
+
+\change{Table~3 completely redesigned (10 columns, 3-level scale, footnotes, GDPR column, ``Proven Scale'' column).}
+
+\bigskip
+
+\subsection*{Comment 1.5 --- Wrong submission category}
+
+\begin{reviewerbox}
+The manuscript has been submitted under the category ``Humanities, Arts and Social Sciences,'' which is clearly incorrect for a software engineering contribution. The authors should resubmit under an appropriate subject area.
+\end{reviewerbox}
+
+\response{We thank the reviewer for noting this administrative error. The resubmission has been reclassified under the ``Computer Science'' subject area, which is the appropriate category for a software engineering contribution describing a web-based platform with cryptographic components. We apologize for the oversight.}
+
+\change{Journal submission metadata corrected to ``Computer Science'' category.}
+
+\bigskip
+\hrule
+\bigskip
+
+%% ================================================================
+\section*{Reviewer \#2}
+%% ================================================================
+
+\subsection*{Comment 2.1 --- Integration engineering, not scientific novelty}
+
+\begin{reviewerbox}
+The manuscript largely integrates well-established cryptographic primitives (SHA-256, HMAC, RBAC, PostgreSQL RLS) without proposing methodological, algorithmic, or architectural innovations. The contribution appears primarily as an implementation effort rather than a scientifically novel advancement. The authors should clearly articulate what is fundamentally new beyond integration engineering.
+\end{reviewerbox}
+
+\response{We agree and have explicitly repositioned the contribution as integration engineering. See our response to Reviewer~\#1, Comment~1.3. The revised manuscript states that the contribution lies in the \emph{systematic integration} of established primitives into a domain-specific workflow, not in the primitives themselves. We also note that the SoftwareX scope explicitly encompasses ``software that has a significant impact on research'' regardless of algorithmic novelty.}
+
+\change{Same as Comment~1.3. Abstract, Section~1 (``Scope of contribution'' paragraph), Section~7.}
+
+\bigskip
+
+\subsection*{Comment 2.2 --- Insufficient inferential statistics}
+
+\begin{reviewerbox}
+The reported 65\% cycle-time reduction and 45.4\% evaluator efficiency gain are based on a small, single-institution deployment ($n=60$ submissions, $n=6$ evaluators). No inferential statistics, confidence intervals, or hypothesis testing are provided. Claims regarding dispute elimination and efficiency improvements are therefore overstated and insufficiently supported.
+\end{reviewerbox}
+
+\response{Fully addressed. See our response to Reviewer~\#1, Comment~1.2. The revised Section~5 now includes 95\% CIs, Mann--Whitney $U$ tests with exact $p$-values, effect sizes, and Fisher's exact test for dispute rates. All claims are hedged appropriately.}
+
+\change{Same as Comment~1.2. Section~5 (Impact), Section~6 (Limitations).}
+
+\bigskip
+
+\subsection*{Comment 2.3 --- Retrospective self-reported data}
+
+\begin{reviewerbox}
+The evaluation relies on retrospective self-reported administrative data. There is no controlled baseline, no randomized comparison, and no longitudinal multi-cohort validation. This weakens the empirical credibility of the reported performance improvements.
+\end{reviewerbox}
+
+\response{We acknowledge this limitation explicitly in the revised Section~6 (Limitations), under the new ``Baseline data quality'' and ``Confounding factors'' subsections. The text now states: ``\textit{Baseline comparisons rely on retrospective self-reported administrative survey data and are subject to recall bias. Evaluators may overestimate time previously spent, inflating the apparent efficiency gain. No objective time-tracking data exists for the pre-deployment period.}'' We also note the absence of a randomized comparison and explain why randomization was impractical in a real institutional deployment. Multi-institutional longitudinal validation is identified as planned future work.}
+
+\change{Section~5 --- explicit recall bias and Hawthorne effect warnings. Section~6 --- ``Baseline data quality'' subsection. Section~7 --- future work includes multi-institutional deployments with quasi-experimental designs.}
+
+\bigskip
+
+\subsection*{Comment 2.4 --- Trusted administrator weakness}
+
+\begin{reviewerbox}
+The manuscript explicitly assumes a trusted administrator, which fundamentally weakens the integrity guarantees. Since a malicious root user can rewrite the entire hash chain, the system does not provide strong tamper-resistance in adversarial institutional contexts. Security claims should be toned down accordingly.
+\end{reviewerbox}
+
+\response{Addressed via the same RFC~3161 implementation described in our response to Reviewer~\#1, Comment~1.1. The revised Section~3 now presents a three-class threat model:}
+
+\begin{enumerate}[nosep]
+  \item External (unauthenticated) attacker --- mitigated by TLS, rate limiting, input sanitization, JWT auth;
+  \item Non-privileged insider (authenticated user) --- mitigated by RBAC, RLS, HMAC-authenticated forms, hash-chained audit trail;
+  \item \textbf{Privileged administrator} (root DB access) --- mitigated by RFC~3161 external hash anchoring.
+\end{enumerate}
+
+\noindent The residual limitation is explicitly stated: if the administrator suppresses TSR storage \emph{before} the timestamp is requested, no external anchor exists for that record. This is identified as an area for future improvement (e.g., continuous blockchain anchoring, multi-party key management).
+
+\change{Section~3 --- complete rewrite. New code: \texttt{TimestampService.js}. All ``immutable'' $\to$ ``tamper-evident''.}
+
+\bigskip
+
+\subsection*{Comment 2.5 --- Comparison lacks rigor}
+
+\begin{reviewerbox}
+The comparison with platforms such as SIGAA, OpenReview, EasyChair, HotCRP, and SUCUPIRA lacks methodological rigor. The functional comparison does not consider plugin capabilities, extensibility, or alternative cryptographic integration possibilities. It presents a binary ``Yes/No'' simplification that may misrepresent competing systems.
+\end{reviewerbox}
+
+\response{Fully addressed. See our response to Reviewer~\#1, Comment~1.4. The revised Table~3 uses three-level scoring, explicitly credits plugin ecosystems, includes columns where avalia+Tec is rated lower than competitors, and documents the comparison methodology in footnotes.}
+
+\change{Same as Comment~1.4. Table~3 redesigned.}
+
+\bigskip
+
+\subsection*{Comment 2.6 --- No formal security validation}
+
+\begin{reviewerbox}
+While SHA-256 and HMAC are cited, there is no formal security validation, no penetration testing report, no external audit, and no verification of correct key management practices. Simply calling standard libraries does not guarantee secure deployment.
+\end{reviewerbox}
+
+\response{We agree that calling standard libraries does not guarantee secure deployment. The revised manuscript addresses this in two ways:}
+
+\begin{enumerate}[nosep]
+  \item \textbf{Positive evidence:} Section~3 now states that the implementation was checked against the OWASP Top~10 checklist and that \texttt{npm audit} reports zero high-severity known vulnerabilities in production dependencies. We also describe current key management practices (JWT secrets and HMAC keys stored as environment variables, never hard-coded).
+  \item \textbf{Honest limitation:} Section~3 and Section~6 (``Security'' subsection) explicitly state: ``\textit{No formal penetration test or external security audit has been conducted to date; this represents planned future work.}'' and ``\textit{These do not constitute a comprehensive security assessment.}''
+\end{enumerate}
+
+Formal penetration testing and external audit are listed as future work in Section~7.
+
+\change{Section~3 (Threat Model) --- OWASP/npm audit mention, key management description. Section~6 (Limitations) --- new ``Security'' subsection.}
+
+\bigskip
+
+\subsection*{Comment 2.7 --- No stress testing}
+
+\begin{reviewerbox}
+Performance testing was conducted on 60 submissions. No stress testing, concurrent user simulation, or high-load benchmarking is presented. It is unclear how the system performs with hundreds or thousands of simultaneous users.
+\end{reviewerbox}
+
+\response{We have now conducted and reported load testing. A new load test script (\texttt{scripts/load-test.js}) using autocannon (HTTP benchmarking tool for Node.js) was created with three scenarios: GET / (landing page), GET /api/verify/:protocol (integrity verification), and POST /api/inscricao (submission creation with SHA-256 hashing and async RFC~3161 timestamping). Tests were run at 100 and 500 concurrent connections for 30~seconds each on the same AWS EC2 t3.medium instance.}
+
+A new Section~4.1 (Load Testing) and Table~(tab:loadtest) report the results:
+\begin{itemize}[nosep]
+  \item Read operations sustain $>$1,400 req/s even at 500 concurrent connections;
+  \item Write operations (with hashing and DB insertion) show expected throughput reduction under high concurrency but remain functional;
+  \item The text explicitly states that horizontal scaling (load balancing, PostgreSQL read replicas) is a straightforward architectural extension for larger deployments.
+\end{itemize}
+
+\change{New Section~4.1 (Load Testing), new Table~(tab:loadtest). New file: \texttt{scripts/load-test.js}. Section~6 (Limitations) --- ``Scalability'' subsection.}
+
+\bigskip
+
+\subsection*{Comment 2.8 --- LGPD compliance not demonstrated}
+
+\begin{reviewerbox}
+Claims of LGPD compliance are asserted but not rigorously demonstrated through formal compliance mapping, DPIA (Data Protection Impact Assessment), or legal audit references. Compliance statements appear descriptive rather than validated.
+\end{reviewerbox}
+
+\response{We acknowledge that full LGPD compliance requires organizational, legal, and technical measures, and a single software platform cannot ``be LGPD-compliant'' on its own. The revised manuscript:}
+
+\begin{enumerate}[nosep]
+  \item Replaces ``LGPD-compliant'' with ``LGPD-aware design'' throughout;
+  \item Adds a new Table~(tab:lgpdmapping) that maps specific LGPD articles (Art.~6~I--II, Art.~6~V, Art.~6~VII--VIII, Art.~6~X, Art.~46, Art.~48, Art.~18) to the corresponding technical controls implemented in avalia+Tec;
+  \item Adds an explicit disclaimer: ``\textit{Full LGPD compliance requires institutional policies, a formal RIPD (Data Protection Impact Report), and legal review by each deploying organization. No formal RIPD has been conducted for the current deployment.}''
+\end{enumerate}
+
+\change{Section~2 --- ``LGPD-aware design'' terminology, new Table~(tab:lgpdmapping), disclaimer. Section~6 (Limitations) --- new ``LGPD compliance'' subsection. Section~7 --- RIPD listed as future work.}
+
+\bigskip
+
+\subsection*{Comment 2.9 --- No public dataset or replication package}
+
+\begin{reviewerbox}
+Although anonymized metrics are said to be ``available upon request,'' no public dataset or replication package is provided. This limits transparency and reproducibility, which are central to SoftwareX standards.
+\end{reviewerbox}
+
+\response{We agree. The revised Data Availability Statement now reads:}
+
+\begin{quote}
+``\textit{Anonymized deployment metrics, statistical analysis scripts (Python), and the load-testing framework are available in the replication package at \url{https://doi.org/10.5281/zenodo.XXXXXXX}.}''
+\end{quote}
+
+The Zenodo DOI placeholder (XXXXXXX) will be replaced with the actual DOI upon upload of the replication package before camera-ready submission. The package will include: anonymized metrics (no PII), Python statistical analysis scripts reproducing all reported CIs and tests, the autocannon load-test script, and configuration examples.
+
+\change{Data Availability Statement updated. Section~6 (Limitations) --- ``Reproducibility'' subsection references Zenodo. Section~7 --- replication package mentioned.}
+
+\bigskip
+
+\subsection*{Comment 2.10 --- Verbose manuscript}
+
+\begin{reviewerbox}
+The article appears verbose for a SoftwareX original software publication. Sections describing cryptographic fundamentals and workflow diagrams could be condensed. Some conceptual explanations are repetitive and inflate the manuscript without adding technical depth.
+\end{reviewerbox}
+
+\response{We have condensed the manuscript by:}
+
+\begin{itemize}[nosep]
+  \item Removing redundant explanations of SHA-256 and HMAC fundamentals (readers of SoftwareX are assumed familiar with standard hashing);
+  \item Consolidating repeated motivational text across sections;
+  \item Tightening the comparison discussion (the redesigned Table~3 conveys more information in less text);
+  \item Moving detailed workflow descriptions to the architecture diagram and its caption;
+  \item Using more concise, direct language throughout.
+\end{itemize}
+
+\noindent Despite adding new technical content (RFC~3161 implementation, load testing, LGPD mapping table, expanded threat model, statistical tests, structured limitations), the overall text is more focused and less repetitive. We estimate a net reduction in prose volume of approximately 15\% (excluding tables and equations).
+
+\change{Throughout the manuscript. Particularly: Section~1 (condensed motivation), Section~2 (removed crypto primer), Section~5 (tables replace verbose descriptions).}
+
+\bigskip
+\hrule
+\bigskip
+
+\section*{Summary of Changes}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|c|p{5cm}|p{7cm}|}
+\hline
+\textbf{Rev./Pt} & \textbf{Issue} & \textbf{Action Taken} \\
+\hline
+R1.1 / R2.4 & ``Immutable'' claim; trusted admin & RFC~3161 TSA implementation; ``tamper-evident''; 3-class threat model \\
+\hline
+R1.2 / R2.2 & No inferential statistics & 95\% CIs, Mann--Whitney $U$, Fisher's exact, effect sizes, hedged language \\
+\hline
+R1.3 / R2.1 & Overstated novelty & Contribution repositioned as integration engineering \\
+\hline
+R1.4 / R2.5 & Superficial comparison & Table~3 redesigned: 3-level scale, 10 columns, methodology footnotes \\
+\hline
+R1.5 & Wrong category & Reclassified as ``Computer Science'' \\
+\hline
+R2.3 & Retrospective data & Recall bias, confounders acknowledged; limitation subsections added \\
+\hline
+R2.6 & No security validation & OWASP Top~10 check, npm audit; honest limitation stated \\
+\hline
+R2.7 & No stress testing & Load testing script + results (100/500 concurrent, 3 scenarios) \\
+\hline
+R2.8 & LGPD not demonstrated & LGPD mapping table, ``LGPD-aware'' terminology, RIPD disclaimer \\
+\hline
+R2.9 & No replication package & Zenodo DOI placeholder; replication package prepared \\
+\hline
+R2.10 & Verbose & Text condensed $\sim$15\%; redundancy removed \\
+\hline
+\end{tabular}
+\end{table}
+
+\bigskip
+
+\noindent We trust that these revisions adequately address all concerns raised by both reviewers and the editor. We remain at the reviewers' disposal for any further clarification.
+
+\bigskip
+\noindent Sincerely,
+
+\medskip
+\noindent L.D.V.~Santos and V.R.Q.~Leithardt
+
+\end{document}

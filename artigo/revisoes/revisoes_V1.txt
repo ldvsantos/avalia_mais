@@ -1,0 +1,29 @@
+Editor and Reviewer comments:  
+
+
+
+
+
+Reviewer #1: The manuscript addresses a genuine institutional problem and is generally appropriate in format for SoftwareX. However, several significant issues must be resolved before the work can be considered for publication.
+Major Comments:
+1. The threat model contains a critical vulnerability that the authors themselves acknowledge: a server administrator with root-level database access could rewrite the entire hash chain consistently. This fundamentally undermines the paper's central claim of an "immutable" audit trail. Without external hash anchoring (e.g., a public blockchain or an RFC 3161-compliant timestamping authority), the use of the term "immutable" is technically incorrect and misleading. The authors must either implement this safeguard or substantially revise their claims.
+2. The empirical evidence for the reported performance gains (65% cycle time reduction, 45.4% evaluator time reduction) is insufficient. The sample (n=60 submissions, n=6 evaluators) is drawn from a single institution, and comparisons with prior workflows rely exclusively on retrospective self-reported administrative survey data, which is susceptible to recall bias. No confidence intervals, formal significance tests (e.g., Mann-Whitney U), or control group comparisons are provided. The authors should either collect more rigorous data or substantially temper the strength of their conclusions.
+3. The novelty of the cryptographic contribution is overstated. SHA-256 hashing and HMAC-SHA256 authentication in a Node.js environment represent standard software engineering practice, not a scientific contribution. The claim that no existing platform integrates these mechanisms together requires stronger justification than the comparison presented in Table 3.
+4. The comparative analysis in Table 3 is superficial and appears constructed to favor avalia+Tec. Notably, the paper claims LGPD compliance as a unique advantage while making no assessment of GDPR compliance mechanisms in competing platforms. The comparison criteria should be defined independently of the proposed system's feature set.
+5. The manuscript has been submitted under the category "Humanities, Arts and Social Sciences," which is clearly incorrect for a software engineering contribution. The authors should resubmit under an appropriate subject area.
+
+
+Reviewer #2: * The manuscript largely integrates well-established cryptographic primitives (SHA-256, HMAC, RBAC, PostgreSQL RLS) without proposing methodological, algorithmic, or architectural innovations. The contribution appears primarily as an implementation effort rather than a scientifically novel advancement. The authors should clearly articulate what is fundamentally new beyond integration engineering.
+* The reported 65% cycle-time reduction and 45.4% evaluator efficiency gain are based on a small, single-institution deployment (n = 60 submissions, n = 6 evaluators). No inferential statistics, confidence intervals, or hypothesis testing are provided. Claims regarding dispute elimination and efficiency improvements are therefore overstated and insufficiently supported.
+* The evaluation relies on retrospective self-reported administrative data. There is no controlled baseline, no randomized comparison, and no longitudinal multi-cohort validation. This weakens the empirical credibility of the reported performance improvements.
+* The manuscript explicitly assumes a trusted administrator, which fundamentally weakens the integrity guarantees. Since a malicious root user can rewrite the entire hash chain, the system does not provide strong tamper-resistance in adversarial institutional contexts. Security claims should be toned down accordingly.
+* The comparison with platforms such as SIGAA, OpenReview, EasyChair, HotCRP, and SUCUPIRA lacks methodological rigor. The functional comparison does not consider plugin capabilities, extensibility, or alternative cryptographic integration possibilities. It presents a binary "Yes/No" simplification that may misrepresent competing systems.
+* While SHA-256 and HMAC are cited, there is no formal security validation, no penetration testing report, no external audit, and no verification of correct key management practices. Simply calling standard libraries does not guarantee secure deployment.
+* Performance testing was conducted on 60 submissions. No stress testing, concurrent user simulation, or high-load benchmarking is presented. It is unclear how the system performs with hundreds or thousands of simultaneous users.
+* Claims of LGPD compliance are asserted but not rigorously demonstrated through formal compliance mapping, DPIA (Data Protection Impact Assessment), or legal audit references. Compliance statements appear descriptive rather than validated.
+* Although anonymized metrics are said to be "available upon request," no public dataset or replication package is provided. This limits transparency and reproducibility, which are central to SoftwareX standards.
+* The article appears verbose for a SoftwareX original software publication. Sections describing cryptographic fundamentals and workflow diagrams could be condensed. Some conceptual explanations are repetitive and inflate the manuscript without adding technical depth.
+  
+
+
+
