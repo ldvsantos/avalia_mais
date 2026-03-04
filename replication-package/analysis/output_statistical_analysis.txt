@@ -1,0 +1,34 @@
+﻿
+avalia+Tec -- Statistical Replication Script
+Reproduces all results reported in the SoftwareX manuscript.
+
+=================================================================
+CYCLE-TIME ANALYSIS  (review -> decision)
+=================================================================
+  Historical :  mean = 31.0 days  (SD = 4.2, n = 4)
+  avalia+Tec :  mean = 11.0 days  (SD = 2.8, n = 4)
+  Reduction  :  65 %   95 % CI: [55 %, 73 %]
+  Mann-Whitney U = 0,  p = 0.029  (two-tailed)
+  Rank-biserial r = 1.0
+
+=================================================================
+EVALUATOR-TIME ANALYSIS  (per-submission review time)
+=================================================================
+  Historical :  mean = 15.2 min  (SD = 4.7, n = 6)
+  avalia+Tec :  mean = 8.3 min  (SD = 2.1, n = 6)
+  Reduction  :  45.4 %   95 % CI: [26 %, 59 %]
+  Mann-Whitney U = 2,  p = 0.009  (two-tailed)
+  Cohen's d  = 1.88  (large)
+
+=================================================================
+DISPUTE-RATE ANALYSIS  (formal complaints)
+=================================================================
+  Historical :  14/292  (4.8 %)
+  avalia+Tec :  0/60  (0.0 %)
+  Fisher's exact test (one-tailed)  p = 0.069
+  => Does NOT reach conventional significance at alpha = 0.05
+
+=================================================================
+All analyses completed. Values should match Section 5 of the
+manuscript (allowing for bootstrap sampling variability in CIs).
+=================================================================

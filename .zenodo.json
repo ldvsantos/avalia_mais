@@ -1,0 +1,73 @@
+{
+  "title": "avalia+Tec: A Tamper-Evident Platform for Integrity-Verified Academic Selection Processes — Replication Package",
+  "description": "Replication package for the SoftwareX manuscript describing avalia+Tec. Contains anonymized deployment metrics, statistical analysis scripts reproducing all reported confidence intervals and hypothesis tests, and the HTTP load-testing framework.",
+  "upload_type": "software",
+  "publication_type": "softwaredocumentation",
+  "access_right": "open",
+  "license": "MIT",
+  "creators": [
+    {
+      "name": "Santos, Luiz Diego Vidal",
+      "affiliation": "Universidade Estadual de Feira de Santana (UEFS)",
+      "orcid": "0000-0001-8659-8557"
+    },
+    {
+      "name": "Oliveira, Catuxe Varjão de Santana",
+      "affiliation": "Universidade Federal de Sergipe (UFS)",
+      "orcid": "0000-0001-7276-4681"
+    },
+    {
+      "name": "Santos, Dulce Paloma Vidal",
+      "affiliation": "Universidade Tiradentes",
+      "orcid": "0009-0003-3016-9819"
+    },
+    {
+      "name": "Azevedo, Tânia Cristina",
+      "affiliation": "Universidade Estadual de Feira de Santana (UEFS)",
+      "orcid": "0000-0003-4242-4576"
+    },
+    {
+      "name": "Araújo Filho, Renisson Neponuceno de",
+      "affiliation": "Universidade Federal Rural de Pernambuco (UFRPE)",
+      "orcid": "0000-0002-9747-1276"
+    },
+    {
+      "name": "Santos, Jémison Mattos dos",
+      "affiliation": "Universidade Estadual de Santa Cruz (UESC)",
+      "orcid": "0000-0003-1176-050X"
+    },
+    {
+      "name": "Fernandes, Milton Marques",
+      "affiliation": "Universidade Federal de Sergipe (UFS)",
+      "orcid": "0000-0001-8015-367X"
+    }
+  ],
+  "keywords": [
+    "academic selection",
+    "tamper-evident audit trail",
+    "SHA-256",
+    "HMAC-SHA256",
+    "RFC 3161",
+    "trusted timestamping",
+    "LGPD",
+    "cryptographic integrity",
+    "Node.js",
+    "open-source"
+  ],
+  "related_identifiers": [
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/ldvsantos/avalia_mais",
+      "resource_type": "software",
+      "scheme": "url"
+    },
+    {
+      "relation": "isSupplementTo",
+      "identifier": "https://github.com/ldvsantos/avalia_mais_desktop",
+      "resource_type": "software",
+      "scheme": "url"
+    }
+  ],
+  "grants": [],
+  "language": "eng"
+}

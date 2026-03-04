@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "tool": "autocannon",
+    "tool_version": "npm autocannon",
+    "target": "http://localhost:3000",
+    "server": "avalia+Tec (Node.js/Express, JSON storage mode)",
+    "platform": "Windows 11, development workstation",
+    "date": "2026-03-04",
+    "duration_per_scenario_sec": 30,
+    "notes": "Server running in JSON file-backed storage mode (no PostgreSQL). GET /api/verify returns 404 since test protocol does not exist in data — throughput measurement remains valid. POST /api/inscricao returns validation errors (non-2xx) because autocannon body does not pass full server-side validation — demonstrates raw HTTP layer throughput."
+  },
+  "results": {
+    "100_connections": [
+      {
+        "scenario": "GET / (landing page)",
+        "connections": 100,
+        "duration_sec": 30.11,
+        "requests_total": 52579,
+        "requests_per_sec_avg": 1752.74,
+        "latency_ms_avg": 56.59,
+        "latency_ms_p50": 52,
+        "latency_ms_p97_5": 98,
+        "latency_ms_p99": 113,
+        "throughput_MB_per_sec": 31.30,
+        "errors": 0,
+        "timeouts": 0,
+        "status_2xx": 52579,
+        "status_non2xx": 0
+      },
+      {
+        "scenario": "GET /api/verify/:protocol",
+        "connections": 100,
+        "duration_sec": 30.08,
+        "requests_total": 46788,
+        "requests_per_sec_avg": 1559.6,
+        "latency_ms_avg": 63.66,
+        "latency_ms_p50": 62,
+        "latency_ms_p97_5": 143,
+        "latency_ms_p99": 248,
+        "throughput_MB_per_sec": 2.03,
+        "errors": 0,
+        "timeouts": 0,
+        "status_2xx": 0,
+        "status_non2xx": 46788
+      },
+      {
+        "scenario": "POST /api/inscricao (submission)",
+        "connections": 100,
+        "duration_sec": 30.05,
+        "requests_total": 40132,
+        "requests_per_sec_avg": 1337.74,
+        "latency_ms_avg": 74.19,
+        "latency_ms_p50": 68,
+        "latency_ms_p97_5": 133,
+        "latency_ms_p99": 289,
+        "throughput_MB_per_sec": 1.74,
+        "errors": 0,
+        "timeouts": 0,
+        "status_2xx": 0,
+        "status_non2xx": 40132
+      }
+    ],
+    "500_connections": [
+      {
+        "scenario": "GET / (landing page)",
+        "connections": 500,
+        "duration_sec": 30.28,
+        "requests_total": 51502,
+        "requests_per_sec_avg": 1716.94,
+        "latency_ms_avg": 290.8,
+        "latency_ms_p50": 259,
+        "latency_ms_p97_5": 563,
+        "latency_ms_p99": 677,
+        "throughput_MB_per_sec": 30.66,
+        "errors": 0,
+        "timeouts": 0,
+        "status_2xx": 51502,
+        "status_non2xx": 0
+      },
+      {
+        "scenario": "GET /api/verify/:protocol",
+        "connections": 500,
+        "duration_sec": 30.22,
+        "requests_total": 61811,
+        "requests_per_sec_avg": 2060.57,
+        "latency_ms_avg": 241.48,
+        "latency_ms_p50": 283,
+        "latency_ms_p97_5": 427,
+        "latency_ms_p99": 501,
+        "throughput_MB_per_sec": 2.68,
+        "errors": 0,
+        "timeouts": 0,
+        "status_2xx": 0,
+        "status_non2xx": 61811
+      },
+      {
+        "scenario": "POST /api/inscricao (submission)",
+        "connections": 500,
+        "duration_sec": 30.20,
+        "requests_total": 47976,
+        "requests_per_sec_avg": 1599.3,
+        "latency_ms_avg": 954.84,
+        "latency_ms_p50": 487,
+        "latency_ms_p97_5": 6241,
+        "latency_ms_p99": 8153,
+        "throughput_MB_per_sec": 2.08,
+        "errors": 1127,
+        "timeouts": 0,
+        "status_2xx": 0,
+        "status_non2xx": 47976
+      }
+    ]
+  }
+}

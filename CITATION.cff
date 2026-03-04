@@ -1,0 +1,54 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "avalia+Tec: A Tamper-Evident Platform for Integrity-Verified Academic Selection Processes"
+type: software
+version: 2.2.0
+date-released: "2026-03-04"
+license: MIT
+repository-code: "https://github.com/ldvsantos/avalia_mais"
+url: "https://github.com/ldvsantos/avalia_mais"
+doi: "10.5281/zenodo.18868994"
+abstract: >-
+  avalia+Tec is an open-source, tamper-evident platform for managing
+  competitive academic selection processes (scholarships, admissions,
+  faculty hiring) with cryptographic integrity verification (SHA-256,
+  HMAC-SHA256), RFC 3161 trusted timestamping, hash-chained audit
+  trails, and LGPD-aware data segregation.
+keywords:
+  - academic selection
+  - tamper-evident audit trail
+  - SHA-256
+  - HMAC-SHA256
+  - RFC 3161
+  - trusted timestamping
+  - LGPD
+  - Node.js
+authors:
+  - family-names: Santos
+    given-names: Luiz Diego Vidal
+    affiliation: "Universidade Estadual de Feira de Santana (UEFS)"
+    orcid: "https://orcid.org/0000-0001-8659-8557"
+  - family-names: Oliveira
+    given-names: "Catuxe Varjão de Santana"
+    affiliation: "Universidade Federal de Sergipe (UFS)"
+    orcid: "https://orcid.org/0000-0001-7276-4681"
+  - family-names: Santos
+    given-names: Dulce Paloma Vidal
+    affiliation: "Universidade Tiradentes"
+    orcid: "https://orcid.org/0009-0003-3016-9819"
+  - family-names: Azevedo
+    given-names: "Tânia Cristina"
+    affiliation: "Universidade Estadual de Feira de Santana (UEFS)"
+    orcid: "https://orcid.org/0000-0003-4242-4576"
+  - family-names: "Araújo Filho"
+    given-names: Renisson Neponuceno de
+    affiliation: "Universidade Federal Rural de Pernambuco (UFRPE)"
+    orcid: "https://orcid.org/0000-0002-9747-1276"
+  - family-names: Santos
+    given-names: "Jémison Mattos dos"
+    affiliation: "Universidade Estadual de Santa Cruz (UESC)"
+    orcid: "https://orcid.org/0000-0003-1176-050X"
+  - family-names: Fernandes
+    given-names: Milton Marques
+    affiliation: "Universidade Federal de Sergipe (UFS)"
+    orcid: "https://orcid.org/0000-0001-8015-367X"

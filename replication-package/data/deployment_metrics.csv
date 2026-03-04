@@ -1,0 +1,9 @@
+metric,condition,unit,n,values
+cycle_time,historical,days,4,"36;27;33;28"
+cycle_time,avalia_tec,days,4,"14;8;12.6;9.4"
+evaluator_time,historical,minutes,6,"22.0;10.5;19.0;9.8;15.5;14.4"
+evaluator_time,avalia_tec,minutes,6,"10.4;5.5;10.2;6.5;7.5;9.7"
+disputes,historical,count,1,"14"
+disputes_total_submissions,historical,count,1,"292"
+disputes,avalia_tec,count,1,"0"
+disputes_total_submissions,avalia_tec,count,1,"60"

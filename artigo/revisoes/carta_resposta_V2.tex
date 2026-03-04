@@ -49,8 +49,8 @@ We have addressed \textbf{every comment} raised by both reviewers. The revisions
   \item Expanded three-class threat model with residual-risk analysis;
   \item LGPD compliance mapping table with disclaimer;
   \item Load testing results (autocannon benchmarks at 100/500 concurrent connections);
-  \item Structured Limitations section with seven identified threat areas;
-  \item Zenodo replication package (DOI placeholder);
+  \item Structured Limitations section with five identified areas;
+  \item Zenodo replication package (DOI: 10.5281/zenodo.18868994);
   \item Significant text condensation.
 \end{itemize}
 
@@ -97,14 +97,14 @@ The empirical evidence for the reported performance gains (65\% cycle time reduc
   \item 95\% confidence intervals for all reported metrics;
   \item Mann--Whitney $U$ tests (two-tailed) with exact $p$-values: cycle time $U=0$, $p=0.029$; evaluator time $U=2$, $p=0.009$;
   \item Effect sizes: rank-biserial $r=1.0$ for cycle time, Cohen's $d=1.88$ (large) for evaluator time;
-  \item Fisher's exact test for dispute rates: 0/60 vs.\ 14/292, $p=0.096$ (one-tailed), explicitly noted as \emph{not reaching conventional significance};
+  \item Fisher's exact test for dispute rates: 0/60 vs.\ 14/292, $p=0.069$ (one-tailed), explicitly noted as \emph{not reaching conventional significance};
   \item Explicit acknowledgment of recall bias, Hawthorne effect, small sample size, and single-institution limitation;
   \item Hedged language throughout: ``preliminary effect-size estimates'', ``associated with'', ``suggests'' instead of causal claims.
 \end{itemize}
 
 We have not added a control group, as this was a real institutional deployment where randomization would have been impractical and ethically problematic. We explicitly state this limitation (Section~6).
 
-\change{Section~5 (Impact) --- completely rewritten with statistical tests and hedged language. Section~6 (Limitations) --- new ``Study design'', ``Baseline data quality'', and ``Confounding factors'' subsections.}
+\change{Section~5 (Impact) --- completely rewritten with statistical tests and hedged language. Section~6 (Limitations) --- new ``Study design'' and ``Baseline data quality'' subsections.}
 
 \bigskip
 
@@ -194,7 +194,7 @@ The reported 65\% cycle-time reduction and 45.4\% evaluator efficiency gain are 
 The evaluation relies on retrospective self-reported administrative data. There is no controlled baseline, no randomized comparison, and no longitudinal multi-cohort validation. This weakens the empirical credibility of the reported performance improvements.
 \end{reviewerbox}
 
-\response{We acknowledge this limitation explicitly in the revised Section~6 (Limitations), under the new ``Baseline data quality'' and ``Confounding factors'' subsections. The text now states: ``\textit{Baseline comparisons rely on retrospective self-reported administrative survey data and are subject to recall bias. Evaluators may overestimate time previously spent, inflating the apparent efficiency gain. No objective time-tracking data exists for the pre-deployment period.}'' We also note the absence of a randomized comparison and explain why randomization was impractical in a real institutional deployment. Multi-institutional longitudinal validation is identified as planned future work.}
+\response{We acknowledge this limitation explicitly in the revised Section~6 (Limitations), under the new ``Baseline data quality'' subsection. The text now states: ``\textit{Baseline comparisons rely on retrospective self-reported administrative survey data and are subject to recall bias. Evaluators may overestimate time previously spent, inflating the apparent efficiency gain. No objective time-tracking data exists for the pre-deployment period.}'' We also note the absence of a randomized comparison and explain why randomization was impractical in a real institutional deployment. Multi-institutional longitudinal validation is identified as planned future work.}
 
 \change{Section~5 --- explicit recall bias and Hawthorne effect warnings. Section~6 --- ``Baseline data quality'' subsection. Section~7 --- future work includes multi-institutional deployments with quasi-experimental designs.}
 
@@ -257,16 +257,18 @@ Formal penetration testing and external audit are listed as future work in Secti
 Performance testing was conducted on 60 submissions. No stress testing, concurrent user simulation, or high-load benchmarking is presented. It is unclear how the system performs with hundreds or thousands of simultaneous users.
 \end{reviewerbox}
 
-\response{We have now conducted and reported load testing. A new load test script (\texttt{scripts/load-test.js}) using autocannon (HTTP benchmarking tool for Node.js) was created with three scenarios: GET / (landing page), GET /api/verify/:protocol (integrity verification), and POST /api/inscricao (submission creation with SHA-256 hashing and async RFC~3161 timestamping). Tests were run at 100 and 500 concurrent connections for 30~seconds each on the same AWS EC2 t3.medium instance.}
+\response{We have now conducted and reported load testing. A new load test script (\texttt{scripts/load-test.js}) using autocannon (HTTP benchmarking tool for Node.js) was created with three scenarios: GET~/ (landing page), GET~/api/verify/:protocol (integrity verification), and POST~/api/inscricao (submission creation with SHA-256 hashing and async RFC~3161 timestamping). Tests were executed against a running avalia+Tec server instance at 100 and 500 concurrent connections for 30~seconds each.}
 
-A new Section~4.1 (Load Testing) and Table~(tab:loadtest) report the results:
+A new Section~4.1 (Load Testing) and Table~5 report the measured results:
 \begin{itemize}[nosep]
-  \item Read operations sustain $>$1,400 req/s even at 500 concurrent connections;
-  \item Write operations (with hashing and DB insertion) show expected throughput reduction under high concurrency but remain functional;
+  \item At 100 connections: GET~/ achieves 1,753~req/s (p50=52\,ms, p97.5=98\,ms); POST~/api/inscricao achieves 1,338~req/s (p50=68\,ms, p97.5=133\,ms);
+  \item At 500 connections: read operations sustain $>$1,700~req/s, but POST tail latency increases sharply (p99=8,153\,ms) with 1,127 errors out of 47,976 requests, indicating event-loop saturation that confirms the need for horizontal scaling beyond $\sim$500 concurrent writers;
   \item The text explicitly states that horizontal scaling (load balancing, PostgreSQL read replicas) is a straightforward architectural extension for larger deployments.
 \end{itemize}
 
-\change{New Section~4.1 (Load Testing), new Table~(tab:loadtest). New file: \texttt{scripts/load-test.js}. Section~6 (Limitations) --- ``Scalability'' subsection.}
+The complete raw results (structured JSON with all latency percentiles, throughput, and error counts for all six scenario/concurrency combinations) are included in the replication package (\texttt{load-test/load\_test\_results.json}).
+
+\change{New Section~4.1 (Load Testing), new Table~5 with measured data. New file: \texttt{scripts/load-test.js}. Replication package includes raw JSON results.}
 
 \bigskip
 
@@ -297,12 +299,21 @@ Although anonymized metrics are said to be ``available upon request,'' no public
 \response{We agree. The revised Data Availability Statement now reads:}
 
 \begin{quote}
-``\textit{Anonymized deployment metrics, statistical analysis scripts (Python), and the load-testing framework are available in the replication package at \url{https://doi.org/10.5281/zenodo.XXXXXXX}.}''
+``\textit{Anonymized deployment metrics, statistical analysis scripts (Python), and the load-testing framework are available in the replication package at \url{https://doi.org/10.5281/zenodo.18868994}.}''
 \end{quote}
 
-The Zenodo DOI placeholder (XXXXXXX) will be replaced with the actual DOI upon upload of the replication package before camera-ready submission. The package will include: anonymized metrics (no PII), Python statistical analysis scripts reproducing all reported CIs and tests, the autocannon load-test script, and configuration examples.
+The Zenodo replication package is now published at \url{https://doi.org/10.5281/zenodo.18868994}. The package contains the following evidence files:
+\begin{itemize}[nosep]
+  \item \texttt{data/deployment\_metrics.csv} --- anonymized deployment metrics (no PII);
+  \item \texttt{analysis/statistical\_analysis.py} --- Python script reproducing all CIs, Mann--Whitney $U$ tests, effect sizes, and Fisher's exact test;
+  \item \texttt{analysis/output\_statistical\_analysis.txt} --- captured output confirming article values;
+  \item \texttt{load-test/load-test.js} --- autocannon benchmarking script;
+  \item \texttt{load-test/load\_test\_results.json} --- structured JSON with raw results from all six scenario/concurrency combinations.
+\end{itemize}
 
-\change{Data Availability Statement updated. Section~6 (Limitations) --- ``Reproducibility'' subsection references Zenodo. Section~7 --- replication package mentioned.}
+Machine-readable citation metadata is provided via \texttt{CITATION.cff} and \texttt{.zenodo.json} in the repository root.
+
+\change{Data Availability Statement updated. Section~6 (Limitations) --- ``Reproducibility'' subsection references Zenodo. Section~7 --- replication package mentioned. \texttt{CITATION.cff} and \texttt{.zenodo.json} added.}
 
 \bigskip
 
@@ -353,11 +364,11 @@ R2.3 & Retrospective data & Recall bias, confounders acknowledged; limitation su
 \hline
 R2.6 & No security validation & OWASP Top~10 check, npm audit; honest limitation stated \\
 \hline
-R2.7 & No stress testing & Load testing script + results (100/500 concurrent, 3 scenarios) \\
+R2.7 & No stress testing & Load testing executed: 1,753~req/s GET, 1,338~req/s POST @100 conn; saturation at 500 conn; raw JSON in replication package \\
 \hline
 R2.8 & LGPD not demonstrated & LGPD mapping table, ``LGPD-aware'' terminology, RIPD disclaimer \\
 \hline
-R2.9 & No replication package & Zenodo DOI placeholder; replication package prepared \\
+R2.9 & No replication package & Zenodo replication package published (DOI: 10.5281/zenodo.18868994) \\
 \hline
 R2.10 & Verbose & Text condensed $\sim$15\%; redundancy removed \\
 \hline
