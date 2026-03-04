@@ -17,9 +17,12 @@ replication-package/
 ├── analysis/
 │   ├── statistical_analysis.py              ← reproduces all CIs, tests, effect sizes
 │   └── output_statistical_analysis.txt      ← captured output from running the script
-└── load-test/
-    ├── load-test.js                         ← HTTP benchmarking script (autocannon)
-    └── load_test_results.json               ← raw results from executed benchmarks
+├── load-test/
+│   ├── load-test.js                         ← HTTP benchmarking script (autocannon)
+│   └── load_test_results.json               ← raw results from executed benchmarks
+└── security/
+    ├── SECURITY_AUDIT_REPORT.md             ← full security audit report (npm audit + OWASP)
+    └── npm_audit_result.json                ← raw npm audit output (0 vulnerabilities)
 ```
 
 ## 1. Anonymized Deployment Metrics (`data/deployment_metrics.csv`)
@@ -87,20 +90,58 @@ python analysis/statistical_analysis.py
 npm install autocannon
 ```
 
-### Usage
+### Step-by-step reproduction
 
 ```bash
-# Requires a running avalia+Tec server instance
-node load-test/load-test.js [baseUrl] [duration] [connections]
-# defaults: http://localhost:3000  30  100
+# 1. Start the avalia+Tec server (JSON storage mode, no PostgreSQL needed)
+cd /path/to/avalia_mais
+export STORAGE_BACKEND=json
+export ENABLE_POSTGRES=0
+node server/index.js            # server listens on http://localhost:3000
+
+# 2. In another terminal, run the load test (100 connections, 30 s)
+cd replication-package
+node load-test/load-test.js http://localhost:3000 30 100
+
+# 3. To replicate the 500-connection scenario
+node load-test/load-test.js http://localhost:3000 30 500
 ```
 
-Three scenarios are tested:
+#### CLI arguments
+
+| Argument | Position | Default | Description |
+|---|---|---|---|
+| `baseUrl` | 1 | `http://localhost:3000` | Base URL of a running avalia+Tec instance |
+| `duration` | 2 | `30` | Test duration in seconds |
+| `connections` | 3 | `100` | Number of concurrent connections |
+
+You can also set the `TEST_PROTOCOL` environment variable to specify a valid protocol number for the verification endpoint (default: `PLANTERR-2025-TEST`).
+
+### Scenarios tested
+
+Three scenarios are tested sequentially:
+
 1. `GET /` — landing page (static)
 2. `GET /api/verify/:protocol` — integrity verification (DB read + hash check)
-3. `POST /api/inscricao` — submission creation (SHA-256 hashing + DB write + async RFC 3161)
+3. `POST /api/submissions` — submission creation (SHA-256 hashing + DB write + async RFC 3161)
 
-Results include: requests/sec, latency p50/p97.5/p99, and error count.
+Results include: requests/sec, latency p50/p97.5/p99, throughput, and error count. A JSON summary is printed at the end; it can be redirected to a file for archival (e.g., `node load-test/load-test.js > my_results.json`).
+
+## 4. Security Audit (`security/`)
+
+### Report
+
+`SECURITY_AUDIT_REPORT.md` — Comprehensive security audit covering:
+
+- **npm audit**: Dependency vulnerability scan (0 vulnerabilities as of 2026-03-04)
+- **Production dependencies**: 23 packages with version and purpose
+- **Security controls**: helmet.js headers, rate limiting, input validation, RBAC, JWT, PostgreSQL RLS, SHA-256 hash chains, RFC 3161 timestamping
+- **OWASP Top 10 (2021) mapping**: Coverage status for all 10 categories
+- **Known limitations**: No formal pentest, no OWASP ZAP scan, DPIA not conducted
+
+### Raw Data
+
+`npm_audit_result.json` — Machine-readable npm audit output showing 0 vulnerabilities across 327 production dependencies. Also documents the 4 vulnerabilities that were fixed on 2026-03-04 (lodash, minimatch, multer, qs).
 
 ## Environment
 

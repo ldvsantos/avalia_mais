@@ -1,0 +1,67 @@
+{
+  "auditReportVersion": 2,
+  "reportDate": "2026-03-04T20:15:00Z",
+  "nodeVersion": "v22.20.0",
+  "npmVersion": "10.9.3",
+  "package": "avalia-server@1.0.0",
+  "vulnerabilities": {},
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 0,
+      "moderate": 0,
+      "high": 0,
+      "critical": 0,
+      "total": 0
+    },
+    "dependencies": {
+      "prod": 327,
+      "dev": 0,
+      "optional": 1,
+      "peer": 0,
+      "peerOptional": 0,
+      "total": 327
+    }
+  },
+  "fixesApplied": [
+    {
+      "package": "lodash",
+      "previousVersionRange": "4.0.0 - 4.17.21",
+      "severity": "moderate",
+      "advisory": "GHSA-xxjr-mmjv-4gpg",
+      "description": "Prototype Pollution in _.unset and _.omit"
+    },
+    {
+      "package": "minimatch",
+      "previousVersionRange": "<=3.1.3",
+      "severity": "high",
+      "advisories": [
+        "GHSA-3ppc-4f35-3m26",
+        "GHSA-7r86-cg39-jmmj",
+        "GHSA-23c5-xmqv-rm74"
+      ],
+      "description": "ReDoS via wildcards and GLOBSTAR segments"
+    },
+    {
+      "package": "multer",
+      "previousVersionRange": "<=2.0.2",
+      "fixedVersion": "2.1.1",
+      "severity": "high",
+      "advisories": [
+        "GHSA-xf7r-hgr6-v32p",
+        "GHSA-v52c-386h-88mc"
+      ],
+      "description": "DoS via incomplete cleanup and resource exhaustion"
+    },
+    {
+      "package": "qs",
+      "previousVersionRange": "<=6.14.1",
+      "severity": "moderate",
+      "advisories": [
+        "GHSA-w7fw-mjwx-w883",
+        "GHSA-6rw7-vpxm-498p"
+      ],
+      "description": "DoS via arrayLimit bypass in comma/bracket parsing"
+    }
+  ]
+}
