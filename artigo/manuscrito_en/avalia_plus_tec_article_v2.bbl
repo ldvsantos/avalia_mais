@@ -1,0 +1,130 @@
+\begin{thebibliography}{10}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\texttt{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\expandafter\ifx\csname href\endcsname\relax
+  \def\href#1#2{#2} \def\path#1{#1}\fi
+
+\bibitem{Khan2021}
+A.~Khan, R.~A. Beg, M.~Z. Khan, Towards automated and secure academic selection
+  systems: {A} {S}ystematic {R}eview, IEEE Access 9 (2021) 89234--89256.
+\newblock \href {https://doi.org/10.1109/ACCESS.2021.3089076}
+  {\path{doi:10.1109/ACCESS.2021.3089076}}.
+
+\bibitem{Esposito2016}
+A.~Esposito, A.~Sangrà, M.~F. Maina, Towards a characterization of the role of
+  {W}eb-{B}ased {T}echnologies in {H}igher {E}ducation, Educational Technology
+  \& Society 19~(4) (2016) 44--57.
+
+\bibitem{LGPD2018}
+R.~F. do~Brasil, Lei geral de proteção de dados pessoais ({LGPD}), diário
+  Oficial da União, Brasília (2018).
+
+\bibitem{Cavoukian2011}
+A.~Cavoukian, Privacy by design: {T}he 7 {F}undamental principles, Information
+  and Privacy Commissioner of OntarioAvailable at:
+  \url{https://www.ipc.on.ca/wp-content/uploads/2016/08/Foundational_Principles.pdf}
+  (2011).
+
+\bibitem{Machado2018}
+M.~C.~K. Machado, C.~Machado, D.~T.~d. Souza, O uso de tecnologias digitais na
+  gestão acadêmica de instituições de ensino superior, Revista Brasileira
+  de Educação 23 (2018) 1--20.
+\newblock \href {https://doi.org/10.1590/S1413-24782018230038}
+  {\path{doi:10.1590/S1413-24782018230038}}.
+
+\bibitem{SIGAA2023}
+{Universidade Federal do Rio Grande do Norte},
+  \href{https://www.info.ufrn.br/wikisistemas/doku.php?id=suporte:sigaa:visao_geral}{{SIGAA}
+  -- {S}istema {I}ntegrado de {G}est\~{a}o de {A}tividades {A}cad\^{e}micas},
+  accessed: 2024-12-01 (2023).
+\newline\urlprefix\url{https://www.info.ufrn.br/wikisistemas/doku.php?id=suporte:sigaa:visao_geral}
+
+\bibitem{Soergel2013}
+A.~Soergel, A.~Saunders, A.~McCallum, Open scholarship and peer review: {A}
+  time for experimentation, in: ICML 2013 Workshop on Peer Reviewing and
+  Publishing Models, 2013.
+
+\bibitem{EasyChair2024}
+{EasyChair}, \href{https://easychair.org/}{{EasyChair} conference management
+  system}, accessed: 2024-12-01 (2024).
+\newline\urlprefix\url{https://easychair.org/}
+
+\bibitem{Kohler2004}
+E.~Kohler, \href{https://hotcrp.com/}{{HotCRP}: {A} conference review tool},
+  accessed: 2024-12-01 (2004).
+\newline\urlprefix\url{https://hotcrp.com/}
+
+\bibitem{CAPES2024}
+{CAPES/MEC}, \href{https://sucupira.capes.gov.br/}{Plataforma {S}ucupira --
+  {C}oleta de dados, {A}valia\c{c}\~{a}o e {G}est\~{a}o de {P}rogramas de
+  {P}\'{o}s-{G}radua\c{c}\~{a}o}, accessed: 2024-12-01 (2024).
+\newline\urlprefix\url{https://sucupira.capes.gov.br/}
+
+\bibitem{Piotrowski2007}
+S.~J. Piotrowski, G.~G. Van~Ryzin, Citizen attitudes toward transparency in
+  government, The American Review of Public Administration 37~(3) (2007)
+  306--323.
+\newblock \href {https://doi.org/10.1177/0275074006296777}
+  {\path{doi:10.1177/0275074006296777}}.
+
+\bibitem{Marques2022}
+L.~Marques, G.~da~Silva, M.~Oliveira, Digital governance and transparency in
+  {P}ublic {U}niversities: {A} {B}razilian {C}ase {S}tudy, Government
+  Information Quarterly 39~(1) (2022) 101635.
+\newblock \href {https://doi.org/10.1016/j.giq.2021.101635}
+  {\path{doi:10.1016/j.giq.2021.101635}}.
+
+\bibitem{Hood2007}
+C.~Hood, Public management: {T}he third electoral wave?, Public Administration
+  69~(4) (2007) 405--427.
+
+\bibitem{Sommerville2016}
+I.~Sommerville, Software Engineering, 10th Edition, Pearson, 2015.
+
+\bibitem{ISO27001}
+I.~O. for Standardization~(ISO), Information security management systems ---
+  {R}equirements (2022).
+
+\bibitem{NIST2012}
+N.~I. of~Standards, T.~(NIST), Descriptions and rules for use of the {SHA}-2
+  family of {S}ecure {H}ash {A}lgorithms (2012).
+
+\bibitem{Bellare1997}
+M.~Bellare, H.~Krawczyk, Keying hash functions for message authentication, in:
+  Advances in Cryptology --- CRYPTO '96, Springer, Berlin, Germany, 1997, pp.
+  1--15.
+\newblock \href {https://doi.org/10.1007/3-540-68339-9_1}
+  {\path{doi:10.1007/3-540-68339-9_1}}.
+
+\bibitem{RFC3161}
+C.~Adams, P.~Cain, D.~Pinkas, R.~Zuccherato,
+  \href{https://www.rfc-editor.org/rfc/rfc3161}{Internet {X}.509 {P}ublic {K}ey
+  {I}nfrastructure {T}ime-{S}tamp {P}rotocol ({TSP})}, RFC 3161 (Aug. 2001).
+\newblock \href {https://doi.org/10.17487/RFC3161}
+  {\path{doi:10.17487/RFC3161}}.
+\newline\urlprefix\url{https://www.rfc-editor.org/rfc/rfc3161}
+
+\bibitem{McGraw2006}
+G.~McGraw, Software Security: {B}uilding Security In, Addison-Wesley
+  Professional, 2006.
+
+\bibitem{Owasp2023}
+O.~Foundation, {OWASP} {T}op 10 web application security risksAvailable at:
+  \url{https://owasp.org/www-project-top-ten/} (2023).
+
+\bibitem{AvaliaMoreGitHub2026}
+L.~D. Vidal, E.~avalia+,
+  \href{https://github.com/ldvsantos/avalia_mais}{avalia+tec: {{G}}overn
+  {{S}}election {{P}}rocesses {{W}}ith {{C}}ryptographic {{I}}ntegrity}, gitHub
+  Repository (2026).
+\newline\urlprefix\url{https://github.com/ldvsantos/avalia_mais}
+
+\bibitem{AvaliaMoreDesktop2026}
+L.~D. Vidal, E.~avalia+,
+  \href{https://github.com/ldvsantos/avalia_mais_desktop}{avalia+tec
+  {{D}}esktop: {{D}}istributed {{A}}pplication {{E}}lectr{{o}}n}, gitHub
+  Repository (2026).
+\newline\urlprefix\url{https://github.com/ldvsantos/avalia_mais_desktop}
+
+\end{thebibliography}

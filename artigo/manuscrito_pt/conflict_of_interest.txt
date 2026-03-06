@@ -1,0 +1,6 @@
+DECLARATION OF COMPETING INTERESTS (SoftwareX / Elsevier)
+
+Declaration of competing interests: The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+Practical note (per the journal guide)
+- SoftwareX requests that authors also complete the declaration via the Elsevier Declarations tool (https://declarations.elsevier.com/) and upload the resulting document during submission.
