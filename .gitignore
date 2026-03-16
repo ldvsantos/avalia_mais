@@ -76,3 +76,5 @@ out/
 scripts/deploy-config.ps1
 *.tgz
 downloads/
+
+/.luarc.json

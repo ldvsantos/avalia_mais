@@ -1,0 +1,48 @@
+Subject: Re: SOFTX 102614 – Supplementary/E-component clarification (updated files)
+
+Dear Mr. Beranger,
+
+Thank you for your follow-up regarding SOFTX 102614.
+
+We confirm that this article contains NO Supplementary Material and
+NO E-component. Please remove the Supplementary/E-component count
+and proceed accordingly.
+
+The file avalia_plus_tec_article_v2.pdf is the main manuscript itself,
+not a supplementary file. The article includes one Appendix (Appendix A:
+Deployment Script), which is part of the main document body and appears
+at the end of the PDF, not as a separate supplementary file.
+
+To facilitate typesetting, we are now providing an updated package
+(SOFTX_102614_revision4.zip) containing:
+
+  1. avalia_plus_tec_article_v2.tex   -- LaTeX source
+  2. avalia_plus_tec_article_v2.bbl   -- compiled bibliography
+  3. referencias.bib                  -- BibTeX database
+  4. avalia_plus_tec_article_v2.pdf   -- compiled PDF (26 pages)
+  5. avalia_plus_tec_article_v3.docx  -- Word version for typesetting
+  6. highlights_en.tex                -- highlights
+  7. conflict_of_interest.txt         -- conflict of interest statement
+  8. fig-architecture.png             -- Figure 1
+  9. fig-auditflow.png                -- Figure 4
+ 10. fig-web-portal.png               -- Figure 2
+ 11. fig-desktop-blindreview.png      -- Figure 3
+ 12. fig-consolidation.png            -- Figure 5
+ 13. fig-protocol-hash.png            -- Figure 6
+
+The Word file (.docx) was generated from the LaTeX source and includes
+all six figures embedded. Both the PDF and the Word version reflect the
+final accepted text. Please use whichever format best suits your
+typesetting workflow.
+
+To summarize: no supplementary files exist for this article. All content
+(including Appendix A) is contained within the main manuscript.
+
+Please do not hesitate to contact me if any further clarification is
+needed.
+
+Kind regards,
+
+Dr. Luiz Diego Vidal Santos
+Universidade Estadual de Feira de Santana
+ldvidal@uefs.br

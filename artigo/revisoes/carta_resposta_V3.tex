@@ -1,0 +1,190 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{pifont}
+\usepackage{tcolorbox}
+
+\definecolor{reviewercolor}{RGB}{0,51,102}
+\definecolor{responsecolor}{RGB}{0,100,0}
+\definecolor{changecolor}{RGB}{139,69,19}
+
+\newtcolorbox{reviewerbox}{
+  colback=blue!5!white,
+  colframe=reviewercolor,
+  fonttitle=\bfseries,
+  title=Reviewer Comment,
+  boxrule=0.5pt,
+  left=4pt, right=4pt, top=4pt, bottom=4pt
+}
+
+\newcommand{\response}[1]{\par\noindent\textcolor{responsecolor}{\textbf{Response:}} #1}
+\newcommand{\change}[1]{\par\noindent\textcolor{changecolor}{\textbf{Changes in manuscript:}} \textit{#1}}
+
+\title{Point-by-Point Response to Reviewer Comments --- Revision~3\\[0.3em]
+\large Manuscript SOFTX 102614: ``Architecture of the Avalia+Tec Platform with Cryptographic Security for\\
+Transparent and Auditable Selection Processes''}
+\author{L.D.V. Santos, C.V.S. Oliveira, D.P.V. Santos, T.C. Azevedo,\\
+R.N. Araújo Filho, J.M. Santos, M.M. Fernandes}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\noindent Dear Editor and Reviewers,
+
+\medskip
+\noindent We thank the Editor and both Reviewers for the constructive feedback on the revised manuscript. We are grateful that the major concerns raised in the first round have been considered adequately addressed. Below we provide our point-by-point response to the remaining suggestions from this second review round, all of which have been incorporated into the manuscript.
+
+\bigskip
+\hrule
+\bigskip
+
+%% ================================================================
+\section*{Reviewer \#1}
+%% ================================================================
+
+\begin{reviewerbox}
+All statistical values in the manuscript now match the replication package. No further changes are required from this reviewer's perspective.
+\end{reviewerbox}
+
+\response{We thank Reviewer~\#1 for the careful verification of the statistical values against the replication package. We confirm that all reported metrics---95\% confidence intervals ([55\%, 73\%] and [26\%, 59\%] for cycle-time and evaluator-time reductions, respectively), Fisher's exact $p=0.069$, Mann--Whitney $U=0$, rank-biserial $r=1.0$, and Cohen's $d=1.88$---remain unchanged and consistent with the Python analysis script and its captured output (\texttt{analysis/output\_statistical\_analysis.txt}) in the Zenodo replication package (DOI:~10.5281/zenodo.18868994).}
+
+No manuscript changes were required for this comment.
+
+\bigskip
+\hrule
+\bigskip
+
+%% ================================================================
+\section*{Reviewer \#2}
+%% ================================================================
+
+\subsection*{Comment 2.1 --- Data-flow clarification}
+
+\begin{reviewerbox}
+The submission and evaluation workflow would benefit from an explicit end-to-end data-flow description that synthesizes the individual steps into a single coherent pipeline, making it easier for the reader to grasp the complete processing sequence at a glance.
+\end{reviewerbox}
+
+\response{We agree that an explicit end-to-end synthesis improves readability. A summary sentence with pipeline notation has been appended to the submission pipeline paragraph in Section~2.}
+
+\change{Section~2 (Software Description), end of the submission/evaluation workflow paragraph. Added three sentences describing the end-to-end data flow as a linear pipeline (submission, SHA-256 hashing with TSA anchoring, evaluator assignment, blind scoring with HMAC authentication, server-side validation, automated consolidation, PII-redacted publication), with every state transition appended to the hash-chained audit trail (Fig.~4).}
+
+\bigskip
+
+\subsection*{Comment 2.2 --- Design rationale for hash chaining vs.\ distributed ledgers}
+
+\begin{reviewerbox}
+The manuscript should provide an explicit justification for choosing a hash-chained log over blockchain-based or distributed-ledger alternatives, since reviewers in the first round questioned the approach and readers may have the same concern.
+\end{reviewerbox}
+
+\response{We agree that an explicit design rationale strengthens the paper. A new paragraph titled ``Design rationale'' has been added in Section~1 after the ``Scope of contribution'' paragraph.}
+
+\change{Section~1, new paragraph ``\textbf{Design rationale.}'' Added text discusses: (i)~operational complexity of blockchain solutions (node provisioning, consensus configuration, gas costs) being disproportionate for single-institution deployments; (ii)~equivalence of tamper-evidence guarantees under the target threat model when combined with RFC~3161 anchoring; (iii)~migration path to permissioned distributed ledger for future multi-institutional deployments, since the existing hash-chain data model maps directly onto blockchain transaction structures.}
+
+\bigskip
+
+\subsection*{Comment 2.3 --- Contribution scope}
+
+\begin{reviewerbox}
+The contribution scope as integration engineering has been adequately clarified in the revised version. No further changes needed.
+\end{reviewerbox}
+
+\response{We thank the reviewer for confirming that the ``Scope of contribution'' paragraph and the repositioning as integration engineering adequately address the prior concern. No changes were applied for this point.}
+
+\bigskip
+
+\subsection*{Comment 2.4 --- Deployment documentation}
+
+\begin{reviewerbox}
+The deployment procedures are now documented in Appendix~A. No further changes needed.
+\end{reviewerbox}
+
+\response{We thank the reviewer for confirming that Appendix~A (deployment shell scripts for Ubuntu/Nginx/PostgreSQL on AWS EC2) provides sufficient deployment documentation. No changes were applied for this point.}
+
+\bigskip
+
+\subsection*{Comment 2.5 --- International regulatory context (GDPR)}
+
+\begin{reviewerbox}
+The data-protection discussion focuses exclusively on LGPD (Brazil). For international readership and potential adoption by European institutions, the manuscript should contextualize how the technical controls map to GDPR requirements as well.
+\end{reviewerbox}
+
+\response{We agree that international regulatory context improves the paper's relevance. The LGPD paragraph in Section~2 has been expanded with an explicit GDPR mapping.}
+
+\change{Section~2 (Software Description), LGPD/data-protection paragraph. Added text explaining that the technical controls---purpose-limited data collection, encryption at rest and in transit, role-based access, automated PII redaction, and auditable processing logs---align with core principles of the EU General Data Protection Regulation (GDPR), specifically:
+\begin{itemize}[nosep]
+  \item Article~5 (data minimization, integrity);
+  \item Article~25 (data protection by design);
+  \item Article~32 (security of processing).
+\end{itemize}
+A new reference \texttt{GDPR2016} has been added to the bibliography. The text notes that institutions under GDPR or similar frameworks can adopt the platform with jurisdiction-specific policy adaptations, and that full compliance requires institutional DPIA and legal review.}
+
+\bigskip
+
+\subsection*{Comment 2.6 --- Expanded future work directions}
+
+\begin{reviewerbox}
+The future work section could be strengthened by discussing concrete integration points with existing institutional systems and addressing practical operational concerns such as identity federation and long-term audit data management.
+\end{reviewerbox}
+
+\response{We agree and have expanded the future work paragraph in Section~7 with three concrete directions.}
+
+\change{Section~7 (Conclusions), future work paragraph. Added:
+\begin{itemize}[nosep]
+  \item \textbf{Identity management:} federated authentication via SAML/OAuth~2.0 with institutional identity providers;
+  \item \textbf{Long-term audit storage:} tiered archival strategies with cryptographic integrity seals for regulatory retention periods;
+  \item \textbf{Institutional system integration:} API integration with student information systems SIGAA and SUAP, the most widely deployed platforms in Brazilian federal universities.
+\end{itemize}}
+
+\bigskip
+\hrule
+\bigskip
+
+\section*{Summary of Changes (V2~$\to$~V3)}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{|c|p{4.5cm}|p{7.5cm}|}
+\hline
+\textbf{Pt} & \textbf{Suggestion} & \textbf{Action Taken} \\
+\hline
+R1 & Statistical values verified & Confirmed all values match replication package; no changes needed \\
+\hline
+R2.1 & Data-flow clarification & Pipeline synthesis sentence added to Section~2 \\
+\hline
+R2.2 & Hash chaining vs.\ blockchain rationale & New ``Design rationale'' paragraph in Section~1 \\
+\hline
+R2.3 & Contribution scope & Already addressed in V2; acknowledged \\
+\hline
+R2.4 & Deployment documentation & Already addressed in Appendix~A; acknowledged \\
+\hline
+R2.5 & GDPR context & LGPD paragraph expanded with GDPR mapping (Arts.~5, 25, 32); \texttt{GDPR2016} reference added \\
+\hline
+R2.6 & Expanded future work & Identity management (SAML/OAuth), long-term audit storage, SIGAA/SUAP integration added to Section~7 \\
+\hline
+\end{tabular}
+\end{table}
+
+\bigskip
+
+\noindent All changes are minor additions that do not alter the results, methodology, or conclusions of the paper. The PDF has been recompiled with the updated bibliography.
+
+\bigskip
+
+\noindent We trust that these revisions adequately address all remaining suggestions. We remain at the reviewers' disposal for any further clarification.
+
+\bigskip
+\noindent Sincerely,
+
+\medskip
+\noindent L.D.V.~Santos, C.V.S.~Oliveira, D.P.V.~Santos, T.C.~Azevedo,\\
+R.N.~Araújo Filho, J.M.~Santos, M.M.~Fernandes
+
+\end{document}

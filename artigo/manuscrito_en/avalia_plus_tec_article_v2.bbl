@@ -109,6 +109,14 @@ C.~Adams, P.~Cain, D.~Pinkas, R.~Zuccherato,
 G.~McGraw, Software Security: {B}uilding Security In, Addison-Wesley
   Professional, 2006.
 
+\bibitem{GDPR2016}
+{European Parliament and Council of the European Union}, Regulation ({EU})
+  2016/679 of the {E}uropean {P}arliament and of the {C}ouncil of 27 {A}pril
+  2016 on the protection of natural persons with regard to the processing of
+  personal data and on the free movement of such data ({G}eneral {D}ata
+  {P}rotection {R}egulation), Official Journal of the European Union L~119,
+  pp.\ 1--88 (2016).
+
 \bibitem{Owasp2023}
 O.~Foundation, {OWASP} {T}op 10 web application security risksAvailable at:
   \url{https://owasp.org/www-project-top-ten/} (2023).
