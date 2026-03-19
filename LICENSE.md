@@ -25,7 +25,7 @@ Este software é fornecido “no estado em que se encontra”, sem garantias de 
 
 ## 6) Contato do titular
 Titular: Universidade Estadual de Feira de Santana (UEFS) / PLANTERR
-Autores: Luiz Diego Vidal; Catuxe Varjão de Santana Oliveira; Everaldo
+Autores: Luiz Diego Vidal; Catuxe Varjão de Santana Oliveira; Everaldo; Francisco Sandro Rodrigues Holanda
 Documento (CPF/CNPJ): <PREENCHER_SE_APLICAVEL>
 E-mail: <PREENCHER>
 

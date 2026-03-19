@@ -1,0 +1,111 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\emailauthor{ldvidal@uefs.br}{Francisco Sandro Rodrigues Holanda}
+\Newlabel{cor1}{1}
+\Newlabel{label1}{a}
+\Newlabel{label2}{b}
+\Newlabel{label3}{c}
+\Newlabel{label4}{d}
+\Newlabel{label5}{e}
+\Newlabel{label6}{f}
+\Newlabel{label7}{g}
+\citation{Khan2021,Esposito2016}
+\citation{LGPD2018}
+\citation{Cavoukian2011}
+\citation{Machado2018}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Code metadata (avalia+Tec v2.1.0).}}{2}{table.1}\protected@file@percent }
+\newlabel{codeMetadata}{{1}{2}{Code metadata (avalia+Tec v2.1.0)}{table.1}{}}
+\citation{SIGAA2023}
+\citation{Soergel2013}
+\citation{EasyChair2024}
+\citation{Kohler2004}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Software metadata (executable).}}{3}{table.2}\protected@file@percent }
+\newlabel{executableMetadata}{{2}{3}{Software metadata (executable)}{table.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Motivation and Significance}{3}{section.1}\protected@file@percent }
+\citation{CAPES2024}
+\citation{Piotrowski2007,Marques2022}
+\citation{Machado2018,Hood2007}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Functional comparison of avalia+Tec with existing platforms. Comparison criteria were defined based on regulatory requirements (LGPD/GDPR), security best practices (OWASP, NIST), and institutional governance needs, independently of the proposed system's feature set. Platform capabilities were assessed from official documentation, published source code, and peer-reviewed literature where available.}}{4}{table.3}\protected@file@percent }
+\newlabel{tab:comparison}{{3}{4}{Functional comparison of avalia+Tec with existing platforms. Comparison criteria were defined based on regulatory requirements (LGPD/GDPR), security best practices (OWASP, NIST), and institutional governance needs, independently of the proposed system's feature set. Platform capabilities were assessed from official documentation, published source code, and peer-reviewed literature where available}{table.3}{}}
+\citation{Sommerville2016}
+\citation{ISO27001}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Software Description}{6}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Software Architecture}{6}{subsection.2.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces System architecture of avalia+Tec showing the dual-frontend (web portal and desktop application), backend services with cryptographic and compliance modules, and the PostgreSQL data layer with hash-chained audit trail.}}{7}{figure.1}\protected@file@percent }
+\newlabel{fig:architecture}{{1}{7}{System architecture of avalia+Tec showing the dual-frontend (web portal and desktop application), backend services with cryptographic and compliance modules, and the PostgreSQL data layer with hash-chained audit trail}{figure.1}{}}
+\citation{NIST2012}
+\citation{Bellare1997}
+\citation{RFC3161}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Software Functionalities}{8}{subsection.2.2}\protected@file@percent }
+\citation{Bellare1997}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Web portal interface showing the candidate submission form with structured sections, field-level validation, and real-time character count enforcement.}}{9}{figure.2}\protected@file@percent }
+\newlabel{fig:webportal}{{2}{9}{Web portal interface showing the candidate submission form with structured sections, field-level validation, and real-time character count enforcement}{figure.2}{}}
+\citation{McGraw2006}
+\citation{GDPR2016}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Desktop application (Electron) displaying the evaluator's blind-review interface. Personally identifiable candidate information is suppressed to enforce impartial assessment.}}{10}{figure.3}\protected@file@percent }
+\newlabel{fig:blindreview}{{3}{10}{Desktop application (Electron) displaying the evaluator's blind-review interface. Personally identifiable candidate information is suppressed to enforce impartial assessment}{figure.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Mapping of LGPD provisions to technical controls implemented in avalia+Tec. Full compliance additionally requires institutional policies, DPIA, and legal assessment.}}{11}{table.4}\protected@file@percent }
+\newlabel{tab:lgpdmapping}{{4}{11}{Mapping of LGPD provisions to technical controls implemented in avalia+Tec. Full compliance additionally requires institutional policies, DPIA, and legal assessment}{table.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Illustrative Examples}{11}{section.3}\protected@file@percent }
+\newlabel{lst:hashcompute}{{1}{12}{Server-side SHA-256 hash computation upon document upload. The hash is stored in the database and returned to the candidate as a verification receipt}{lstlisting.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}Server-side SHA-256 hash computation upon document upload. The hash is stored in the database and returned to the candidate as a verification receipt.}{12}{lstlisting.1}\protected@file@percent }
+\newlabel{lst:verify}{{2}{12}{Document integrity verification endpoint. Compares the stored hash against a freshly computed hash to detect post-submission modification}{lstlisting.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}Document integrity verification endpoint. Compares the stored hash against a freshly computed hash to detect post-submission modification.}{12}{lstlisting.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Representative excerpt of the hash-chained audit trail from the UEFS deployment. Each hash $H_n$ incorporates the previous entry's hash $H_{n-1}$, ensuring tamper-evidence across the entire chain.}}{13}{table.5}\protected@file@percent }
+\newlabel{tab:auditsample}{{5}{13}{Representative excerpt of the hash-chained audit trail from the UEFS deployment. Each hash $H_n$ incorporates the previous entry's hash $H_{n-1}$, ensuring tamper-evidence across the entire chain}{table.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces End-to-end audit trail flowchart showing cryptographic operations (SHA-256 hashing, HMAC-SHA256 authentication) and verification checkpoints across four phases: document submission, blind evaluation, automated consolidation, and dispute resolution with hash-based integrity verification.}}{14}{figure.4}\protected@file@percent }
+\newlabel{fig:auditflow}{{4}{14}{End-to-end audit trail flowchart showing cryptographic operations (SHA-256 hashing, HMAC-SHA256 authentication) and verification checkpoints across four phases: document submission, blind evaluation, automated consolidation, and dispute resolution with hash-based integrity verification}{figure.4}{}}
+\citation{Owasp2023}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Consolidation dashboard showing rank-ordered results with weighted aggregate scores, individual evaluator contributions, and export options (CSV, PDF with QR-code verification).}}{16}{figure.5}\protected@file@percent }
+\newlabel{fig:consolidation}{{5}{16}{Consolidation dashboard showing rank-ordered results with weighted aggregate scores, individual evaluator contributions, and export options (CSV, PDF with QR-code verification)}{figure.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Candidate receipt (PDF) displaying the unique protocol ID, submission timestamp, and SHA-256 hexadecimal hash for independent document integrity verification. The embedded QR code links to the audit trail endpoint.}}{16}{figure.6}\protected@file@percent }
+\newlabel{fig:protocolhash}{{6}{16}{Candidate receipt (PDF) displaying the unique protocol ID, submission timestamp, and SHA-256 hexadecimal hash for independent document integrity verification. The embedded QR code links to the audit trail endpoint}{figure.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Computational Performance}{16}{section.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Computational time associated with core avalia+Tec operations. Measurements were collected over 30 executions on an AWS EC2 t3.medium instance (2~vCPUs, 4~GB RAM, Ubuntu 22.04 LTS).}}{17}{table.6}\protected@file@percent }
+\newlabel{tab:performance}{{6}{17}{Computational time associated with core avalia+Tec operations. Measurements were collected over 30 executions on an AWS EC2 t3.medium instance (2~vCPUs, 4~GB RAM, Ubuntu 22.04 LTS)}{table.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Load Testing}{17}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Load test results (30~seconds per scenario, autocannon). Conc.\ = concurrent connections. Raw results are available in the replication package (\texttt  {load\_test\_results.json}).}}{17}{table.7}\protected@file@percent }
+\newlabel{tab:loadtest}{{7}{17}{Load test results (30~seconds per scenario, autocannon). Conc.\ = concurrent connections. Raw results are available in the replication package (\texttt {load\_test\_results.json})}{table.7}{}}
+\citation{Hood2007}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Impact}{18}{section.5}\protected@file@percent }
+\citation{AvaliaMoreGitHub2026,AvaliaMoreDesktop2026}
+\citation{Sommerville2016}
+\citation{Owasp2023}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Limitations}{19}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusions}{20}{section.7}\protected@file@percent }
+\@writefile{toc}{\let\numberline\tmptocnumberline}
+\bibstyle{elsarticle-num}
+\bibdata{referencias}
+\bibcite{Khan2021}{{1}{}{{}}{{}}}
+\@writefile{toc}{\contentsline {section}{\numberline {Appendix~A}Deployment and Environment Setup}{22}{appendix.A}\protected@file@percent }
+\newlabel{app:deployment}{{Appendix~A}{22}{Deployment and Environment Setup}{appendix.A}{}}
+\newlabel{lst:deploy}{{3}{22}{Server-side deployment of the avalia+Tec backend and web portal. The script clones the repository, installs dependencies, configures the database, and starts the application}{lstlisting.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}Server-side deployment of the avalia+Tec backend and web portal. The script clones the repository, installs dependencies, configures the database, and starts the application.}{22}{lstlisting.3}\protected@file@percent }
+\newlabel{lst:desktopbuild}{{4}{22}{Building the Electron desktop application for evaluators. Produces platform-specific installers for Windows, macOS, and Linux}{lstlisting.4}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {4}Building the Electron desktop application for evaluators. Produces platform-specific installers for Windows, macOS, and Linux.}{22}{lstlisting.4}\protected@file@percent }
+\bibcite{Esposito2016}{{2}{}{{}}{{}}}
+\bibcite{LGPD2018}{{3}{}{{}}{{}}}
+\bibcite{Cavoukian2011}{{4}{}{{}}{{}}}
+\bibcite{Machado2018}{{5}{}{{}}{{}}}
+\bibcite{SIGAA2023}{{6}{}{{}}{{}}}
+\bibcite{Soergel2013}{{7}{}{{}}{{}}}
+\bibcite{EasyChair2024}{{8}{}{{}}{{}}}
+\bibcite{Kohler2004}{{9}{}{{}}{{}}}
+\bibcite{CAPES2024}{{10}{}{{}}{{}}}
+\bibcite{Piotrowski2007}{{11}{}{{}}{{}}}
+\bibcite{Marques2022}{{12}{}{{}}{{}}}
+\bibcite{Hood2007}{{13}{}{{}}{{}}}
+\bibcite{Sommerville2016}{{14}{}{{}}{{}}}
+\bibcite{ISO27001}{{15}{}{{}}{{}}}
+\bibcite{NIST2012}{{16}{}{{}}{{}}}
+\bibcite{Bellare1997}{{17}{}{{}}{{}}}
+\bibcite{RFC3161}{{18}{}{{}}{{}}}
+\bibcite{McGraw2006}{{19}{}{{}}{{}}}
+\bibcite{GDPR2016}{{20}{}{{}}{{}}}
+\bibcite{Owasp2023}{{21}{}{{}}{{}}}
+\bibcite{AvaliaMoreGitHub2026}{{22}{}{{}}{{}}}
+\bibcite{AvaliaMoreDesktop2026}{{23}{}{{}}{{}}}
+\providecommand\NAT@force@numbers{}\NAT@force@numbers
+\gdef \@abspage@last{26}

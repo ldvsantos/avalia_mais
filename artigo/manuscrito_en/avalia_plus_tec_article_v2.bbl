@@ -17,8 +17,10 @@ A.~Esposito, A.~Sangrà, M.~F. Maina, Towards a characterization of the role of
   \& Society 19~(4) (2016) 44--57.
 
 \bibitem{LGPD2018}
-R.~F. do~Brasil, Lei geral de proteção de dados pessoais ({LGPD}), diário
-  Oficial da União, Brasília (2018).
+Brasil, Lei n\textsuperscript{o} 13.709, de 14 de agosto de 2018. {Lei Geral
+  de Prote\c{c}\~{a}o de Dados Pessoais (LGPD)}, Di\'{a}rio Oficial da
+  Uni\~{a}o, Bras\'{\i}lia, DF, 15 ago. 2018 (2018).
+\newline\urlprefix\url{https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm}
 
 \bibitem{Cavoukian2011}
 A.~Cavoukian, Privacy by design: {T}he 7 {F}undamental principles, Information
@@ -83,8 +85,11 @@ C.~Hood, Public management: {T}he third electoral wave?, Public Administration
 I.~Sommerville, Software Engineering, 10th Edition, Pearson, 2015.
 
 \bibitem{ISO27001}
-I.~O. for Standardization~(ISO), Information security management systems ---
-  {R}equirements (2022).
+{International Organization for Standardization}, {ISO}/{IEC} 27001:2022 ---
+  {I}nformation security, cybersecurity and privacy protection ---
+  {I}nformation security management systems --- {R}equirements, ISO, Geneva,
+  Switzerland (2022).
+\newline\urlprefix\url{https://www.iso.org/standard/27001}
 
 \bibitem{NIST2012}
 N.~I. of~Standards, T.~(NIST), Descriptions and rules for use of the {SHA}-2
@@ -115,7 +120,8 @@ G.~McGraw, Software Security: {B}uilding Security In, Addison-Wesley
   2016 on the protection of natural persons with regard to the processing of
   personal data and on the free movement of such data ({G}eneral {D}ata
   {P}rotection {R}egulation), Official Journal of the European Union L~119,
-  pp.\ 1--88 (2016).
+  4 May 2016, pp.\ 1--88 (2016).
+\newline\urlprefix\url{https://eur-lex.europa.eu/eli/reg/2016/679/oj}
 
 \bibitem{Owasp2023}
 O.~Foundation, {OWASP} {T}op 10 web application security risksAvailable at:

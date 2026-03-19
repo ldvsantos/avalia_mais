@@ -3,7 +3,7 @@
 Este projeto é proprietário.
 
 - Titular dos direitos: AVALIA+TEC
-- Autores: Luiz Diego Vidal; Catuxe Varjão de Santana Oliveira; Everaldo
+- Autores: Luiz Diego Vidal; Catuxe Varjão de Santana Oliveira; Everaldo; Francisco Sandro Rodrigues Holanda
 - Contato: <ldvsantos@uefs.br>
 - Ano: 2025
 
